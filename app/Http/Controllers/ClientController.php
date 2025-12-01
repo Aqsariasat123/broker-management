@@ -21,7 +21,28 @@ class ClientController extends Controller
         }
         
         // Use paginate instead of get
-        $clients = $query->orderBy('created_at', 'desc')->paginate(10);
+        $clients = $query->with('policies')->orderBy('created_at', 'desc')->paginate(10);
+
+        // Calculate expiration status for each client
+        $clients->getCollection()->transform(function ($client) {
+            $expiredPolicies = [];
+            $expiringPolicies = [];
+            
+            foreach ($client->policies as $policy) {
+                if ($policy->isExpired()) {
+                    $expiredPolicies[] = $policy;
+                } elseif ($policy->isDueForRenewal()) {
+                    $expiringPolicies[] = $policy;
+                }
+            }
+            
+            $client->hasExpired = count($expiredPolicies) > 0;
+            $client->hasExpiring = count($expiringPolicies) > 0;
+            $client->expiredPolicies = $expiredPolicies;
+            $client->expiringPolicies = $expiringPolicies;
+            
+            return $client;
+        });
 
         // Get lookup data for dropdowns
         $lookupData = $this->getLookupData();

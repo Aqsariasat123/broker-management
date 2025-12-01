@@ -8,18 +8,29 @@
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; color: #000; margin: 10px; background: #fff; }
     .container-table { max-width: 100%; margin: 0 auto; }
-    h3 { background: #f1f1f1; padding: 8px; margin-bottom: 10px; font-weight: bold; border: 1px solid #ddd; }
-    .top-bar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-    .left-group { display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:220px; }
+    h3 { background: transparent; padding: 8px 0; margin-bottom: 15px; font-weight: bold; color: #2d2d2d; font-size: 20px; }
+    .top-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; margin-bottom:15px; }
+    .left-group { display:flex; align-items:center; gap:15px; flex:1 1 auto; min-width:220px; }
     .left-buttons { display:flex; gap:10px; align-items:center; }
-    .records-found { font-size:14px; color:#555; min-width:150px; }
-    .action-buttons { margin-left:auto; display:flex; gap:10px; }
-    .btn { border:none; cursor:pointer; padding:6px 12px; font-size:13px; border-radius:2px; white-space:nowrap; transition:background-color .2s; text-decoration:none; color:inherit; background:#fff; border:1px solid #ccc; }
-    .btn-add { background:#df7900; color:#fff; border-color:#df7900; }
+    .records-found { font-size:14px; color:#2d2d2d; font-weight:normal; }
+    .filter-group { display:flex; align-items:center; gap:8px; }
+    .action-buttons { margin-left:auto; display:flex; gap:10px; align-items:center; }
+    .btn { border:none; cursor:pointer; padding:6px 16px; font-size:13px; border-radius:2px; white-space:nowrap; transition:background-color .2s; text-decoration:none; color:inherit; background:#fff; border:1px solid #ccc; font-weight:normal; }
+    .btn-add { background:#f3742a; color:#fff; border-color:#f3742a; }
     .btn-export, .btn-column { background:#fff; color:#000; border:1px solid #ccc; }
+    .btn-follow-up { background:#000; color:#fff; border-color:#000; }
+    .btn-close { background:#fff; color:#000; border:1px solid #ccc; }
     .btn-back { background:#ccc; color:#333; border-color:#ccc; }
-    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; max-height: 520px; overflow-y: auto; background: #fff; }
-    .footer { display:flex; justify-content:center; align-items:center; padding:5px 0; gap:10px; border-top:1px solid #ccc; flex-wrap:wrap; margin-top:15px; }
+    .filter-toggle { display:flex; align-items:center; gap:8px; }
+    .toggle-switch { position:relative; width:44px; height:24px; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.4s; border-radius:24px; }
+    .toggle-slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%; }
+    .toggle-switch input:checked + .toggle-slider { background-color:#4CAF50; }
+    .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
+    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; max-height: 520px; overflow-y: auto; background: #fff; margin-bottom:15px; }
+    .footer { display:flex; justify-content:space-between; align-items:center; padding:10px 0; gap:10px; border-top:1px solid #ddd; flex-wrap:wrap; margin-top:15px; }
+    .footer-left { display:flex; gap:10px; }
    .paginator {
       display: flex;
       align-items: center;
@@ -27,31 +38,51 @@
       font-size: 12px;
       color: #555;
       white-space: nowrap;
-      /* Remove margin-left:auto to center */
-      justify-content: center;
+      margin-left: auto;
     }
     .btn-page{
-            color: #2d2d2d;
-    font-size: 25px;
-    width: 22px;
-    height: 50px;
-    padding: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex
-;
-    align-items: center;
-    justify-content: center;
+      color: #2d2d2d;
+      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      font-weight: normal;
     }
+    .btn-page:hover:not([disabled]) { background: #e9e9e9; }
+    .btn-page[disabled] { opacity: 0.5; cursor: not-allowed; background: #f5f5f5; }
     table { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
-    thead tr { background-color: black; color: white; height:35px; font-weight: normal; }
-    thead th { padding:6px 5px; text-align:left; border-right:1px solid #444; white-space:nowrap; font-weight: normal; }
+    thead tr { background-color: #000; color: #fff; height:35px; font-weight: normal; }
+    thead th { padding:6px 5px; text-align:left; border-right:1px solid #444; white-space:nowrap; font-weight: normal; color: #fff !important; }
+    thead th:first-child { text-align:center; }
     thead th:last-child { border-right:none; }
-    tbody tr { background-color:#fefefe; border-bottom:1px solid #ddd; min-height:28px; }
+    tbody tr { background-color:#fff; border-bottom:1px solid #ddd; min-height:28px; }
     tbody tr:nth-child(even) { background-color:#f8f8f8; }
     tbody tr.inactive-row { background:#fff3cd !important; }
     tbody td { padding:5px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
     tbody td:last-child { border-right:none; }
+    .bell-cell { text-align:center; padding:8px 5px; vertical-align:middle; min-width:50px; }
+    .bell-cell.expired { background-color:#ffebee !important; }
+    .bell-cell.expiring { background-color:#fff8e1 !important; }
+    .bell-cell:not(.expired):not(.expiring) { background-color:#fff !important; }
+    .bell-radio { width:16px; height:16px; cursor:not-allowed; pointer-events:none; opacity:0.6; }
+    .bell-radio.expired { accent-color:#dc3545; }
+    .bell-radio.expiring { accent-color:#ffc107; }
+    .bell-radio.normal { accent-color:#ccc; }
+
+    .action-cell { display:flex; align-items:center; gap:8px; }
+    .action-expand { width:16px; height:16px; }
+    .action-clock { width:16px; height:16px; }
+    .action-menu { width:18px; height:18px; }
+    .checkbox-cell { text-align:center; }
+    .checkbox-cell input[type="checkbox"] { width:16px; height:16px; cursor:pointer; accent-color:#f3742a; }
     .icon-expand { cursor:pointer; color:black; text-align:center; width:20px; }
     .btn-action { padding:2px 6px; font-size:11px; margin:1px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:2px; display:inline-block; }
     .badge-status { font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; }
@@ -104,16 +135,19 @@
     <div class="top-bar">
       <div class="left-group">
         <div class="records-found">Records Found - {{ $clients->total() }}</div>
-
-        <div class="left-buttons" aria-label="left action buttons">
-          <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
-          <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+        <div class="filter-group">
+          <label class="toggle-switch">
+            <input type="checkbox" id="filterToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label style="font-size:14px; color:#2d2d2d; margin:0;">Filter</label>
+          <button class="btn btn-follow-up" id="followUpBtn">To Follow Up</button>
         </div>
       </div>
 
       <div class="action-buttons">
         <button class="btn btn-add" id="addClientBtn">Add</button>
-        <button class="btn btn-back" onclick="window.history.back()">Back</button>
+        <button class="btn btn-close" id="closeBtn">Close</button>
       </div>
     </div>
 
@@ -121,8 +155,13 @@
       <table id="clientsTable">
         <thead>
           <tr>
+            <th style="text-align:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+              </svg>
+            </th>
             <th>Action</th>
-            <th>View</th>
             @if(in_array('client_name',$selectedColumns))<th data-column="client_name">Client Name</th>@endif
             @if(in_array('client_type',$selectedColumns))<th data-column="client_type">Client Type</th>@endif
             @if(in_array('nin_bcrn',$selectedColumns))<th data-column="nin_bcrn">NIN/BCRN</th>@endif
@@ -159,9 +198,43 @@
         <tbody>
           @foreach($clients as $client)
             <tr class="{{ $client->status === 'Inactive' ? 'inactive-row' : '' }}">
-              <td class="icon-expand" onclick="openEditClient({{ $client->id }})">⤢</td>
-              <td>
-                <a href="{{ route('clients.show', $client->id) }}" class="btn-action" style="text-decoration:none;">View</a>
+              <td class="bell-cell {{ $client->hasExpired ?? false ? 'expired' : ($client->hasExpiring ?? false ? 'expiring' : '') }}">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                  <input type="radio" name="client_select" class="bell-radio {{ $client->hasExpired ?? false ? 'expired' : ($client->hasExpiring ?? false ? 'expiring' : 'normal') }}" value="{{ $client->id }}" >
+                  @if(($client->hasExpired ?? false) || ($client->hasExpiring ?? false))
+                    <div style="font-size:10px; margin-top:2px; line-height:1.2; color:#666;">
+                      @if($client->hasExpired ?? false)
+                        @php
+                          $expiredPolicies = $client->expiredPolicies ?? [];
+                          $expiredCount = count($expiredPolicies);
+                          $expiredText = $expiredCount > 0 ? ($expiredCount . ' expired') : 'Expired';
+                        @endphp
+                        {{ $expiredText }}
+                      @elseif($client->hasExpiring ?? false)
+                        @php
+                          $expiringPolicies = $client->expiringPolicies ?? [];
+                          $expiringCount = count($expiringPolicies);
+                          $expiringText = $expiringCount > 0 ? ($expiringCount . ' expiring') : 'Expiring';
+                        @endphp
+                        {{ $expiringText }}
+                      @endif
+                    </div>
+                  @endif
+                </div>
+              </td>
+              <td class="action-cell">
+                <svg class="action-expand" onclick="openEditClient({{ $client->id }})" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <path d="M8 3H5C3.89543 3 3 3.89543 3 5V8M21 8V5C21 3.89543 20.1046 3 19 3H16M16 21H19C20.1046 21 21 20.1046 21 19V16M3 16V19C3 20.1046 3.89543 21 5 21H8" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg class="action-clock" onclick="openEditClient({{ $client->id }})" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <circle cx="12" cy="12" r="10" stroke="#666" stroke-width="2"/>
+                  <path d="M12 6V12L16 14" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <svg class="action-menu" onclick="openClientMenu({{ $client->id }})" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <circle cx="12" cy="6" r="1.5" fill="#666"/>
+                  <circle cx="12" cy="12" r="1.5" fill="#666"/>
+                  <circle cx="12" cy="18" r="1.5" fill="#666"/>
+                </svg>
               </td>
               @if(in_array('client_name',$selectedColumns))<td data-column="client_name">
                 <a href="{{ route('clients.show', $client->id) }}" style="color:#007bff; text-decoration:underline;">{{ $client->client_name }}</a>
@@ -170,17 +243,21 @@
               @if(in_array('nin_bcrn',$selectedColumns))<td data-column="nin_bcrn">{{ $client->nin_bcrn ?? '##########' }}</td>@endif
               @if(in_array('dob_dor',$selectedColumns))<td data-column="dob_dor">{{ $client->dob_dor ? $client->dob_dor->format('d-M-y') : '##########' }}</td>@endif
               @if(in_array('mobile_no',$selectedColumns))<td data-column="mobile_no">{{ $client->mobile_no }}</td>@endif
-              @if(in_array('wa',$selectedColumns))<td data-column="wa">{{ $client->wa ?? '-' }}</td>@endif
+              @if(in_array('wa',$selectedColumns))<td data-column="wa" class="checkbox-cell">
+                <input type="checkbox" {{ $client->wa ? 'checked' : '' }}>
+              </td>@endif
               @if(in_array('district',$selectedColumns))<td data-column="district">{{ $client->district ?? '-' }}</td>@endif
               @if(in_array('occupation',$selectedColumns))<td data-column="occupation">{{ $client->occupation ?? '-' }}</td>@endif
               @if(in_array('source',$selectedColumns))<td data-column="source">{{ $client->source }}</td>@endif
-              @if(in_array('status',$selectedColumns))<td data-column="status"><span class="badge-status" style="background:{{ $client->status == 'Active' ? '#28a745' : ($client->status=='Inactive' ? '#6c757d' : '#ffc107') }}">{{ $client->status }}</span></td>@endif
+              @if(in_array('status',$selectedColumns))<td data-column="status">{{ $client->status == 'Inactive' ? 'Dormant' : ($client->status == 'Active' ? 'Active' : $client->status) }}</td>@endif
               @if(in_array('signed_up',$selectedColumns))<td data-column="signed_up">{{ $client->signed_up ? $client->signed_up->format('d-M-y') : '##########' }}</td>@endif
               @if(in_array('employer',$selectedColumns))<td data-column="employer">{{ $client->employer ?? '-' }}</td>@endif
               @if(in_array('clid',$selectedColumns))<td data-column="clid">{{ $client->clid }}</td>@endif
               @if(in_array('contact_person',$selectedColumns))<td data-column="contact_person">{{ $client->contact_person ?? '-' }}</td>@endif
               @if(in_array('income_source',$selectedColumns))<td data-column="income_source">{{ $client->income_source ?? '-' }}</td>@endif
-              @if(in_array('married',$selectedColumns))<td data-column="married">{{ $client->married ? 'Yes' : 'No' }}</td>@endif
+              @if(in_array('married',$selectedColumns))<td data-column="married" class="checkbox-cell">
+                <input type="checkbox" {{ $client->married ? 'checked' : '' }}>
+              </td>@endif
               @if(in_array('spouses_name',$selectedColumns))<td data-column="spouses_name">{{ $client->spouses_name ?? '-' }}</td>@endif
               @if(in_array('alternate_no',$selectedColumns))<td data-column="alternate_no">{{ $client->alternate_no ?? '-' }}</td>@endif
               @if(in_array('email_address',$selectedColumns))<td data-column="email_address">{{ $client->email_address ?? '-' }}</td>@endif
@@ -188,7 +265,9 @@
               @if(in_array('island',$selectedColumns))<td data-column="island">{{ $client->island ?? '-' }}</td>@endif
               @if(in_array('country',$selectedColumns))<td data-column="country">{{ $client->country ?? '-' }}</td>@endif
               @if(in_array('po_box_no',$selectedColumns))<td data-column="po_box_no">{{ $client->po_box_no ?? '-' }}</td>@endif
-              @if(in_array('pep',$selectedColumns))<td data-column="pep">{{ $client->pep ? 'Yes' : 'No' }}</td>@endif
+              @if(in_array('pep',$selectedColumns))<td data-column="pep" class="checkbox-cell">
+                <input type="checkbox" {{ $client->pep ? 'checked' : '' }}>
+              </td>@endif
               @if(in_array('pep_comment',$selectedColumns))<td data-column="pep_comment">{{ $client->pep_comment ?? '-' }}</td>@endif
               @if(in_array('image',$selectedColumns))<td data-column="image">{{ $client->image ? '📷' : '-' }}</td>@endif
               @if(in_array('salutation',$selectedColumns))<td data-column="salutation">{{ $client->salutation ?? '-' }}</td>@endif
@@ -203,6 +282,10 @@
     </div>
 
     <div class="footer">
+      <div class="footer-left">
+        <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
+        <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+      </div>
       <div class="paginator">
         @php
           $base = url()->current();
@@ -214,7 +297,7 @@
 
         <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
         <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
-        <span class="page-info" style="padding:0 8px;">Page {{ $current }} of {{ $last }}</span>
+        <span class="page-info" style="padding:0 8px; color:#555; font-size:12px;">Page {{ $current }} of {{ $last }}</span>
         <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$current+1) : '#' }}" @if($current>= $last) disabled @endif>&rsaquo;</a>
         <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
       </div>
@@ -482,6 +565,17 @@
 
   document.getElementById('addClientBtn').addEventListener('click', () => openClientModal('add'));
   document.getElementById('columnBtn').addEventListener('click', () => openColumnModal());
+  document.getElementById('followUpBtn').addEventListener('click', () => {
+    window.location.href = '{{ route("clients.index") }}?follow_up=true';
+  });
+  document.getElementById('closeBtn').addEventListener('click', () => {
+    window.location.href = '{{ route("clients.index") }}';
+  });
+  
+  function openClientMenu(id) {
+    // Placeholder for menu functionality
+    console.log('Open menu for client:', id);
+  }
 
   async function openEditClient(id){
     try {
