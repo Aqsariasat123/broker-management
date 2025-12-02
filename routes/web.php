@@ -24,6 +24,7 @@ use App\Http\Controllers\DebitNoteController;
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\CalendarController;
 
 
 
@@ -132,6 +133,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
     Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
     Route::post('/clients/save-column-settings', [ClientController::class, 'saveColumnSettings'])->name('clients.save-column-settings');
+    Route::post('/clients/{client}/upload-photo', [ClientController::class, 'uploadPhoto'])->name('clients.upload-photo');
+    Route::post('/clients/{client}/upload-document', [ClientController::class, 'uploadDocument'])->name('clients.upload-document');
 
     // Contacts Routes
     Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
@@ -204,7 +207,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/statements/{statement}', [StatementController::class, 'update'])->name('statements.update');
     Route::delete('/statements/{statement}', [StatementController::class, 'destroy'])->name('statements.destroy');
 
-    Route::view('/calendar', 'calender.index')->name('calendar');
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+    Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
 
     // Secure file download route for encrypted files
     Route::get('/secure-file/{type}/{id}', function ($type, $id) {

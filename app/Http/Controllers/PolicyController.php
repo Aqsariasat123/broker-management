@@ -282,7 +282,39 @@ class PolicyController extends Controller
 
     public function export(Request $request)
     {
-        $policies = Policy::all();
+        // Apply same filters as index method
+        $query = Policy::query();
+        
+        // Filter for Due for Renewal
+        if ($request->has('dfr') && $request->dfr == 'true') {
+            $query->where(function($q) {
+                $q->whereHas('policyStatus', function($subQ) {
+                    $subQ->where('name', 'LIKE', '%DFR%');
+                })->orWhere(function($subQ) {
+                    $subQ->whereNotNull('end_date')
+                      ->whereBetween('end_date', [now(), now()->addDays(30)]);
+                });
+            });
+        }
+
+        $policies = $query->with([
+                'client',
+                'insurer',
+                'policyClass',
+                'policyPlan',
+                'policyStatus',
+                'businessType',
+                'frequency',
+                'payPlan',
+                'agency'
+            ])
+            ->orderBy('date_registered', 'desc')
+            ->get();
+        
+        // Get selected columns from session
+        $selectedColumns = session('policy_columns', [
+            'policy_no','client_name','insurer','policy_class','policy_plan','sum_insured','start_date','end_date','insured','policy_status','date_registered','policy_id','insured_item','renewable','biz_type','term','term_unit','base_premium','premium','frequency','pay_plan','agency','agent','notes'
+        ]);
         
         $fileName = 'policies_export_' . date('Y-m-d') . '.csv';
         $headers = [
@@ -290,47 +322,132 @@ class PolicyController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        $handle = fopen('php://output', 'w');
-        fputcsv($handle, [
-            'Policy No', 'Client Name', 'Insurer', 'Policy Class', 'Policy Plan',
-            'Sum Insured', 'Start Date', 'End Date', 'Insured', 'Policy Status',
-            'Date Registered', 'Policy ID', 'Insured Item', 'Renewable', 'Biz Type',
-            'Term', 'Term Unit', 'Base Premium', 'Premium', 'Frequency', 'Pay Plan',
-            'Agency', 'Agent', 'Notes'
-        ]);
+        // Column labels mapping
+        $columnLabels = [
+            'policy_no' => 'Policy No',
+            'client_name' => 'Client Name',
+            'insurer' => 'Insurer',
+            'policy_class' => 'Policy Class',
+            'policy_plan' => 'Policy Plan',
+            'sum_insured' => 'Sum Insured',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'insured' => 'Insured',
+            'policy_status' => 'Policy Status',
+            'date_registered' => 'Date Registered',
+            'policy_id' => 'Policy ID',
+            'insured_item' => 'Insured Item',
+            'renewable' => 'Renewable',
+            'biz_type' => 'Biz Type',
+            'term' => 'Term',
+            'term_unit' => 'Term Unit',
+            'base_premium' => 'Base Premium',
+            'premium' => 'Premium',
+            'frequency' => 'Frequency',
+            'pay_plan' => 'Pay Plan',
+            'agency' => 'Agency',
+            'agent' => 'Agent',
+            'notes' => 'Notes'
+        ];
 
-        foreach ($policies as $policy) {
-            fputcsv($handle, [
-                $policy->policy_no,
-                $policy->client ? $policy->client->client_name : 'N/A',
-                $policy->insurer ? $policy->insurer->name : 'N/A',
-                $policy->policyClass ? $policy->policyClass->name : 'N/A',
-                $policy->policyPlan ? $policy->policyPlan->name : 'N/A',
-                $policy->sum_insured,
-                $policy->start_date?->format('d-M-y'),
-                $policy->end_date?->format('d-M-y'),
-                $policy->insured,
-                $policy->policyStatus ? $policy->policyStatus->name : 'N/A',
-                $policy->date_registered?->format('d-M-y'),
-                $policy->policy_code,
-                $policy->insured_item,
-                $policy->renewable ? 'Yes' : 'No',
-                $policy->businessType ? $policy->businessType->name : 'N/A',
-                $policy->term,
-                $policy->term_unit,
-                $policy->base_premium,
-                $policy->premium,
-                $policy->frequency ? $policy->frequency->name : 'N/A',
-                $policy->payPlan ? $policy->payPlan->name : 'N/A',
-                $policy->agency ? $policy->agency->name : 'N/A',
-                $policy->agent,
-                $policy->notes
-            ]);
-        }
+        return response()->streamDownload(function() use ($policies, $selectedColumns, $columnLabels) {
+            $handle = fopen('php://output', 'w');
+            
+            // Write header row with selected columns
+            $headers = [];
+            foreach ($selectedColumns as $col) {
+                if (isset($columnLabels[$col])) {
+                    $headers[] = $columnLabels[$col];
+                }
+            }
+            fputcsv($handle, $headers);
 
-        fclose($handle);
-        return response()->streamDownload(function() use ($handle) {
-            //
+            // Write data rows
+            foreach ($policies as $policy) {
+                $row = [];
+                foreach ($selectedColumns as $col) {
+                    switch ($col) {
+                        case 'policy_no':
+                            $row[] = $policy->policy_no;
+                            break;
+                        case 'client_name':
+                            $row[] = $policy->client ? $policy->client->client_name : 'N/A';
+                            break;
+                        case 'insurer':
+                            $row[] = $policy->insurer ? $policy->insurer->name : 'N/A';
+                            break;
+                        case 'policy_class':
+                            $row[] = $policy->policyClass ? $policy->policyClass->name : 'N/A';
+                            break;
+                        case 'policy_plan':
+                            $row[] = $policy->policyPlan ? $policy->policyPlan->name : 'N/A';
+                            break;
+                        case 'sum_insured':
+                            $row[] = $policy->sum_insured ? number_format($policy->sum_insured, 2) : '';
+                            break;
+                        case 'start_date':
+                            $row[] = $policy->start_date ? $policy->start_date->format('d-M-y') : '';
+                            break;
+                        case 'end_date':
+                            $row[] = $policy->end_date ? $policy->end_date->format('d-M-y') : '';
+                            break;
+                        case 'insured':
+                            $row[] = $policy->insured ?? '';
+                            break;
+                        case 'policy_status':
+                            $row[] = $policy->policyStatus ? $policy->policyStatus->name : 'N/A';
+                            break;
+                        case 'date_registered':
+                            $row[] = $policy->date_registered ? $policy->date_registered->format('d-M-y') : '';
+                            break;
+                        case 'policy_id':
+                            $row[] = $policy->policy_code ?? $policy->id;
+                            break;
+                        case 'insured_item':
+                            $row[] = $policy->insured_item ?? '';
+                            break;
+                        case 'renewable':
+                            $row[] = $policy->renewable ? 'Yes' : 'No';
+                            break;
+                        case 'biz_type':
+                            $row[] = $policy->businessType ? $policy->businessType->name : 'N/A';
+                            break;
+                        case 'term':
+                            $row[] = $policy->term ?? '';
+                            break;
+                        case 'term_unit':
+                            $row[] = $policy->term_unit ?? '';
+                            break;
+                        case 'base_premium':
+                            $row[] = $policy->base_premium ? number_format($policy->base_premium, 2) : '';
+                            break;
+                        case 'premium':
+                            $row[] = $policy->premium ? number_format($policy->premium, 2) : '';
+                            break;
+                        case 'frequency':
+                            $row[] = $policy->frequency ? $policy->frequency->name : 'N/A';
+                            break;
+                        case 'pay_plan':
+                            $row[] = $policy->payPlan ? $policy->payPlan->name : 'N/A';
+                            break;
+                        case 'agency':
+                            $row[] = $policy->agency ? $policy->agency->name : ($policy->agent ?? 'N/A');
+                            break;
+                        case 'agent':
+                            $row[] = $policy->agent ?? '';
+                            break;
+                        case 'notes':
+                            $row[] = $policy->notes ?? '';
+                            break;
+                        default:
+                            $row[] = '';
+                            break;
+                    }
+                }
+                fputcsv($handle, $row);
+            }
+            
+            fclose($handle);
         }, $fileName, $headers);
     }
 

@@ -68,7 +68,10 @@
     .btn-cancel { background:#6c757d; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
     .btn-delete { background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
     .column-selection { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-bottom:15px; }
-    .column-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #ddd; border-radius:2px; cursor:pointer; }
+    .column-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #ddd; border-radius:2px; cursor:move; }
+    .column-item.dragging { opacity: 0.5; }
+    .column-item.drag-over { border-color: #007bff; background-color: #f0f8ff; }
+    .btn-print { background:#fff; color:#000; border:1px solid #ccc; }
     @media (max-width:768px) { .form-row .form-group { flex:0 0 calc((100% - 20px) / 2); } .table-responsive { max-height:500px; } }
   </style>
 </head>
@@ -113,6 +116,7 @@
         <div class="records-found">Records Found - {{ $vehicles->total() }}</div>
         <a class="btn btn-export" href="{{ route('vehicles.export', array_merge(request()->query(), ['page' => $vehicles->currentPage()])) }}">Export</a>
         <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+        <button class="btn btn-print" id="printBtn" type="button">Print</button>
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addVehicleBtn">Add</button>
@@ -120,7 +124,7 @@
       </div>
     </div>
     <div class="table-responsive">
-      <table>
+      <table id="vehiclesTable">
         <thead>
           <tr>
             <th>Action</th>
@@ -198,11 +202,12 @@
         </div>
         <form id="columnForm" action="{{ route('vehicles.save-column-settings') }}" method="POST">
           @csrf
-          <div class="column-selection">
+          <div class="column-selection" id="columnSelection">
             @foreach($allColumns as $key => $label)
-              <div class="column-item">
+              <div class="column-item" draggable="true" data-column="{{ $key }}" style="cursor:move;">
+                <span style="cursor:move; margin-right:8px; font-size:16px; color:#666;">☰</span>
                 <input type="checkbox" class="column-checkbox" id="col_{{ $key }}" value="{{ $key }}" name="columns[]" @if(in_array($key, $selectedColumns)) checked @endif>
-                <label for="col_{{ $key }}">{{ $label }}</label>
+                <label for="col_{{ $key }}" style="cursor:pointer; flex:1; user-select:none;">{{ $label }}</label>
               </div>
             @endforeach
           </div>
@@ -321,6 +326,7 @@ document.getElementById('columnBtn').addEventListener('click', () => openColumnM
 function openColumnModal(){
   document.getElementById('columnModal').classList.add('show');
   document.body.style.overflow = 'hidden';
+  setTimeout(initDragAndDrop, 100);
 }
 function closeColumnModal(){
   document.getElementById('columnModal').classList.remove('show');
@@ -329,14 +335,146 @@ function closeColumnModal(){
 function selectAllColumns(){ document.querySelectorAll('.column-checkbox').forEach(cb=>cb.checked=true); }
 function deselectAllColumns(){ document.querySelectorAll('.column-checkbox').forEach(cb=>cb.checked=false); }
 function saveColumnSettings(){
+  const items = Array.from(document.querySelectorAll('#columnSelection .column-item'));
+  const order = items.map(item => item.dataset.column);
   const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n=>n.value);
+  const orderedChecked = order.filter(col => checked.includes(col));
   const form = document.getElementById('columnForm');
   const existing = form.querySelectorAll('input[name="columns[]"]'); existing.forEach(e=>e.remove());
-  checked.forEach(c => {
+  orderedChecked.forEach(c => {
     const i = document.createElement('input'); i.type='hidden'; i.name='columns[]'; i.value=c; form.appendChild(i);
   });
   form.submit();
 }
+
+// Drag and drop functionality
+let draggedElement = null;
+let dragOverElement = null;
+
+function initDragAndDrop() {
+  const columnSelection = document.getElementById('columnSelection');
+  if (!columnSelection) return;
+  const columnItems = columnSelection.querySelectorAll('.column-item');
+  columnItems.forEach(item => {
+    item.addEventListener('dragstart', function(e) {
+      draggedElement = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+      const dragImage = this.cloneNode(true);
+      dragImage.style.opacity = '0.5';
+      document.body.appendChild(dragImage);
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+      setTimeout(() => document.body.removeChild(dragImage), 0);
+    });
+    item.addEventListener('dragend', function(e) {
+      this.classList.remove('dragging');
+      if (dragOverElement) {
+        dragOverElement.classList.remove('drag-over');
+        dragOverElement = null;
+      }
+      draggedElement = null;
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggedElement && this !== draggedElement) {
+        if (dragOverElement && dragOverElement !== this) {
+          dragOverElement.classList.remove('drag-over');
+        }
+        this.classList.add('drag-over');
+        dragOverElement = this;
+        const rect = this.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        if (next) {
+          if (this.nextSibling && this.nextSibling !== draggedElement) {
+            this.parentNode.insertBefore(draggedElement, this.nextSibling);
+          } else if (!this.nextSibling) {
+            this.parentNode.appendChild(draggedElement);
+          }
+        } else {
+          if (this.previousSibling !== draggedElement) {
+            this.parentNode.insertBefore(draggedElement, this);
+          }
+        }
+      }
+    });
+    item.addEventListener('dragleave', function(e) {
+      if (!this.contains(e.relatedTarget)) {
+        this.classList.remove('drag-over');
+        if (dragOverElement === this) {
+          dragOverElement = null;
+        }
+      }
+    });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.classList.remove('drag-over');
+      dragOverElement = null;
+      return false;
+    });
+  });
+}
+
+// Print table function
+function printTable() {
+  const table = document.getElementById('vehiclesTable');
+  if (!table) return;
+  const headers = [];
+  const headerCells = table.querySelectorAll('thead th');
+  headerCells.forEach(th => {
+    let headerText = th.textContent.trim();
+    if (headerText) headers.push(headerText);
+  });
+  const rows = [];
+  const tableRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+  tableRows.forEach(row => {
+    if (row.style.display === 'none') return;
+    const cells = [];
+    const rowCells = row.querySelectorAll('td');
+    rowCells.forEach((cell) => {
+      let cellContent = '';
+      if (cell.querySelector('.icon-expand')) {
+        cellContent = '⤢';
+      } else {
+        const link = cell.querySelector('a');
+        cellContent = link ? link.textContent.trim() : cell.textContent.trim();
+      }
+      cells.push(cellContent || '-');
+    });
+    rows.push(cells);
+  });
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  const headersHTML = headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('');
+  const rowsHTML = rows.map(row => {
+    const cellsHTML = row.map(cell => {
+      return '<td>' + escapeHtml(String(cell || '-')) + '</td>';
+    }).join('');
+    return '<tr>' + cellsHTML + '</tr>';
+  }).join('');
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  const printHTML = '<!DOCTYPE html><html><head><title>Vehicles - Print</title><style>@page { margin: 1cm; size: A4 landscape; }html, body { margin: 0; padding: 0; background: #fff !important; }body { font-family: Arial, sans-serif; font-size: 10px; }table { width: 100%; border-collapse: collapse; page-break-inside: auto; }thead { display: table-header-group; }thead th { background-color: #000 !important; color: #fff !important; padding: 8px 5px; text-align: left; border: 1px solid #333; font-weight: normal; -webkit-print-color-adjust: exact; print-color-adjust: exact; }tbody tr { page-break-inside: avoid; border-bottom: 1px solid #ddd; }tbody tr:nth-child(even) { background-color: #f8f8f8; }tbody td { padding: 6px 5px; border: 1px solid #ddd; white-space: nowrap; }</style></head><body><table><thead><tr>' + headersHTML + '</tr></thead><tbody>' + rowsHTML + '</tbody></table><scr' + 'ipt>window.onload = function() { setTimeout(function() { window.print(); }, 100); };window.onafterprint = function() { window.close(); };</scr' + 'ipt></body></html>';
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function() {
+      printTable();
+    });
+  }
+});
 
 function openVehicleModal(mode, vh = null) {
   const modal = document.getElementById('vehicleModal');

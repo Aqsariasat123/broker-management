@@ -1,74 +1,244 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Insurance Broker Web Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A static multi-page web application generated from Excel design specifications. This application provides a complete UI for managing insurance broker data with forms, tables, search, pagination, and export functionality.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Multi-page Navigation**: Each Excel sheet becomes a dedicated page
+- **Dynamic Forms**: Auto-generated forms based on field definitions
+- **Data Tables**: Sortable, searchable tables with pagination
+- **Export to CSV**: Export filtered data with column selection
+- **Responsive Design**: Works on desktop and mobile devices
+- **Dark Theme**: Modern UI with orange accent colors
+- **Column Toggle**: Show/hide table columns dynamically
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Project Structure
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```
+.
+├── index.html              # Main dashboard page
+├── pages/                  # Generated pages (one per Excel sheet)
+│   ├── fields&module.html
+│   ├── system-db.html
+│   └── ...
+├── styles/
+│   └── styles.css         # Main stylesheet
+├── scripts/
+│   └── script.js          # Main JavaScript functionality
+├── data/
+│   └── design.json        # Parsed Excel metadata (auto-generated)
+├── tools/
+│   ├── parse_excel.py     # Excel parser script
+│   └── generate_pages.py # Page generator script
+├── assets/
+│   ├── logo.svg
+│   └── icons/
+└── dist/
+    └── index.html         # Single-file build (all-in-one)
+```
 
-## Learning Laravel
+## Getting Started
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Prerequisites
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Python 3.7+ with pandas and openpyxl installed:
+  ```bash
+  pip install pandas openpyxl
+  ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Step 1: Parse Excel File
 
-## Laravel Sponsors
+Run the parsing script to generate `data/design.json`:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+python tools/parse_excel.py
+```
 
-### Premium Partners
+This script:
+- Reads the Excel file: `IDB Oct 25 (2).xlsx`
+- Extracts field definitions from each sheet
+- Detects field types (text, date, numeric, boolean, lookup)
+- Generates summary statistics
+- Outputs JSON metadata to `data/design.json`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Step 2: Generate Pages (Optional)
 
-## Contributing
+If you need to regenerate pages after modifying the design:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+python tools/generate_pages.py
+```
 
-## Code of Conduct
+### Step 3: Open the Application
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Simply open `index.html` in a web browser:
 
-## 2.1 Client & Policy Management
+```bash
+# On Windows
+start index.html
 
-- **Client + Policy CRUD** – `ClientController` and `PolicyController` expose authenticated CRUD endpoints plus CSV exports so brokers can add/update client profiles and attach new policies in one workflow. The new `policies.show` route (`/policies/{policy}`) consolidates coverage info (term, sum insured, premiums) together with a live payment timeline.
-- **Coverage & premium tracking** – Policies link to schedules, payment plans, debit notes, and payments through dedicated models (`Schedule`, `PaymentPlan`, `DebitNote`, `Payment`). The detail view and JSON API surface base vs. total premium, instalment amounts, and recorded receipts for full auditability.
-- **Automated reminders** – The `policies:send-reminders` Artisan command (scheduled daily at 08:00 in `App\Console\Kernel`) emails administrators whenever a policy is 30 days from expiry or a payment plan instalment is due within 14 days. Lead times are adjustable via command options.
-- **Dynamic lookups** – Contact types, channels, payment modes, and every other enumerated field remain data-driven via the `lookup_categories` / `lookup_values` tables and UI, so admins can add new values without touching code.
+# On macOS
+open index.html
 
-## 2.5 Database & Security
+# On Linux
+xdg-open index.html
+```
 
-- **MySQL RDBMS / Normalized schema** – The platform runs on MySQL 8.x with migrations defining a third-normal-form model that matches the broker ERD (clients, policies, schedules, payment plans, debit notes, payments, commission notes/statements, tax returns, contacts, proposals, medicals, follow-ups, etc.). Each relationship is enforced with foreign keys and cascading rules so orphaned rows are impossible.
-- **Secure storage & encryption** – Secrets live in `.env` (never committed). User credentials leverage Laravel’s bcrypt/argon hashing, and sensitive blobs (attachments, IDs, POA, medical reports) are written via `Storage::disk('local')->put` with `Crypt::encryptString()` wrapping before persistence, ensuring AES-256 encryption at rest.
-- **Backups & integrity checks** – Nightly `mysqldump` jobs plus weekly `spatie/laravel-backup` runs push encrypted archives to off-site object storage. A lightweight cron runs `php artisan migrate:status`, `php artisan db:monitor`, and checksum comparisons against the last known-good snapshot so schema drift or corruption is caught early.
+Or use a local web server (recommended):
 
-## Security Vulnerabilities
+```bash
+# Python 3
+python -m http.server 8000
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Then open: http://localhost:8000
+```
+
+## Usage
+
+### Navigation
+
+- Use the **sidebar** to navigate between pages
+- Each page corresponds to an Excel sheet
+- The **Dashboard** (index.html) provides an overview
+
+### Adding Data
+
+1. Scroll to the **form section** on any page
+2. Fill in the required fields (marked with *)
+3. Click **Save** to add the record to the table
+
+### Viewing Data
+
+- **Search**: Use the search box to filter table rows
+- **Sort**: Click column headers to sort ascending/descending
+- **Pagination**: Navigate through pages using pagination controls
+- **Column Toggle**: Click "Columns" button to show/hide columns
+- **Export**: Click "Export CSV" to download filtered data
+
+### Field Types
+
+The application automatically detects and renders:
+
+- **Text**: Standard text input
+- **Date**: Date picker input
+- **Numeric**: Number input with decimal support
+- **Boolean**: Checkbox
+- **Lookup**: Dropdown select with sample values
+- **Email**: Email input with validation
+- **Phone**: Tel input
+
+## Customization
+
+### Styling
+
+Edit `styles/styles.css` to customize:
+- Colors (CSS variables in `:root`)
+- Layout dimensions
+- Typography
+- Component styles
+
+### Functionality
+
+Edit `scripts/script.js` to customize:
+- Table behavior
+- Form validation
+- Export format
+- Data generation
+
+### Data Source
+
+Replace `data/design.json` with your own data structure, or modify `tools/parse_excel.py` to parse different Excel formats.
+
+## Single-File Build
+
+A single-file version is available in `dist/index.html` that includes all CSS and JavaScript inline. This is useful for:
+- Quick sharing
+- Offline use
+- Deployment without a web server
+
+To regenerate the single-file build, run:
+
+```bash
+python tools/build_single_file.py
+```
+
+## Technical Details
+
+### Design Language
+
+- **Primary Color**: Orange (#ff7f00)
+- **Dark Header**: #2c3e50
+- **Background**: Light gray (#ecf0f1)
+- **Cards**: White with subtle shadow
+- **Typography**: Segoe UI / Roboto fallback
+
+### Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Mobile browsers
+
+### Data Format
+
+The `design.json` structure:
+
+```json
+{
+  "sheets": [
+    {
+      "name": "Sheet Name",
+      "page": "sheet-name.html",
+      "fields": [
+        {
+          "name": "Field Name",
+          "type": "text|Date|Numeric|Boolean|Lookup",
+          "uiType": "text|date|number|checkbox|select",
+          "required": true|false,
+          "sample": ["value1", "value2"]
+        }
+      ],
+      "summary": {
+        "Tasks": 13,
+        "Claims": 11
+      }
+    }
+  ]
+}
+```
+
+## Troubleshooting
+
+### Excel File Not Found
+
+Ensure `IDB Oct 25 (2).xlsx` is in the project root directory.
+
+### Pages Not Loading
+
+- Check browser console for errors
+- Ensure `data/design.json` exists and is valid JSON
+- Verify file paths are correct (use relative paths)
+
+### Styling Issues
+
+- Clear browser cache
+- Check CSS file path in HTML
+- Verify CSS variables are supported
+
+### JavaScript Errors
+
+- Open browser developer tools (F12)
+- Check Console tab for errors
+- Ensure `scripts/script.js` loads correctly
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is generated from design specifications and is intended for internal use.
+
+## Support
+
+For issues or questions:
+1. Check the browser console for errors
+2. Verify all files are in place
+3. Ensure Python dependencies are installed
+4. Review the Excel file structure matches expected format

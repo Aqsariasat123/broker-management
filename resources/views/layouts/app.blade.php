@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Keystone Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,7 +24,11 @@
           <span class="toggle-icon-close">✕</span>
         </button>
         <div class="profile-dropdown">
-          <button class="profile-btn" id="profileBtn" aria-label="Profile menu">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="profile-name" style="font-size:14px; color:#2d2d2d;">{{ auth()->user()->name ?? 'User' }}</span>
+            <a href="{{ route('logout') }}" class="btn" style="background:#dc3545; color:#fff; border-color:#dc3545; padding:6px 12px; text-decoration:none; border-radius:4px; font-size:13px;">Logout</a>
+          </div>
+          <button class="profile-btn" id="profileBtn" aria-label="Profile menu" style="display:none;">
             <div class="profile-avatar">
               <span>{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</span>
             </div>

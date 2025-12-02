@@ -43,20 +43,37 @@ class Client extends Model
         'other_names',
         'surname',
         'passport_no',
-        'id_document_path',
-        'poa_document_path',
-        'business_docs_path'
+        'id_expiry_date',
+        'monthly_income',
+        'agency',
+        'agent',
+        'source_name',
+        'has_vehicle',
+        'has_house',
+        'has_business',
+        'has_boat',
+        'notes'
     ];
 
     protected $casts = [
         'dob_dor' => 'date',
         'signed_up' => 'date',
+        'id_expiry_date' => 'date',
         'married' => 'boolean',
-        'pep' => 'boolean'
+        'pep' => 'boolean',
+        'has_vehicle' => 'boolean',
+        'has_house' => 'boolean',
+        'has_business' => 'boolean',
+        'has_boat' => 'boolean'
     ];
 
     public function policies(): HasMany
     {
         return $this->hasMany(Policy::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'tied_to', 'clid');
     }
 }

@@ -4,9 +4,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Document;
 use App\Models\LookupCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ClientController extends Controller
 {
@@ -14,10 +16,20 @@ class ClientController extends Controller
     {
         $query = Client::query();
         
-        // Filter for To Follow Up
+        // Filter for To Follow Up - show only clients with expired or expiring policies
         if ($request->has('follow_up') && $request->follow_up == 'true') {
-            // Add your follow-up logic here
-            $query->where('status', 'Active'); // Example filter
+            $query->whereHas('policies', function($q) {
+                $q->where(function($subQ) {
+                    // Expired policies (end_date is in the past)
+                    $subQ->whereNotNull('end_date')
+                         ->where('end_date', '<', now());
+                })->orWhere(function($subQ) {
+                    // Expiring policies (end_date is within next 30 days)
+                    $subQ->whereNotNull('end_date')
+                         ->where('end_date', '>=', now())
+                         ->where('end_date', '<=', now()->addDays(30));
+                });
+            });
         }
         
         // Use paginate instead of get
@@ -83,6 +95,17 @@ class ClientController extends Controller
             'other_names' => 'nullable|string|max:255',
             'surname' => 'required|string|max:255',
             'passport_no' => 'nullable|string|max:50',
+            'id_expiry_date' => 'nullable|date',
+            'monthly_income' => 'nullable|string|max:255',
+            'agency' => 'nullable|string|max:255',
+            'agent' => 'nullable|string|max:255',
+            'source_name' => 'nullable|string|max:255',
+            'has_vehicle' => 'boolean',
+            'has_house' => 'boolean',
+            'has_business' => 'boolean',
+            'has_boat' => 'boolean',
+            'notes' => 'nullable|string',
+            'image' => 'required|image|mimes:jpeg,jpg,png|max:5120',
         ]);
 
         // Generate unique CLID
@@ -93,7 +116,73 @@ class ClientController extends Controller
         // Combine names for client_name
         $validated['client_name'] = trim($validated['first_name'] . ' ' . ($validated['other_names'] ?? '') . ' ' . $validated['surname']);
 
-        Client::create($validated);
+        $client = Client::create($validated);
+
+        // Handle image upload - store in documents table
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            
+            // Validate passport photo dimensions
+            $imageInfo = getimagesize($file->getRealPath());
+            if ($imageInfo === false) {
+                return redirect()->back()->withErrors(['image' => 'Invalid image file.'])->withInput();
+            }
+            
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
+            
+            // Passport photo standard dimensions (in pixels at 300 DPI):
+            // Square format: 600x600 pixels (2x2 inches) - most common
+            // Rectangular format: 413x531 pixels (35x45 mm)
+            // Allow some tolerance: ±50 pixels for width/height
+            $minWidth = 350;
+            $maxWidth = 650;
+            $minHeight = 350;
+            $maxHeight = 650;
+            
+            // Check if dimensions are within acceptable range
+            if ($width < $minWidth || $width > $maxWidth || $height < $minHeight || $height > $maxHeight) {
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must be passport size (approximately 600x600 pixels or 413x531 pixels). Current dimensions: ' . $width . 'x' . $height . ' pixels.'
+                ])->withInput();
+            }
+            
+            // Check aspect ratio (should be close to 1:1 for square or 0.78:1 for rectangular)
+            $aspectRatio = $width / $height;
+            $squareRatio = 1.0; // 1:1 for square passport photos
+            $rectRatio = 0.78; // 35:45 mm ratio
+            $tolerance = 0.15; // Allow 15% tolerance
+            
+            $isSquare = abs($aspectRatio - $squareRatio) <= $tolerance;
+            $isRectangular = abs($aspectRatio - $rectRatio) <= $tolerance;
+            
+            if (!$isSquare && !$isRectangular) {
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must have passport size aspect ratio (square 1:1 or rectangular 35:45mm). Current ratio: ' . round($aspectRatio, 2) . ':1'
+                ])->withInput();
+            }
+            
+            $filename = 'client_photo_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('documents', $filename, 'public');
+            $client->update(['image' => $path]);
+            
+            // Also store in documents table
+            $latest = Document::orderBy('id', 'desc')->first();
+            $nextDocId = $latest ? (int)str_replace('DOC', '', $latest->doc_id) + 1 : 1001;
+            $docId = 'DOC' . $nextDocId;
+            
+            Document::create([
+                'doc_id' => $docId,
+                'tied_to' => $client->clid,
+                'name' => 'Client Photo',
+                'group' => 'Photo',
+                'type' => 'Photo',
+                'format' => $file->getClientOriginalExtension(),
+                'date_added' => now(),
+                'year' => now()->format('Y'),
+                'file_path' => $path,
+            ]);
+        }
 
         return redirect()->route('clients.index')->with('success', 'Client created successfully.');
     }
@@ -108,13 +197,14 @@ class ClientController extends Controller
     {
         // If request expects JSON (AJAX), return JSON
         if (request()->expectsJson() || request()->wantsJson()) {
+            $client->load('documents');
             return response()->json($client);
         }
         
         $client->load(['policies' => function($query) {
             $query->with(['insurer', 'policyClass', 'policyPlan', 'policyStatus'])
                   ->orderBy('date_registered', 'desc');
-        }]);
+        }, 'documents']);
         return view('clients.show', compact('client'));
     }
 
@@ -122,6 +212,7 @@ class ClientController extends Controller
     {
         // If request expects JSON (AJAX), return JSON for modal
         if (request()->expectsJson() || request()->wantsJson()) {
+            $client->load('documents');
             return response()->json($client);
         }
         
@@ -162,7 +253,96 @@ class ClientController extends Controller
             'other_names' => 'nullable|string|max:255',
             'surname' => 'required|string|max:255',
             'passport_no' => 'nullable|string|max:50',
+            'id_expiry_date' => 'nullable|date',
+            'monthly_income' => 'nullable|string|max:255',
+            'agency' => 'nullable|string|max:255',
+            'agent' => 'nullable|string|max:255',
+            'source_name' => 'nullable|string|max:255',
+            'has_vehicle' => 'boolean',
+            'has_house' => 'boolean',
+            'has_business' => 'boolean',
+            'has_boat' => 'boolean',
+            'notes' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
+
+        // Validate that image is required if no existing image
+        if (!$client->image && !$request->hasFile('image')) {
+            return redirect()->back()->withErrors(['image' => 'Passport size photo is required.'])->withInput();
+        }
+
+        // Handle image upload if new file provided - store in documents table
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($client->image && Storage::disk('public')->exists($client->image)) {
+                Storage::disk('public')->delete($client->image);
+            }
+            $file = $request->file('image');
+            
+            // Validate passport photo dimensions
+            $imageInfo = getimagesize($file->getRealPath());
+            if ($imageInfo === false) {
+                return redirect()->back()->withErrors(['image' => 'Invalid image file.'])->withInput();
+            }
+            
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
+            
+            // Passport photo standard dimensions (in pixels at 300 DPI):
+            // Square format: 600x600 pixels (2x2 inches) - most common
+            // Rectangular format: 413x531 pixels (35x45 mm)
+            // Allow some tolerance: ±50 pixels for width/height
+            $minWidth = 350;
+            $maxWidth = 650;
+            $minHeight = 350;
+            $maxHeight = 650;
+            
+            // Check if dimensions are within acceptable range
+            if ($width < $minWidth || $width > $maxWidth || $height < $minHeight || $height > $maxHeight) {
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must be passport size (approximately 600x600 pixels or 413x531 pixels). Current dimensions: ' . $width . 'x' . $height . ' pixels.'
+                ])->withInput();
+            }
+            
+            // Check aspect ratio (should be close to 1:1 for square or 0.78:1 for rectangular)
+            $aspectRatio = $width / $height;
+            $squareRatio = 1.0; // 1:1 for square passport photos
+            $rectRatio = 0.78; // 35:45 mm ratio
+            $tolerance = 0.15; // Allow 15% tolerance
+            
+            $isSquare = abs($aspectRatio - $squareRatio) <= $tolerance;
+            $isRectangular = abs($aspectRatio - $rectRatio) <= $tolerance;
+            
+            if (!$isSquare && !$isRectangular) {
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must have passport size aspect ratio (square 1:1 or rectangular 35:45mm). Current ratio: ' . round($aspectRatio, 2) . ':1'
+                ])->withInput();
+            }
+            
+            $filename = 'client_' . $client->id . '_photo_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('documents', $filename, 'public');
+            $validated['image'] = $path;
+            
+            // Also store in documents table
+            $latest = Document::orderBy('id', 'desc')->first();
+            $nextId = $latest ? (int)str_replace('DOC', '', $latest->doc_id) + 1 : 1001;
+            $docId = 'DOC' . $nextId;
+            
+            Document::create([
+                'doc_id' => $docId,
+                'tied_to' => $client->clid,
+                'name' => 'Client Photo',
+                'group' => 'Photo',
+                'type' => 'Photo',
+                'format' => $file->getClientOriginalExtension(),
+                'date_added' => now(),
+                'year' => now()->format('Y'),
+                'file_path' => $path,
+            ]);
+        } elseif ($request->has('existing_image')) {
+            // Keep existing image
+            $validated['image'] = $client->image;
+        }
 
         // Combine names for client_name
         $validated['client_name'] = trim($validated['first_name'] . ' ' . ($validated['other_names'] ?? '') . ' ' . $validated['surname']);
@@ -247,6 +427,141 @@ class ClientController extends Controller
         
         return redirect()->route('clients.index')
             ->with('success', 'Column settings saved successfully.');
+    }
+
+    public function uploadPhoto(Request $request, Client $client)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,jpg,png|max:5120',
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            
+            // Validate passport photo dimensions
+            $imageInfo = getimagesize($file->getRealPath());
+            if ($imageInfo === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid image file.'
+                ], 422);
+            }
+            
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
+            
+            // Passport photo standard dimensions (in pixels at 300 DPI):
+            // Square format: 600x600 pixels (2x2 inches) - most common
+            // Rectangular format: 413x531 pixels (35x45 mm)
+            // Allow some tolerance: ±50 pixels for width/height
+            $minWidth = 350;
+            $maxWidth = 650;
+            $minHeight = 350;
+            $maxHeight = 650;
+            
+            // Check if dimensions are within acceptable range
+            if ($width < $minWidth || $width > $maxWidth || $height < $minHeight || $height > $maxHeight) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo must be passport size (approximately 600x600 pixels or 413x531 pixels). Current dimensions: ' . $width . 'x' . $height . ' pixels.'
+                ], 422);
+            }
+            
+            // Check aspect ratio (should be close to 1:1 for square or 0.78:1 for rectangular)
+            $aspectRatio = $width / $height;
+            $squareRatio = 1.0; // 1:1 for square passport photos
+            $rectRatio = 0.78; // 35:45 mm ratio
+            $tolerance = 0.15; // Allow 15% tolerance
+            
+            $isSquare = abs($aspectRatio - $squareRatio) <= $tolerance;
+            $isRectangular = abs($aspectRatio - $rectRatio) <= $tolerance;
+            
+            if (!$isSquare && !$isRectangular) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo must have passport size aspect ratio (square 1:1 or rectangular 35:45mm). Current ratio: ' . round($aspectRatio, 2) . ':1'
+                ], 422);
+            }
+            
+            $filename = 'client_' . $client->id . '_photo_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('documents', $filename, 'public');
+            
+            // Generate unique DOC ID
+            $latest = Document::orderBy('id', 'desc')->first();
+            $nextId = $latest ? (int)str_replace('DOC', '', $latest->doc_id) + 1 : 1001;
+            $docId = 'DOC' . $nextId;
+
+            // Store in documents table
+            Document::create([
+                'doc_id' => $docId,
+                'tied_to' => $client->clid,
+                'name' => 'Client Photo',
+                'group' => 'Photo',
+                'type' => 'Photo',
+                'format' => $file->getClientOriginalExtension(),
+                'date_added' => now(),
+                'year' => now()->format('Y'),
+                'file_path' => $path,
+            ]);
+
+            // Also update client image field for backward compatibility
+            $client->update(['image' => $path]);
+        }
+
+        $client->load('documents');
+        return response()->json([
+            'success' => true,
+            'message' => 'Photo uploaded successfully.',
+            'client' => $client
+        ]);
+    }
+
+    public function uploadDocument(Request $request, Client $client)
+    {
+        $request->validate([
+            'document' => 'required|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            'document_type' => 'required|in:id_document,poa_document,other',
+        ]);
+
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            $documentType = $request->document_type;
+            
+            // Map document types to names
+            $documentNames = [
+                'id_document' => 'ID Card',
+                'poa_document' => 'Proof Of Address',
+                'other' => 'Business Document'
+            ];
+            
+            $filename = 'client_' . $client->id . '_' . $documentType . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('documents', $filename, 'public');
+            
+            // Generate unique DOC ID
+            $latest = Document::orderBy('id', 'desc')->first();
+            $nextId = $latest ? (int)str_replace('DOC', '', $latest->doc_id) + 1 : 1001;
+            $docId = 'DOC' . $nextId;
+
+            // Store in documents table
+            Document::create([
+                'doc_id' => $docId,
+                'tied_to' => $client->clid,
+                'name' => $documentNames[$documentType],
+                'group' => 'Client Document',
+                'type' => $documentType,
+                'format' => $file->getClientOriginalExtension(),
+                'date_added' => now(),
+                'year' => now()->format('Y'),
+                'file_path' => $path,
+            ]);
+        }
+
+        $client->load('documents');
+        return response()->json([
+            'success' => true,
+            'message' => 'Document uploaded successfully.',
+            'client' => $client
+        ]);
     }
 
     private function getLookupData()
