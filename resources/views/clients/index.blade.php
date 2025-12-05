@@ -2,6 +2,7 @@
 @section('content')
 <style>
     * { box-sizing: border-box; }
+    .dashboard { padding-left:0 !important; }
     body { font-family: Arial, sans-serif; color: #000; margin: 0; background: #f5f5f5; }
     .container-table { max-width: 100%; margin: 0 auto; background: #fff; padding: 0; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 15px; background: #f5f5f5; padding: 15px 20px; border-bottom: 1px solid #ddd; }
@@ -132,7 +133,24 @@
     .icon-expand { cursor:pointer; color:black; text-align:center; width:20px; }
     .btn-action { padding:2px 6px; font-size:11px; margin:1px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:2px; display:inline-block; }
     .badge-status { font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; }
-    /* Modal styles (simple, like contacts) */
+    /* Full Page View Styles */
+    .client-page-view { display:none; width:100%; min-height:calc(100vh - 60px); background:#f5f5f5; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .client-page-view.show { display:block !important; }
+    .clients-table-view { display:block; width:100%; }
+    .clients-table-view.hidden { display:none; }
+    
+    .client-page-header { background:#fff; color:#000; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd; position:sticky; top:0; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .client-page-title { font-size:20px; font-weight:bold; color:#000; display:flex; align-items:center; gap:8px; }
+    .client-page-title .client-name { color:#f3742a; }
+    .client-page-nav { display:flex; gap:8px; }
+    .nav-tab { background:#2d2d2d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; transition:background 0.2s; }
+    .nav-tab:hover { background:#444; }
+    .nav-tab.active { background:#2d2d2d; border-bottom:3px solid #4CAF50; }
+    .client-page-actions { display:flex; gap:8px; }
+    .client-page-body { padding-top:20px; background:#f5f5f5; min-height:calc(100vh - 60px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .client-page-content { background:transparent; padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    
+    /* Modal styles (for document upload only) */
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
     .modal.show { display:flex; }
     .modal-content { background:#fff; border-radius:6px; width:92%; max-width:1100px; max-height:calc(100vh - 40px); overflow:auto; box-shadow:0 4px 6px rgba(0,0,0,.1); padding:0; }
@@ -142,18 +160,19 @@
     .modal-footer
     { padding:12px 15px; border-top:1px solid #ddd; display:flex; 
       justify-content:flex-end; gap:8px; background:#f9f9f9; }
-    /* Client Details Modal Styles */
-    .nav-tab { background:#2d2d2d; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-size:13px; border-radius:2px; }
+    /* Client Details Modal Styles - Pixel Perfect */
+    .nav-tab { background:#2d2d2d; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-size:13px; border-radius:2px; white-space:nowrap; }
     .nav-tab.active { background:#000; }
     .nav-tab:hover { background:#1a1a1a; }
-    .detail-section { background:#fff; border:1px solid #ddd; margin-bottom:10px; border-radius:2px; }
-    .detail-section-header { background:#808080; color:#fff; padding:6px 10px; font-weight:bold; font-size:12px; border-bottom:1px solid #ddd; text-transform:uppercase; }
+    .detail-section { background:#fff; margin-bottom:0; border-radius:0; overflow:hidden; margin-right:10px; }
+    .detail-section:last-child { margin-right:0; }
+    .detail-section-header { background:#a0a0a0; color:#fff; padding:6px 10px; font-weight:bold; font-size:12px; border-bottom:1px solid #ddd; text-transform:uppercase; line-height:1.4; }
     .detail-section-body { padding:8px; }
-    .detail-row { display:flex; flex-direction:column; margin-bottom:8px; }
+    .detail-row { display:flex !important; flex-direction:row !important; align-items:center; margin-bottom:8px; gap:8px; }
     .detail-row:last-child { margin-bottom:0; }
-    .detail-label { font-size:10px; color:#555; font-weight:600; margin-bottom:3px; }
-    .detail-value { font-size:11px; color:#000; padding:4px 6px; border:1px solid #ddd; background:#fff; border-radius:2px; min-height:22px; display:flex; align-items:center; }
-    .detail-value.checkbox { border:none; padding:0; background:transparent; }
+    .detail-label { font-size:10px; color:#555; font-weight:600; line-height:1.2; display:block; min-width:120px; flex-shrink:0; }
+    .detail-value { font-size:11px; color:#000; padding:4px 6px; border:1px solid #ddd; background:#fff; border-radius:2px; min-height:22px; display:flex; align-items:center; box-sizing:border-box; flex:1; }
+    .detail-value.checkbox { border:none; padding:0; background:transparent; min-height:auto; flex:0 0 auto; }
     .detail-value.checkbox input[type="checkbox"] { 
       width:18px; 
       height:18px;
@@ -165,6 +184,7 @@
       background:#fff;
       position:relative;
       margin:0;
+      cursor:default;
     }
     .detail-value.checkbox input[type="checkbox"]:checked {
       background-color:#f3742a;
@@ -181,17 +201,32 @@
       font-weight:bold;
       line-height:1;
     }
-    .detail-value textarea { width:100%; min-height:40px; resize:vertical; font-family:inherit; font-size:11px; border:1px solid #ddd; background:#fff; border-radius:2px; padding:4px 6px; }
+    .detail-value input[type="text"] { 
+      width:100%; 
+      border:1px solid #ddd; 
+      padding:4px 6px; 
+      border-radius:2px; 
+      background:#fff; 
+      font-size:11px; 
+      font-family:inherit;
+      box-sizing:border-box;
+      min-height:22px;
+    }
+    .detail-value textarea { 
+      width:100%; 
+      min-height:40px; 
+      resize:vertical; 
+      font-family:inherit; 
+      font-size:11px; 
+      border:1px solid #ddd; 
+      background:#fff; 
+      border-radius:2px; 
+      padding:4px 6px; 
+      box-sizing:border-box;
+    }
     .detail-photo { width:80px; height:100px; object-fit:cover; border:1px solid #ddd; border-radius:2px; flex-shrink:0; }
     .document-item { display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px; border:1px solid #ddd; border-radius:4px; background:#fff; width:120px; }
     .document-icon { width:60px; height:60px; background:#f0f0f0; border:1px solid #ddd; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#666; }
-    /* Client Details Modal Styles */
-    .nav-tab { background:#2d2d2d; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-size:13px; border-radius:2px; }
-    .nav-tab.active { background:#000; }
-    .nav-tab:hover { background:#1a1a1a; }
-    .detail-section { background:#fff; border:1px solid #ddd; margin-bottom:10px; border-radius:2px; }
-    .detail-section-header { background:#808080; color:#fff; padding:6px 10px; font-weight:bold; font-size:12px; border-bottom:1px solid #ddd; text-transform:uppercase; }
-    .detail-section-body { padding:8px; }
     .detail-row { display:flex; flex-direction:column; margin-bottom:8px; }
     .detail-row:last-child { margin-bottom:0; }
     .detail-label { font-size:10px; color:#555; font-weight:600; margin-bottom:3px; }
@@ -324,7 +359,575 @@
       /* Hide sidebar and other layout elements */
       .sidebar, .main-content > .top-header { display: none !important; }
     }
-    @media (max-width:768px) { .form-row .form-group { flex:0 0 calc((100% - 20px) / 2); } .table-responsive { max-height:500px; } }
+    /* Responsive Styles */
+    @media (max-width: 1200px) {
+      /* Tablet adjustments */
+      #clientDetailsContent {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .detail-section {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+      .detail-section:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    @media (max-width: 992px) {
+      /* Small tablet adjustments */
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .client-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 15px;
+      }
+      .client-page-nav {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+      .client-page-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+      
+      /* Form grid - 2 columns on small tablet */
+      #clientFormPageContent .modal-body > div[style*="grid-template-columns"],
+      #clientFormPageContent form > div > div[style*="grid-template-columns"],
+      #clientFormPageContent [style*="grid-template-columns:repeat(4, 1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      
+      #clientFormPageContent .detail-section {
+        margin-right: 0 !important;
+        margin-bottom: 10px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      /* Mobile styles */
+      .dashboard {
+        padding: 0 !important;
+      }
+      
+      /* Page header */
+      .page-header {
+        padding: 10px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .page-title-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      h3 {
+        font-size: 20px;
+      }
+      .top-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .left-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+      }
+      .left-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      .left-buttons .btn {
+        width: 100%;
+        text-align: left;
+        padding-left: 10px;
+      }
+      .action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .filter-group {
+        width: 100%;
+      }
+      
+      /* Table responsive */
+      .table-responsive {
+        max-height: 500px;
+        padding: 0 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      table {
+        min-width: 800px;
+        font-size: 11px;
+      }
+      thead th, tbody td {
+        padding: 6px 4px;
+        font-size: 11px;
+      }
+      
+      /* Footer */
+      .footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px 15px;
+      }
+      .footer-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .paginator {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      /* Client page view */
+      .client-page-view {
+        min-height: calc(100vh - 60px);
+        max-height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
+      }
+      .client-page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 15px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .client-page-title {
+        font-size: 18px;
+        width: 100%;
+      }
+      .client-page-nav {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 5px;
+      }
+      .nav-tab {
+        font-size: 12px;
+        padding: 6px 12px;
+        white-space: nowrap;
+      }
+      .client-page-actions {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .client-page-body {
+        padding: 15px 10px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(100vh - 120px);
+      }
+      
+      .client-page-content {
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Ensure cards are scrollable */
+      #clientDetailsContent,
+      #clientFormPageContent {
+        overflow-y: visible;
+      }
+      
+      /* Make sure form content is scrollable */
+      #clientFormPageContent form {
+        overflow-y: visible;
+      }
+      
+      #clientFormPageContent [style*="padding:12px"] {
+        overflow-y: visible;
+      }
+      
+      /* Client details content - stack to 1 column on mobile */
+      #clientDetailsContent {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+        padding: 10px !important;
+      }
+      .detail-section {
+        margin-right: 0 !important;
+        margin-bottom: 15px;
+        border-right: none !important;
+      }
+      .detail-section:last-child {
+        margin-bottom: 0;
+      }
+      
+      /* Form responsive */
+      .form-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .form-row .form-group {
+        flex: 1 1 100% !important;
+        width: 100%;
+      }
+      
+      /* Client Form Page - Grid Container Responsive */
+      #clientFormPageContent .modal-body > div[style*="grid-template-columns"],
+      #clientFormPageContent form > div > div[style*="grid-template-columns"],
+      #clientFormPageContent [style*="grid-template-columns:repeat(4, 1fr)"] {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+      }
+      
+      /* Form detail sections stack on mobile */
+      #clientFormPageContent .detail-section {
+        margin-right: 0 !important;
+        margin-bottom: 15px;
+        border-right: none !important;
+      }
+      
+      /* Form action buttons */
+      #clientFormPageContent .client-page-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+      }
+      
+      #clientFormPageContent .client-page-actions .btn,
+      #clientFormPageContent .client-page-actions .btn-save,
+      #clientFormPageContent .client-page-actions .btn-delete {
+        width: 100%;
+        text-align: center;
+      }
+      
+      /* Form padding adjustments */
+      #clientFormPageContent [style*="padding:12px"] {
+        padding: 10px !important;
+      }
+      
+      /* Photo upload section responsive */
+      #clientFormPageContent .detail-row {
+        flex-direction: row !important;
+        align-items: center !important;
+      }
+      
+      /* Photo section with flex layout - stack on mobile */
+      #clientFormPageContent .detail-row > div[style*="display:flex"][style*="gap:10px"] {
+        flex-direction: column !important;
+        width: 100%;
+        align-items: center !important;
+      }
+      
+      /* Photo preview responsive */
+      #clientFormPageContent #clientPhotoPreview {
+        width: 100% !important;
+        max-width: 150px;
+        margin: 0 auto 5px;
+      }
+      
+      #clientFormPageContent input[type="file"][id="image"] {
+        width: 100% !important;
+        max-width: 150px;
+        margin: 0 auto;
+      }
+      
+      /* Ensure all form inputs are full width on mobile */
+      #clientFormPageContent .detail-value {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      
+      #clientFormPageContent .detail-value input,
+      #clientFormPageContent .detail-value select,
+      #clientFormPageContent .detail-value textarea {
+        width: 100% !important;
+      }
+      
+      /* Fix flex containers in form (DOB/Age, ID Expiry, etc) */
+      #clientFormPageContent .detail-row > div[style*="display:flex"][style*="gap:5px"] {
+        width: 100%;
+        flex-direction: column !important;
+        gap: 5px !important;
+      }
+      
+      #clientFormPageContent .detail-row > div[style*="display:flex"][style*="gap:5px"] > input {
+        width: 100% !important;
+      }
+      
+      /* Passport number section */
+      #clientFormPageContent .detail-row > div[style*="display:flex"][style*="gap:5px"] > input[readonly] {
+        width: 100% !important;
+      }
+      
+      /* Checkbox design fixes for mobile */
+      .detail-value.checkbox input[type="checkbox"],
+      .checkbox-cell input[type="checkbox"] {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        border-width: 2px !important;
+      }
+      
+      .detail-value.checkbox input[type="checkbox"]:checked::after,
+      .checkbox-cell input[type="checkbox"]:checked::after {
+        font-size: 14px !important;
+      }
+      
+      /* Ensure checkbox container has proper spacing on mobile */
+      .detail-value.checkbox {
+        min-width: 24px !important;
+        width: auto !important;
+        flex: 0 0 24px !important;
+        margin-right: 12px !important;
+        margin-left: 0 !important;
+      }
+      
+      /* Checkbox label spacing on mobile - ensure proper gap */
+      .detail-row {
+        gap: 12px !important;
+      }
+      
+      .detail-row .detail-label {
+        min-width: 100px !important;
+        margin-right: 0 !important;
+      }
+      
+      /* Special handling for checkbox rows - ensure label and checkbox don't merge */
+      .detail-row:has(.detail-value.checkbox) {
+        gap: 12px !important;
+      }
+      
+      /* Alternative selector for browsers that don't support :has() */
+      .detail-row .detail-label + .detail-value.checkbox {
+        margin-left: 0 !important;
+      }
+      
+      /* Override inline styles for checkbox spacing in INSURABLES section */
+      .detail-row[style*="margin-bottom:0"] .detail-label[style*="margin-right:8px"] {
+        margin-right: 12px !important;
+      }
+      
+      /* Ensure checkbox has space after label */
+      .detail-row .detail-label:has(+ .detail-value.checkbox),
+      .detail-row .detail-label + .detail-value.checkbox {
+        margin-left: 0 !important;
+      }
+      
+      /* Force spacing for all checkbox containers */
+      .detail-value.checkbox {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      
+      /* Fix INSURABLES section checkboxes visibility on mobile */
+      .detail-section[class*="INSURABLES"] .detail-value.checkbox,
+      .detail-section:has(.detail-section-header:contains("INSURABLES")) .detail-value.checkbox {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        min-width: 24px !important;
+        flex: 0 0 24px !important;
+      }
+      
+      /* Alternative selector for INSURABLES checkboxes */
+      .detail-section-body .detail-row .detail-value.checkbox[style*="flex:0 0 auto"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: auto !important;
+        min-width: 24px !important;
+        flex: 0 0 24px !important;
+      }
+      
+      /* Ensure INSURABLES checkbox inputs are visible */
+      .detail-section-body input[id*="has_vehicle"],
+      .detail-section-body input[id*="has_house"],
+      .detail-section-body input[id*="has_business"],
+      .detail-section-body input[id*="has_boat"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 24px !important;
+        height: 24px !important;
+      }
+      
+      /* Fix INSURABLES flex container on mobile */
+      .detail-section-body > div[style*="display:flex"][style*="gap:12px"] {
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+      }
+      
+      .detail-section-body > div[style*="display:flex"] .detail-row {
+        min-width: auto !important;
+        flex: 1 1 auto !important;
+      }
+      
+      /* Documents section */
+      #clientDocumentsSection,
+      #editFormDocumentsSection {
+        padding: 12px !important;
+        overflow-y: visible;
+      }
+      .document-item {
+        width: 100px;
+      }
+      
+      /* Ensure smooth scrolling on mobile */
+      .client-page-view,
+      .client-page-body,
+      .client-page-content {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+      }
+      
+      /* Fix for iOS Safari scrolling */
+      @supports (-webkit-touch-callout: none) {
+        .client-page-view {
+          height: 100vh;
+          overflow-y: scroll;
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        .client-page-body {
+          min-height: auto;
+          max-height: none;
+        }
+      }
+      
+      /* Modal responsive */
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+      .modal-body {
+        padding: 12px;
+      }
+      
+      /* Column selection */
+      .column-selection {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Small mobile styles */
+      h3 {
+        font-size: 18px;
+      }
+      .page-header {
+        padding: 8px 10px;
+      }
+      .top-bar {
+        gap: 8px;
+      }
+      .btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      table {
+        min-width: 700px;
+        font-size: 10px;
+      }
+      thead th, tbody td {
+        padding: 4px 3px;
+        font-size: 10px;
+      }
+      .client-page-header {
+        padding: 10px 12px;
+      }
+      .client-page-title {
+        font-size: 16px;
+      }
+      .nav-tab {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+      .detail-label {
+        font-size: 9px;
+        min-width: 90px;
+      }
+      .detail-value {
+        font-size: 10px;
+      }
+      
+      /* Checkbox design for small mobile */
+      .detail-value.checkbox input[type="checkbox"],
+      .checkbox-cell input[type="checkbox"] {
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+      }
+      
+      .detail-value.checkbox input[type="checkbox"]:checked::after,
+      .checkbox-cell input[type="checkbox"]:checked::after {
+        font-size: 13px !important;
+      }
+      
+      .detail-value.checkbox {
+        min-width: 22px !important;
+        flex: 0 0 22px !important;
+        margin-right: 10px !important;
+      }
+      
+      /* Ensure proper gap in detail rows on small mobile */
+      .detail-row {
+        gap: 10px !important;
+      }
+      
+      /* Fix for INSURABLES section checkboxes */
+      .detail-row .detail-label[style*="margin-right:8px"] {
+        margin-right: 10px !important;
+      }
+      
+      .document-item {
+        width: 80px;
+      }
+      .document-icon {
+        width: 50px;
+        height: 50px;
+      }
+      
+      /* Ensure INSURABLES checkboxes are visible on small mobile */
+      .detail-section-body .detail-value.checkbox[style*="flex:0 0 auto"] {
+        display: flex !important;
+        visibility: visible !important;
+        min-width: 22px !important;
+        flex: 0 0 22px !important;
+      }
+      
+      .detail-section-body input[id*="has_vehicle"],
+      .detail-section-body input[id*="has_house"],
+      .detail-section-body input[id*="has_business"],
+      .detail-section-body input[id*="has_boat"] {
+        display: block !important;
+        visibility: visible !important;
+        width: 22px !important;
+        height: 22px !important;
+      }
+    }
   </style>
 
 @php
@@ -336,8 +939,12 @@
 @endphp
 
 <div class="dashboard">
+  <!-- Main Clients Table View -->
+  <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
-    <div class="page-header">
+    <!-- Clients Card -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
         <h3>Clients</h3>
         <div class="records-found">Records Found - {{ $clients->total() }}</div>
@@ -358,19 +965,19 @@
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addClientBtn">Add</button>
-        <button class="btn btn-close" id="closeBtn">Close</button>
+        <!-- <button class="btn btn-close" id="closeBtn">Close</button> -->
       </div>
     </div>
 
-    @if(session('success'))
-      <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
-        {{ session('success') }}
-        <button type="button" class="alert-close" onclick="document.getElementById('successAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
-      </div>
-    @endif
+      @if(session('success'))
+        <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
+          {{ session('success') }}
+          <button type="button" class="alert-close" onclick="document.getElementById('successAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
+        </div>
+      @endif
 
-    <div class="table-responsive" id="tableResponsive">
-      <table id="clientsTable">
+      <div class="table-responsive" id="tableResponsive">
+        <table id="clientsTable">
         <thead>
           <tr>
             <th style="text-align:center;">
@@ -450,7 +1057,7 @@
               @foreach($selectedColumns as $col)
                 @if($col == 'client_name')
                   <td data-column="client_name">
-                    <a href="{{ route('clients.show', $client->id) }}" style="color:#007bff; text-decoration:underline;">{{ $client->client_name }}</a>
+                   {{ $client->client_name }}
                   </td>
                 @elseif($col == 'client_type')
                   <td data-column="client_type">{{ $client->client_type }}</td>
@@ -523,34 +1130,114 @@
             </tr>
           @endforeach
         </tbody>
-      </table>
-    </div>
-
-    <div class="footer">
-      <div class="footer-left">
-        <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
-        <button class="btn btn-column" id="columnBtn" type="button">Column</button>
-        <button class="btn btn-export" id="printBtn" type="button" style="margin-left:10px;">Print</button>
+        </table>
       </div>
-      <div class="paginator">
-        @php
-          $base = url()->current();
-          $q = request()->query();
-          $current = $clients->currentPage();
-          $last = max(1,$clients->lastPage());
-          function page_url($base,$q,$p){ $params = array_merge($q,['page'=>$p]); return $base . '?' . http_build_query($params); }
-        @endphp
 
-        <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
-        <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
-        <span class="page-info">Page {{ $current }} of {{ $last }}</span>
-        <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$current+1) : '#' }}" @if($current>= $last) disabled @endif>&rsaquo;</a>
-        <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
+      <div class="footer" style="background:#fff; border-top:1px solid #ddd; margin-top:0;">
+        <div class="footer-left">
+          <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
+          <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+          <button class="btn btn-export" id="printBtn" type="button" style="margin-left:10px;">Print</button>
+        </div>
+        <div class="paginator">
+          @php
+            $base = url()->current();
+            $q = request()->query();
+            $current = $clients->currentPage();
+            $last = max(1,$clients->lastPage());
+            function page_url($base,$q,$p){ $params = array_merge($q,['page'=>$p]); return $base . '?' . http_build_query($params); }
+          @endphp
+
+          <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
+          <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
+          <span class="page-info">Page {{ $current }} of {{ $last }}</span>
+          <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$current+1) : '#' }}" @if($current>= $last) disabled @endif>&rsaquo;</a>
+          <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
+        </div>
       </div>
     </div>
   </div>
+</div>  
+  <!-- Client Page View (Full Page) -->
+  <div class="client-page-view" id="clientPageView">
+    <div class="client-page-header">
+      <div class="client-page-title">
+        <span id="clientPageTitle">Client</span> - <span class="client-name" id="clientPageName"></span>
+      </div>
+    </div>
+    <div class="client-page-body">
+      <div class="client-page-content">
+        <!-- Client Details View -->
+        <div id="clientDetailsPageContent" style="display:none;">
+      
+          <!-- Client Details Card -->
+          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+              <div class="client-page-nav">
+                <button class="nav-tab" data-tab="proposals">Proposals</button>
+                <button class="nav-tab" data-tab="policies">Policies</button>
+                <button class="nav-tab" data-tab="payments">Payments</button>
+                <button class="nav-tab" data-tab="vehicles">Vehicles</button>
+                <button class="nav-tab" data-tab="claims">Claims</button>
+                <button class="nav-tab active" data-tab="documents">Documents</button>
+              </div>
+              <div class="client-page-actions">
+                <button class="btn btn-edit" id="editClientFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
+                <button class="btn" onclick="closeClientPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+              </div>
+            </div>
+          
+            <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
+              <!-- Content will be loaded via JavaScript -->
+            </div>
+          </div>
+          
+          <!-- Documents Card -->
+          <div id="clientDocumentsSection" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px;">
+            <h4 style="font-weight:bold; margin-bottom:10px; color:#000; font-size:13px;">Documents</h4>
+            <div id="clientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+              <!-- Documents will be loaded here -->
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+              <input type="file" id="photoUploadInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+              <button class="btn" onclick="document.getElementById('photoUploadInput').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
+              <button class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Add Document</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Client Edit/Add Form -->
+        <div id="clientFormPageContent" style="display:none;">
+          <!-- Client Form Card -->
+          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
+            <div style="display:flex; justify-content:flex-end; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+              <div class="client-page-actions">
+                <button type="button" class="btn-delete" id="clientDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
+                <button type="submit" form="clientForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
+                <button type="button" class="btn" onclick="closeClientPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+              </div>
+            </div>
+            
+            <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
+              @csrf
+              <div id="clientFormMethod" style="display:none;"></div>
+              <div style="padding:12px;">
+                <!-- Form content will be cloned from modal -->
+              </div>
+            </form>
+          </div>
+          
+          <!-- Documents Card (will be cloned from modal) -->
+          <div id="editFormDocumentsSection" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px; display:none;">
+            <!-- Documents section will be cloned here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <!-- Add/Edit Client Modal (single) -->
+  <!-- Add/Edit Client Modal (hidden, used for form structure) -->
   <div class="modal" id="clientModal">
     <div class="modal-content" style="max-width:95%; width:1400px; max-height:95vh; overflow-y:auto;">
       <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
@@ -574,7 +1261,7 @@
                 <div class="detail-section-body">
                   <div class="detail-row">
                     <span class="detail-label">Client Type</span>
-                    <select id="client_type" name="client_type" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="client_type" name="client_type" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       <option value="Individual">Individual</option>
                       <option value="Business">Business</option>
@@ -583,25 +1270,25 @@
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">DOB/DOR</span>
-                    <div style="display:flex; gap:5px;">
+                    <div style="display:flex; gap:5px; align-items:center; flex:1;">
                       <input id="dob_dor" name="dob_dor" type="date" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                      <input id="dob_age" type="text" readonly class="detail-value" style="width:50px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+                      <input id="dob_age" type="text" readonly class="detail-value" style="width:50px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px; flex-shrink:0;">
                     </div>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">NIN/BCRN</span>
-                    <input id="nin_bcrn" name="nin_bcrn" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="nin_bcrn" name="nin_bcrn" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">ID Expiry Date</span>
-                    <div style="display:flex; gap:5px;">
+                    <div style="display:flex; gap:5px; align-items:center; flex:1;">
                       <input id="id_expiry_date" name="id_expiry_date" type="date" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                      <input id="id_expiry_days" type="text" readonly class="detail-value" style="width:50px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+                      <input id="id_expiry_days" type="text" readonly class="detail-value" style="width:50px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px; flex-shrink:0;">
                     </div>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Client Status</span>
-                    <select id="status" name="status" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="status" name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['client_statuses'] as $st) <option value="{{ $st }}">{{ $st }}</option> @endforeach
                     </select>
@@ -611,41 +1298,42 @@
               <div class="detail-section">
                 <div class="detail-section-header">INDIVIDUAL DETAILS</div>
                 <div class="detail-section-body">
-                  <div class="detail-row">
-                    <span class="detail-label">Salutation</span>
-                    <select id="salutation" name="salutation" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                      <option value="">Select</option>
-                      @foreach($lookupData['salutations'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
-                    </select>
-                  </div>
-                  <div class="detail-row" style="display:flex; flex-direction:row; align-items:flex-start; gap:10px;">
-                    <div style="flex:1; display:flex; flex-direction:column;">
-                      <span class="detail-label">First Name</span>
-                      <input id="first_name" name="first_name" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <div style="display:flex; gap:10px; align-items:flex-start;">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                      <div class="detail-row" style="margin-bottom:0;">
+                        <span class="detail-label">Salutation</span>
+                        <select id="salutation" name="salutation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                          <option value="">Select</option>
+                          @foreach($lookupData['salutations'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
+                        </select>
+                      </div>
+                      <div class="detail-row" style="margin-bottom:0;">
+                        <span class="detail-label">First Name</span>
+                        <input id="first_name" name="first_name" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                      </div>
                     </div>
-                    <div style="display:flex; flex-direction:column;">
-                      <span class="detail-label" style="visibility:hidden;">Photo</span>
+                    <div style="display:flex; flex-direction:column; flex-shrink:0; margin-top:13px;">
                       <div id="clientPhotoPreview" style="width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                         <img id="clientPhotoImg" src="" alt="Photo" class="detail-photo" style="display:none; width:100%; height:100%; object-fit:cover;">
                         <span style="font-size:10px; color:#999;">Photo</span>
                       </div>
-                      <input id="image" name="image" type="file" accept="image/*" required style="margin-top:5px; font-size:10px; width:80px;" onchange="previewClientPhoto(event)">
+                      <input id="image" name="image" type="file" accept="image/*" style="margin-top:5px; font-size:10px; width:80px;" onchange="previewClientPhoto(event)">
                       <input type="hidden" id="existing_image" name="existing_image" value="">
                     </div>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Other Names</span>
-                    <input id="other_names" name="other_names" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="other_names" name="other_names" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Surname</span>
-                    <input id="surname" name="surname" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="surname" name="surname" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Passport No</span>
-                    <div style="display:flex; gap:5px;">
+                    <div style="display:flex; gap:5px; align-items:center; flex:1;">
                       <input id="passport_no" name="passport_no" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                      <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px;">
+                      <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; flex-shrink:0;">
                     </div>
                   </div>
                 </div>
@@ -659,7 +1347,7 @@
                 <div class="detail-section-body">
                   <div class="detail-row">
                     <span class="detail-label">Mobile No</span>
-                    <input id="mobile_no" name="mobile_no" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="mobile_no" name="mobile_no" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">On Wattsapp</span>
@@ -669,15 +1357,15 @@
                   </div>
                   <div class="detail-row" id="alternate_no_row">
                     <span class="detail-label">Alternate No</span>
-                    <input id="alternate_no" name="alternate_no" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="alternate_no" name="alternate_no" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Email Address</span>
-                    <input id="email_address" name="email_address" type="email" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="email_address" name="email_address" type="email" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Contact Person</span>
-                    <input id="contact_person" name="contact_person" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="contact_person" name="contact_person" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                 </div>
               </div>
@@ -686,29 +1374,29 @@
                 <div class="detail-section-body">
                   <div class="detail-row">
                     <span class="detail-label">Occupation</span>
-                    <select id="occupation" name="occupation" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="occupation" name="occupation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['occupations'] as $o) <option value="{{ $o }}">{{ $o }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Income Source</span>
-                    <select id="income_source" name="income_source" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="income_source" name="income_source" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['income_sources'] as $i) <option value="{{ $i }}">{{ $i }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Employer</span>
-                    <input id="employer" name="employer" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="employer" name="employer" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Monthly Income</span>
-                    <input id="monthly_income" name="monthly_income" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="monthly_income" name="monthly_income" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label"></span>
-                    <input type="text" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input type="text" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                 </div>
               </div>
@@ -721,32 +1409,32 @@
                 <div class="detail-section-body">
                   <div class="detail-row">
                     <span class="detail-label">District</span>
-                    <select id="district" name="district" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="district" name="district" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['districts'] as $d) <option value="{{ $d }}">{{ $d }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Address</span>
-                    <input id="location" name="location" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="location" name="location" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Island</span>
-                    <select id="island" name="island" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="island" name="island" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['islands'] as $is) <option value="{{ $is }}">{{ $is }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Country</span>
-                    <select id="country" name="country" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="country" name="country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['countries'] as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">P.O. Box No</span>
-                    <input id="po_box_no" name="po_box_no" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="po_box_no" name="po_box_no" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                 </div>
               </div>
@@ -761,20 +1449,20 @@
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Spouse's Name</span>
-                    <input id="spouses_name" name="spouses_name" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="spouses_name" name="spouses_name" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">PEP</span>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                      <div class="detail-value checkbox" style="flex:0; min-width:auto;">
+                    <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                      <div class="detail-value checkbox" style="flex:0 0 auto; min-width:auto;">
                         <input id="pep" name="pep" type="checkbox" value="1">
                       </div>
-                      <input type="text" value="PEP Details" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; font-size:11px;">
+                      <input type="text" value="PEP Details" readonly style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; font-size:11px; font-family:inherit; box-sizing:border-box; min-height:22px;">
                     </div>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label"></span>
-                    <textarea id="pep_comment" name="pep_comment" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
+                    <textarea id="pep_comment" name="pep_comment" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
                   </div>
                 </div>
               </div>
@@ -787,61 +1475,61 @@
                 <div class="detail-section-body">
                   <div class="detail-row">
                     <span class="detail-label">Sign Up Date</span>
-                    <input id="signed_up" name="signed_up" type="date" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="signed_up" name="signed_up" type="date" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Agency</span>
-                    <input id="agency" name="agency" type="text" value="Keystone" readonly class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+                    <input id="agency" name="agency" type="text" value="Keystone" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Agent</span>
-                    <input id="agent" name="agent" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="agent" name="agent" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Source</span>
-                    <select id="source" name="source" class="detail-value" required style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <select id="source" name="source" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                       <option value="">Select</option>
                       @foreach($lookupData['sources'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                     </select>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Source Name</span>
-                    <input id="source_name" name="source_name" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <input id="source_name" name="source_name" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   </div>
                 </div>
               </div>
               <div class="detail-section">
                 <div class="detail-section-header">INSURABLES</div>
                 <div class="detail-section-body">
-                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:12px;">
-                    <div class="detail-row" style="margin-bottom:0;">
-                      <span class="detail-label">Vehicle</span>
-                      <div class="detail-value checkbox">
+                  <div style="display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+                    <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+                      <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Vehicle</span>
+                      <div class="detail-value checkbox" style="flex:0 0 auto;">
                         <input id="has_vehicle" name="has_vehicle" type="checkbox" value="1">
                       </div>
                     </div>
-                    <div class="detail-row" style="margin-bottom:0;">
-                      <span class="detail-label">House</span>
-                      <div class="detail-value checkbox">
+                    <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+                      <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">House</span>
+                      <div class="detail-value checkbox" style="flex:0 0 auto;">
                         <input id="has_house" name="has_house" type="checkbox" value="1">
                       </div>
                     </div>
-                    <div class="detail-row" style="margin-bottom:0;">
-                      <span class="detail-label">Business</span>
-                      <div class="detail-value checkbox">
+                    <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+                      <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Business</span>
+                      <div class="detail-value checkbox" style="flex:0 0 auto;">
                         <input id="has_business" name="has_business" type="checkbox" value="1">
                       </div>
                     </div>
-                    <div class="detail-row" style="margin-bottom:0;">
-                      <span class="detail-label">Boat</span>
-                      <div class="detail-value checkbox">
-                        <input id="has_boat" name="has_boat" type="checkbox" value="1">
-                      </div>
+                  </div>
+                  <div class="detail-row" style="margin-bottom:8px; align-items:center;">
+                    <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Boat</span>
+                    <div class="detail-value checkbox" style="flex:0 0 auto;">
+                      <input id="has_boat" name="has_boat" type="checkbox" value="1">
                     </div>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Notes</span>
-                    <textarea id="notes" name="notes" class="detail-value" style="width:100%; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
+                    <textarea id="notes" name="notes" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
                   </div>
                 </div>
               </div>
@@ -869,12 +1557,12 @@
     <div class="modal-content" style="max-width:95%; width:1400px; max-height:95vh; overflow-y:auto;">
       <div class="modal-header" style="background:#fff; color:#000; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd;">
         <div style="display:flex; gap:8px;">
-          <button class="nav-tab active" data-tab="proposals">Proposals</button>
+          <button class="nav-tab" data-tab="proposals">Proposals</button>
           <button class="nav-tab" data-tab="policies">Policies</button>
           <button class="nav-tab" data-tab="payments">Payments</button>
           <button class="nav-tab" data-tab="vehicles">Vehicles</button>
           <button class="nav-tab" data-tab="claims">Claims</button>
-          <button class="nav-tab" data-tab="documents">Documents</button>
+          <button class="nav-tab active" data-tab="documents">Documents</button>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-edit" id="editClientFromModalBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Edit</button>
@@ -882,15 +1570,15 @@
         </div>
       </div>
       <div class="modal-body" style="background:#f5f5f5; padding:12px;">
-        <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+        <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; align-items:start;">
           <!-- Content will be loaded via JavaScript -->
         </div>
-        <div id="clientDocumentsSection" style="margin-top:15px; padding-top:12px; border-top:2px solid #ddd;">
-          <h4 style="font-weight:bold; margin-bottom:10px; color:#000; font-size:13px;">Documents</h4>
-          <div id="clientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <div id="clientDocumentsSection" style="margin-top:15px; padding-top:12px; border-top:2px solid #ddd; background:#f5f5f5;">
+          <h4 style="font-weight:bold; margin-bottom:10px; color:#000; font-size:13px; padding:0 12px;">Documents</h4>
+          <div id="clientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; padding:0 12px;">
             <!-- Documents will be loaded here -->
           </div>
-          <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <div style="display:flex; gap:10px; justify-content:flex-end; padding:0 12px 12px;">
             <input type="file" id="photoUploadInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
             <button class="btn" onclick="document.getElementById('photoUploadInput').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
             <button class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Add Document</button>
@@ -1143,9 +1831,22 @@
       }
       const client = await res.json();
       currentClientId = clientId;
+      
+      // Set client name in header
+      const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
+      document.getElementById('clientPageName').textContent = clientName;
+      document.getElementById('clientPageTitle').textContent = 'Client';
+      
       populateClientDetailsModal(client);
-      document.getElementById('clientDetailsModal').classList.add('show');
-      document.body.style.overflow = 'hidden';
+      
+      // Hide table view, show page view
+      document.getElementById('clientsTableView').classList.add('hidden');
+      const clientPageView = document.getElementById('clientPageView');
+      clientPageView.classList.add('show');
+      clientPageView.style.display = 'block';
+      document.getElementById('clientDetailsPageContent').style.display = 'block';
+      document.getElementById('clientFormPageContent').style.display = 'none';
+      document.getElementById('editClientFromPageBtn').style.display = 'inline-block';
     } catch (e) {
       console.error(e);
       alert('Error loading client details: ' + e.message);
@@ -1154,6 +1855,7 @@
 
   // Populate client details modal with data
   function populateClientDetailsModal(client) {
+    // Use page view content if available, otherwise fall back to modal
     const content = document.getElementById('clientDetailsContent');
     if (!content) return;
 
@@ -1194,7 +1896,7 @@
     const idExpiryDays = client.id_expiry_date ? daysUntilExpiry(client.id_expiry_date) : '';
     const photoUrl = client.image ? (client.image.startsWith('http') ? client.image : `/storage/${client.image}`) : '';
 
-    // Column 1: Customer Details & Individual Details
+    // Column 1 (Leftmost): CUSTOMER DETAILS, then CONTACT DETAILS
     const col1 = `
       <div class="detail-section">
         <div class="detail-section-header">CUSTOMER DETAILS</div>
@@ -1205,9 +1907,9 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">DOB/DOR</span>
-            <div style="display:flex; gap:5px;">
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
               <div class="detail-value" style="flex:1;">${dob}</div>
-              <div class="detail-value" style="width:50px;">${dobAge}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge}</div>
             </div>
           </div>
           <div class="detail-row">
@@ -1216,9 +1918,9 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">ID Expiry Date</span>
-            <div style="display:flex; gap:5px;">
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
               <div class="detail-value" style="flex:1;">${idExpiry}</div>
-              <div class="detail-value" style="width:50px;">${idExpiryDays}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${idExpiryDays}</div>
             </div>
           </div>
           <div class="detail-row">
@@ -1228,41 +1930,6 @@
         </div>
       </div>
       <div class="detail-section">
-        <div class="detail-section-header">INDIVIDUAL DETAILS</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Salutation</span>
-            <div class="detail-value">${client.salutation || '-'}</div>
-          </div>
-          <div class="detail-row" style="display:flex; flex-direction:row; align-items:flex-start; gap:10px;">
-            <div style="flex:1; display:flex; flex-direction:column;">
-              <span class="detail-label">First Name</span>
-              <div class="detail-value" style="flex:1;">${client.first_name || '-'}</div>
-            </div>
-            ${photoUrl ? `<div style="display:flex; flex-direction:column;"><span class="detail-label" style="visibility:hidden;">Photo</span><img src="${photoUrl}" alt="Photo" class="detail-photo" style="cursor:pointer;" onclick="previewClientPhotoModal('${photoUrl}')"></div>` : ''}
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Other Names</span>
-            <div class="detail-value">${client.other_names || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Surname</span>
-            <div class="detail-value">${client.surname || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Passport No</span>
-            <div style="display:flex; gap:5px;">
-              <div class="detail-value" style="flex:1;">${client.passport_no || '-'}</div>
-              <button class="btn" style="background:#fff; color:#000; border:1px solid #ddd; padding:4px 8px; border-radius:2px; cursor:default; font-size:12px; width:60px;">SEY</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Column 2: Contact Details & Income Details
-    const col2 = `
-      <div class="detail-section">
         <div class="detail-section-header">CONTACT DETAILS</div>
         <div class="detail-section-body">
           <div class="detail-row">
@@ -1270,7 +1937,7 @@
             <div class="detail-value">${client.mobile_no || '-'}</div>
           </div>
           <div class="detail-row">
-            <span class="detail-label">On Wattsapp</span>
+            <span class="detail-label">On Whatsapp</span>
             <div class="detail-value checkbox">
               <input type="checkbox" ${client.wa ? 'checked' : ''} disabled>
             </div>
@@ -1285,7 +1952,100 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">Contact Person</span>
-            <div class="detail-value">${client.contact_person || '-'}</div>
+            <div class="detail-value">${client.contact_person || ''}</div>
+          </div>
+        </div>
+      </div>
+   
+    `;
+
+    // Column 2 (Second from Left): ADDRESS DETAILS , then REGISTRATION DETAILS
+    const col2 = `
+      <div class="detail-section">
+        <div class="detail-section-header">ADDRESS DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">District</span>
+            <div class="detail-value">${client.district || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Address</span>
+            <div class="detail-value">${client.location || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Island</span>
+            <div class="detail-value">${client.island || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Country</span>
+            <div class="detail-value">${client.country || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">P.O. Box No</span>
+            <div class="detail-value">${client.po_box_no || '-'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-header">REGISTRATION DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Sign Up Date</span>
+            <div class="detail-value">${client.signed_up ? formatDate(client.signed_up) : '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Agency</span>
+            <div class="detail-value">Keystone</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Agent</span>
+            <div class="detail-value">${client.agent || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Source</span>
+            <div class="detail-value">${client.source || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Source Name</span>
+            <div class="detail-value">${client.source_name || '-'}</div>
+          </div>
+        </div>
+      </div>
+      
+    `;
+
+    // Column 3 (Second from Right): ADDRESS DETAILS, then OTHER DETAILS
+    const col3 = `
+      <div class="detail-section">
+        <div class="detail-section-header">INDIVIDUAL DETAILS</div>
+        <div class="detail-section-body">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+              <div class="detail-row" style="margin-bottom:0;">
+                <span class="detail-label">Salutation</span>
+                <div class="detail-value" style="flex:1;">${client.salutation || '-'}</div>
+              </div>
+              <div class="detail-row" style="margin-bottom:0;">
+                <span class="detail-label">First Name</span>
+                <div class="detail-value" style="flex:1;">${client.first_name || '-'}</div>
+              </div>
+            </div>
+            ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" style="cursor:pointer; width:80px; height:100px; border:1px solid #ddd; border-radius:2px;" onclick="previewClientPhotoModal('${photoUrl}')"></div>` : '<div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>'}
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Other Names</span>
+            <div class="detail-value">${client.other_names || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Surname</span>
+            <div class="detail-value">${client.surname || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Passport No</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${client.passport_no || '-'}</div>
+              <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; font-family:inherit; box-sizing:border-box; min-height:22px; flex-shrink:0;">
+            </div>
           </div>
         </div>
       </div>
@@ -1314,35 +2074,12 @@
           </div>
         </div>
       </div>
+      
+
     `;
 
-    // Column 3: Address Details & Other Details
-    const col3 = `
-      <div class="detail-section">
-        <div class="detail-section-header">ADDRESS DETAILS</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">District</span>
-            <div class="detail-value">${client.district || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Address</span>
-            <div class="detail-value">${client.location || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Island</span>
-            <div class="detail-value">${client.island || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Country</span>
-            <div class="detail-value">${client.country || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">P.O. Box No</span>
-            <div class="detail-value">${client.po_box_no || '-'}</div>
-          </div>
-        </div>
-      </div>
+    // Column 4 (Rightmost): REGISTRATION DETAILS, then INSURABLES
+    const col4 = `
       <div class="detail-section">
         <div class="detail-section-header">OTHER DETAILS</div>
         <div class="detail-section-body">
@@ -1358,85 +2095,57 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">PEP</span>
-            <div style="display:flex; gap:5px; align-items:center;">
-              <div class="detail-value checkbox" style="flex:0; min-width:auto;">
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value checkbox" style="flex:0 0 auto; min-width:auto;">
                 <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
               </div>
-              <button type="button" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:11px; white-space:nowrap;">PEP Details</button>
+              <input type="text" value="PEP Details" readonly style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; font-size:11px; font-family:inherit; box-sizing:border-box; min-height:22px;">
             </div>
           </div>
-          <div class="detail-row">
+          <div class="detail-row" style="align-items:flex-start;">
             <span class="detail-label"></span>
-            <div class="detail-value">${client.pep_comment || ''}</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Column 4: Registration Details & Insurables
-    const col4 = `
-      <div class="detail-section">
-        <div class="detail-section-header">REGISTRATION DETAILS</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Sign Up Date</span>
-            <div class="detail-value">${client.signed_up ? formatDate(client.signed_up) : '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Agency</span>
-            <div class="detail-value">Keystone</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Agent</span>
-            <div class="detail-value">${client.agent || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Source</span>
-            <div class="detail-value">${client.source || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Source Name</span>
-            <div class="detail-value">${client.source_name || '-'}</div>
+            <div class="detail-value" style="min-height:40px; padding:4px 6px; border:1px solid #ddd; border-radius:2px; background:#fff; white-space:pre-wrap; word-wrap:break-word; flex:1;">${client.pep_comment || ''}</div>
           </div>
         </div>
       </div>
       <div class="detail-section">
         <div class="detail-section-header">INSURABLES</div>
         <div class="detail-section-body">
-          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:12px;">
-            <div class="detail-row" style="margin-bottom:0;">
-              <span class="detail-label">Vehicle</span>
-              <div class="detail-value checkbox">
+          <div style="display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+            <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+              <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Vehicle</span>
+              <div class="detail-value checkbox" style="flex:0 0 auto;">
                 <input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled>
               </div>
             </div>
-            <div class="detail-row" style="margin-bottom:0;">
-              <span class="detail-label">House</span>
-              <div class="detail-value checkbox">
+            <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+              <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">House</span>
+              <div class="detail-value checkbox" style="flex:0 0 auto;">
                 <input type="checkbox" ${client.has_house ? 'checked' : ''} disabled>
               </div>
             </div>
-            <div class="detail-row" style="margin-bottom:0;">
-              <span class="detail-label">Business</span>
-              <div class="detail-value checkbox">
+            <div class="detail-row" style="margin-bottom:0; flex:1; min-width:80px; align-items:center;">
+              <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Business</span>
+              <div class="detail-value checkbox" style="flex:0 0 auto;">
                 <input type="checkbox" ${client.has_business ? 'checked' : ''} disabled>
               </div>
             </div>
-            <div class="detail-row" style="margin-bottom:0;">
-              <span class="detail-label">Boat</span>
-              <div class="detail-value checkbox">
-                <input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled>
-              </div>
+          </div>
+          <div class="detail-row" style="margin-bottom:8px; align-items:center;">
+            <span class="detail-label" style="min-width:auto; flex-shrink:0; margin-right:8px;">Boat</span>
+            <div class="detail-value checkbox" style="flex:0 0 auto;">
+              <input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled>
             </div>
           </div>
-          <div class="detail-row">
+          <div class="detail-row" style="align-items:flex-start;">
             <span class="detail-label">Notes</span>
-            <textarea class="detail-value" style="min-height:40px; resize:vertical; width:100%; font-size:11px; padding:4px 6px;" readonly>${client.notes || ''}</textarea>
+            <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${client.notes || ''}</textarea>
           </div>
         </div>
       </div>
     `;
 
+    // Render columns in order: CUSTOMER, CONTACT, ADDRESS, REGISTRATION (left to right)
     content.innerHTML = col1 + col2 + col3 + col4;
 
     // Load documents from documents table
@@ -1462,14 +2171,13 @@
       documentsList.innerHTML = docsHTML || '<div style="color:#999; font-size:12px;">No documents uploaded</div>';
     }
 
-    // Set edit button action
-    const editBtn = document.getElementById('editClientFromModalBtn');
-    if (editBtn) {
-      editBtn.onclick = function() {
-        closeClientDetailsModal();
-        openEditClient(currentClientId);
-      };
-    }
+      // Set edit button action
+     const editBtn = document.getElementById('editClientFromPageBtn');
+     if (editBtn) {
+       editBtn.onclick = function() {
+         openEditClient(currentClientId);
+       };
+     }
 
     // Tab navigation - make tabs clickable to navigate to respective pages
     document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -1516,8 +2224,17 @@
   }
 
   function closeClientDetailsModal() {
-    document.getElementById('clientDetailsModal').classList.remove('show');
-    document.body.style.overflow = '';
+    closeClientPageView();
+  }
+  
+  function closeClientPageView() {
+    const clientPageView = document.getElementById('clientPageView');
+    clientPageView.classList.remove('show');
+    clientPageView.style.display = 'none';
+    document.getElementById('clientsTableView').classList.remove('hidden');
+    document.getElementById('clientDetailsPageContent').style.display = 'none';
+    document.getElementById('clientFormPageContent').style.display = 'none';
+    currentClientId = null;
   }
 
   // Photo upload handler
@@ -1893,28 +2610,29 @@
 
   function openClientModal(mode, client = null){
     const modal = document.getElementById('clientModal');
-    const form = document.getElementById('clientForm');
+    const modalForm = modal.querySelector('form');
     const formMethod = document.getElementById('clientFormMethod');
     const deleteBtn = document.getElementById('clientDeleteBtn');
 
-    // Ensure all fields are visible when modal opens
-    const allFields = document.querySelectorAll('#clientForm .detail-row, #clientForm .detail-section, #clientForm .detail-section-body');
+    // Ensure all fields are visible when modal opens - use modal form specifically
+    const modalBody = modalForm ? modalForm.querySelector('.modal-body') : null;
+    const allFields = modalBody ? modalBody.querySelectorAll('.detail-row, .detail-section, .detail-section-body') : [];
     allFields.forEach(field => {
       field.style.display = '';
       field.style.visibility = '';
       field.style.opacity = '';
     });
-    const allInputs = document.querySelectorAll('#clientForm input, #clientForm select, #clientForm textarea');
+    const allInputs = modalBody ? modalBody.querySelectorAll('input, select, textarea') : [];
     allInputs.forEach(input => {
       input.style.display = '';
       input.style.visibility = '';
     });
 
     if (mode === 'add') {
-      form.action = '{{ route("clients.store") }}';
+      modalForm.action = '{{ route("clients.store") }}';
       formMethod.innerHTML = '';
       deleteBtn.style.display = 'none';
-      form.reset();
+      modalForm.reset();
       // Make photo required for new clients
       const imageInput = document.getElementById('image');
       if (imageInput) imageInput.required = true;
@@ -1943,7 +2661,7 @@
       const editDocumentsList = document.getElementById('editClientDocumentsList');
       if (editDocumentsList) editDocumentsList.innerHTML = '<div style="color:#999; font-size:12px;">No documents uploaded</div>';
     } else {
-      form.action = `/clients/${currentClientId}`;
+      modalForm.action = `/clients/${currentClientId}`;
       formMethod.innerHTML = `@method('PUT')`;
       deleteBtn.style.display = 'inline-block';
 
@@ -2072,14 +2790,107 @@
       }
     }
 
-    document.body.style.overflow = 'hidden';
-    modal.classList.add('show');
+    // Clone form content from modal to page view
+    const pageFormContainer = document.getElementById('clientFormPageContent');
+    // Get the page form specifically from the page view container (not the modal)
+    const pageForm = pageFormContainer ? pageFormContainer.querySelector('form') : null;
+    const formContentDiv = pageForm ? pageForm.querySelector('div[style*="padding:12px"]') : null;
+    
+    if (modalForm && pageForm && pageFormContainer && formContentDiv) {
+      // Get the modal body content
+      const modalBody = modalForm.querySelector('.modal-body');
+      if (modalBody) {
+        // Clear form content div completely first
+        formContentDiv.innerHTML = '';
+        
+        // Clone the grid container and all its content - only clone once
+        const gridContainer = modalBody.querySelector('div[style*="grid-template-columns"]');
+        if (gridContainer && !formContentDiv.querySelector('div[style*="grid-template-columns"]')) {
+          const clonedGrid = gridContainer.cloneNode(true);
+          formContentDiv.appendChild(clonedGrid);
+        }
+        
+        // Clone documents section - find it in modal body and place in separate card
+        const editDocumentsList = modalBody.querySelector('#editClientDocumentsList');
+        const editFormDocumentsSection = document.getElementById('editFormDocumentsSection');
+        if (editDocumentsList && editFormDocumentsSection) {
+          // Find the parent container (Documents section)
+          let documentsSection = editDocumentsList.closest('div[style*="margin-top"]') || 
+                                 editDocumentsList.parentElement?.parentElement;
+          if (documentsSection) {
+            // Clear existing content
+            editFormDocumentsSection.innerHTML = '';
+            
+            // Clone the documents section content
+            const clonedDocs = documentsSection.cloneNode(true);
+            
+            // Extract the content (h4, documents list, buttons)
+            const docsTitle = clonedDocs.querySelector('h4');
+            const docsList = clonedDocs.querySelector('#editClientDocumentsList');
+            const docsButtons = clonedDocs.querySelector('div[style*="justify-content:flex-end"]');
+            
+            // Rebuild in the card structure
+            if (docsTitle) {
+              const titleClone = docsTitle.cloneNode(true);
+              titleClone.style.marginBottom = '10px';
+              titleClone.style.color = '#000';
+              titleClone.style.fontSize = '13px';
+              titleClone.style.fontWeight = 'bold';
+              editFormDocumentsSection.appendChild(titleClone);
+            }
+            
+            if (docsList) {
+              const listClone = docsList.cloneNode(true);
+              listClone.style.marginBottom = '10px';
+              editFormDocumentsSection.appendChild(listClone);
+            }
+            
+            if (docsButtons) {
+              const buttonsClone = docsButtons.cloneNode(true);
+              editFormDocumentsSection.appendChild(buttonsClone);
+            }
+            
+            // Show the documents section
+            editFormDocumentsSection.style.display = 'block';
+          }
+        }
+        
+        // Update form attributes
+        pageForm.method = 'POST';
+        pageForm.action = modalForm.action;
+        pageForm.enctype = 'multipart/form-data';
+        
+        // Update method field
+        const pageMethodDiv = pageForm.querySelector('#clientFormMethod');
+        if (pageMethodDiv && formMethod) {
+          pageMethodDiv.innerHTML = formMethod.innerHTML;
+        }
+      }
+    }
+    
+    // Set page title
+    if (mode === 'add') {
+      document.getElementById('clientPageTitle').textContent = 'Add Client';
+      document.getElementById('clientPageName').textContent = '';
+      document.getElementById('editClientFromPageBtn').style.display = 'none';
+    } else {
+      const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
+      document.getElementById('clientPageTitle').textContent = 'Edit Client';
+      document.getElementById('clientPageName').textContent = clientName;
+      document.getElementById('editClientFromPageBtn').style.display = 'none';
+    }
+    
+    // Hide table view, show page view
+    document.getElementById('clientsTableView').classList.add('hidden');
+    const clientPageView = document.getElementById('clientPageView');
+    clientPageView.classList.add('show');
+    clientPageView.style.display = 'block';
+    document.getElementById('clientDetailsPageContent').style.display = 'none';
+    document.getElementById('clientFormPageContent').style.display = 'block';
   }
 
   function closeClientModal(){
-    document.getElementById('clientModal').classList.remove('show');
-    currentClientId = null;
-    document.body.style.overflow = '';
+    closeClientPageView();
   }
 
   function deleteClient(){
