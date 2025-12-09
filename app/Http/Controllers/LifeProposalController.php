@@ -67,9 +67,12 @@ class LifeProposalController extends Controller
         return redirect()->route('life-proposals.index')->with('success', 'Life Proposal created successfully.');
     }
 
-    public function show(LifeProposal $lifeProposal)
+    public function show(Request $request, LifeProposal $lifeProposal)
     {
-        return response()->json($lifeProposal);
+        if ($request->expectsJson()) {
+            return response()->json($lifeProposal);
+        }
+        return view('life-proposals.show', compact('lifeProposal'));
     }
 
     public function update(Request $request, LifeProposal $lifeProposal)

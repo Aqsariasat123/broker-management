@@ -10,7 +10,12 @@ class DocumentController extends Controller
     public function index()
     {
         $documents = Document::orderBy('created_at', 'desc')->paginate(10);
-        return view('documents.index', compact('documents'));
+        
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('documents');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('documents');
+        
+        return view('documents.index', compact('documents', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -45,9 +50,20 @@ class DocumentController extends Controller
         return redirect()->route('documents.index')->with('success', 'Document created successfully.');
     }
 
+    public function show(Request $request, Document $document)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($document);
+        }
+        return view('documents.show', compact('document'));
+    }
+
     public function edit(Document $document)
     {
-        return response()->json($document);
+        if (request()->expectsJson()) {
+            return response()->json($document);
+        }
+        return view('documents.edit', compact('document'));
     }
 
     public function update(Request $request, Document $document)

@@ -10,7 +10,12 @@ class VehicleController extends Controller
     public function index()
     {
         $vehicles = Vehicle::orderBy('created_at', 'desc')->paginate(10);
-        return view('vehicles.index', compact('vehicles'));
+        
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('vehicles');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('vehicles');
+        
+        return view('vehicles.index', compact('vehicles', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -44,9 +49,20 @@ class VehicleController extends Controller
         return redirect()->route('vehicles.index')->with('success', 'Vehicle created successfully.');
     }
 
+    public function show(Request $request, Vehicle $vehicle)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($vehicle);
+        }
+        return view('vehicles.show', compact('vehicle'));
+    }
+
     public function edit(Vehicle $vehicle)
     {
-        return response()->json($vehicle);
+        if (request()->expectsJson()) {
+            return response()->json($vehicle);
+        }
+        return view('vehicles.edit', compact('vehicle'));
     }
 
     public function update(Request $request, Vehicle $vehicle)

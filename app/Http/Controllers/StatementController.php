@@ -31,7 +31,11 @@ class StatementController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('statements.index', compact('statements', 'insurers', 'modesOfPayment', 'insurerFilter'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('statements');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('statements');
+
+        return view('statements.index', compact('statements', 'insurers', 'modesOfPayment', 'insurerFilter', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -56,9 +60,20 @@ class StatementController extends Controller
         return redirect()->route('statements.index')->with('success', 'Statement created successfully.');
     }
 
+    public function show(Request $request, Statement $statement)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($statement->load(['insurer', 'modeOfPayment']));
+        }
+        return view('statements.show', compact('statement'));
+    }
+
     public function edit(Statement $statement)
     {
-        return response()->json($statement->load(['insurer', 'modeOfPayment']));
+        if (request()->expectsJson()) {
+            return response()->json($statement->load(['insurer', 'modeOfPayment']));
+        }
+        return view('statements.edit', compact('statement'));
     }
 
     public function update(Request $request, Statement $statement)

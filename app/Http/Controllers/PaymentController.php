@@ -55,7 +55,11 @@ class PaymentController extends Controller
             $q->where('name', 'Mode Of Payment (Life)');
         })->where('active', 1)->orderBy('seq')->get();
 
-        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('payments');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payments');
+
+        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns'));
     }
 
     public function create(Request $request)
@@ -138,14 +142,24 @@ class PaymentController extends Controller
         }
     }
 
-    public function show(Payment $payment)
+    public function show(Request $request, Payment $payment)
     {
-        $payment->load(['debitNote.paymentPlan.schedule.policy.client']);
+        $payment->load(['debitNote.paymentPlan.schedule.policy.client', 'modeOfPayment']);
+        
+        if ($request->expectsJson()) {
+            return response()->json($payment);
+        }
         return view('payments.show', compact('payment'));
     }
 
     public function edit(Payment $payment)
     {
+        $payment->load(['debitNote.paymentPlan.schedule.policy.client', 'modeOfPayment']);
+        
+        if (request()->expectsJson()) {
+            return response()->json($payment);
+        }
+        
         $debitNotes = DebitNote::with(['paymentPlan.schedule.policy.client'])->orderBy('created_at', 'desc')->get();
 
         // Get modes of payment
@@ -340,5 +354,12 @@ class PaymentController extends Controller
         ];
 
         return view('payments.report', compact('payments', 'totalAmount', 'totalCount', 'byModeOfPayment', 'byDate', 'byClient', 'statusSummary'));
+    }
+
+    public function saveColumnSettings(Request $request)
+    {
+        session(['payment_columns' => $request->columns ?? []]);
+        return redirect()->route('payments.index')
+            ->with('success', 'Column settings saved successfully.');
     }
 }

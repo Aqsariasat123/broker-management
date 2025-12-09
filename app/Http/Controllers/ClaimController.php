@@ -10,7 +10,12 @@ class ClaimController extends Controller
     public function index()
     {
         $claims = Claim::orderBy('created_at', 'desc')->paginate(10);
-        return view('claims.index', compact('claims'));
+        
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('claims');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('claims');
+        
+        return view('claims.index', compact('claims', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -38,9 +43,20 @@ class ClaimController extends Controller
         return redirect()->route('claims.index')->with('success', 'Claim created successfully.');
     }
 
+    public function show(Request $request, Claim $claim)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($claim);
+        }
+        return view('claims.show', compact('claim'));
+    }
+
     public function edit(Claim $claim)
     {
-        return response()->json($claim);
+        if (request()->expectsJson()) {
+            return response()->json($claim);
+        }
+        return view('claims.edit', compact('claim'));
     }
 
     public function update(Request $request, Claim $claim)

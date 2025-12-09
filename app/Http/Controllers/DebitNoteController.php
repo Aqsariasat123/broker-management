@@ -50,7 +50,11 @@ class DebitNoteController extends Controller
         // Get payment plans for filter
         $paymentPlans = PaymentPlan::with('schedule.policy')->orderBy('created_at', 'desc')->get();
 
-        return view('debit-notes.index', compact('debitNotes', 'paymentPlans'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('debit-notes');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('debit-notes');
+
+        return view('debit-notes.index', compact('debitNotes', 'paymentPlans', 'selectedColumns'));
     }
 
     public function create(Request $request)
@@ -98,14 +102,24 @@ class DebitNoteController extends Controller
             ->with('success', 'Debit note created successfully.');
     }
 
-    public function show(DebitNote $debitNote)
+    public function show(Request $request, DebitNote $debitNote)
     {
         $debitNote->load(['paymentPlan.schedule.policy.client', 'payments']);
+        
+        if ($request->expectsJson()) {
+            return response()->json($debitNote);
+        }
         return view('debit-notes.show', compact('debitNote'));
     }
 
     public function edit(DebitNote $debitNote)
     {
+        $debitNote->load(['paymentPlan.schedule.policy.client']);
+        
+        if (request()->expectsJson()) {
+            return response()->json($debitNote);
+        }
+        
         $paymentPlans = PaymentPlan::with(['schedule.policy.client'])->orderBy('created_at', 'desc')->get();
         return view('debit-notes.edit', compact('debitNote', 'paymentPlans'));
     }
@@ -162,5 +176,12 @@ class DebitNoteController extends Controller
 
         return redirect()->route('debit-notes.index')
             ->with('success', 'Debit note deleted successfully.');
+    }
+
+    public function saveColumnSettings(Request $request)
+    {
+        session(['debit_note_columns' => $request->columns ?? []]);
+        return redirect()->route('debit-notes.index')
+            ->with('success', 'Column settings saved successfully.');
     }
 }

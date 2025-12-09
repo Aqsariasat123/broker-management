@@ -35,7 +35,11 @@ class CommissionController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('commissions.index', compact('commissions', 'insurers', 'paymentStatuses', 'modesOfPayment', 'insurerFilter'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('commissions');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('commissions');
+
+        return view('commissions.index', compact('commissions', 'insurers', 'paymentStatuses', 'modesOfPayment', 'insurerFilter', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -68,9 +72,20 @@ class CommissionController extends Controller
         return redirect()->route('commissions.index')->with('success', 'Commission created successfully.');
     }
 
+    public function show(Request $request, Commission $commission)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($commission->load(['insurer', 'paymentStatus', 'modeOfPayment']));
+        }
+        return view('commissions.show', compact('commission'));
+    }
+
     public function edit(Commission $commission)
     {
-        return response()->json($commission->load(['insurer', 'paymentStatus', 'modeOfPayment']));
+        if (request()->expectsJson()) {
+            return response()->json($commission->load(['insurer', 'paymentStatus', 'modeOfPayment']));
+        }
+        return view('commissions.edit', compact('commission'));
     }
 
     public function update(Request $request, Commission $commission)

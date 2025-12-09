@@ -31,5 +31,10 @@ class Payment extends Model
     {
         return $this->belongsTo(DebitNote::class);
     }
+
+    public function modeOfPayment(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\LookupValue::class, 'mode_of_payment_id');
+    }
 }
 

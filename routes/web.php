@@ -101,11 +101,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('tasks')->group(function () {
         Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
         Route::post('/', [TaskController::class, 'store'])->name('tasks.store');
+        Route::get('/export', [TaskController::class, 'export'])->name('tasks.export');
+        Route::post('/columns/settings', [TaskController::class, 'saveColumnSettings'])->name('tasks.save-column-settings');
+        Route::get('/{task}/get', [TaskController::class, 'getTask'])->name('tasks.get');
+        Route::get('/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
+        Route::get('/{task}', [TaskController::class, 'show'])->name('tasks.show');
         Route::put('/{task}', [TaskController::class, 'update'])->name('tasks.update');
         Route::delete('/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
-        Route::get('/{task}/get', [TaskController::class, 'getTask'])->name('tasks.get');
-        Route::post('/columns/settings', [TaskController::class, 'saveColumnSettings'])->name('tasks.save-column-settings');
-        Route::get('/export', [TaskController::class, 'export'])->name('tasks.export');
     });
 
     Route::prefix('lookups')->group(function () {
@@ -149,67 +151,78 @@ Route::middleware('auth')->group(function () {
     Route::post('/contacts/save-column-settings', [ContactController::class, 'saveColumnSettings'])->name('contacts.save-column-settings');
 
     // Life Proposals Routes
-    Route::resource('life-proposals', LifeProposalController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
-    Route::get('/life-proposals/{lifeProposal}/edit', [LifeProposalController::class, 'edit'])->name('life-proposals.edit');
     Route::get('/life-proposals/export', [LifeProposalController::class, 'export'])->name('life-proposals.export');
     Route::post('/life-proposals/save-column-settings', [LifeProposalController::class, 'saveColumnSettings'])->name('life-proposals.save-column-settings');
+    Route::get('/life-proposals/{lifeProposal}/edit', [LifeProposalController::class, 'edit'])->name('life-proposals.edit');
+    Route::resource('life-proposals', LifeProposalController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
 
     // Expenses Routes
     Route::get('/expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
     Route::post('/expenses/save-column-settings', [ExpenseController::class, 'saveColumnSettings'])->name('expenses.save-column-settings');
-    Route::resource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy', 'show', 'edit']);
+    Route::get('/expenses/{expense}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
+    Route::get('/expenses/{expense}', [ExpenseController::class, 'show'])->name('expenses.show');
+    Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+    Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
     // Documents Routes
+    Route::get('/documents/export', [DocumentController::class, 'export'])->name('documents.export');
+    Route::post('/documents/save-column-settings', [DocumentController::class, 'saveColumnSettings'])->name('documents.save-column-settings');
+    Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
+    Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
-    Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
     Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
-    Route::post('/documents/save-column-settings', [DocumentController::class, 'saveColumnSettings'])->name('documents.save-column-settings');
-    Route::get('/documents/export', [DocumentController::class, 'export'])->name('documents.export');
 
     // Vehicles Routes
+    Route::get('/vehicles/export', [VehicleController::class, 'export'])->name('vehicles.export');
+    Route::post('/vehicles/save-column-settings', [VehicleController::class, 'saveColumnSettings'])->name('vehicles.save-column-settings');
+    Route::get('/vehicles/{vehicle}/edit', [VehicleController::class, 'edit'])->name('vehicles.edit');
+    Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
-    Route::get('/vehicles/export', [VehicleController::class, 'export'])->name('vehicles.export');
-    Route::get('/vehicles/{vehicle}/edit', [VehicleController::class, 'edit'])->name('vehicles.edit');
     Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
-    Route::post('/vehicles/save-column-settings', [VehicleController::class, 'saveColumnSettings'])->name('vehicles.save-column-settings');
 
     // Claims Routes
-    Route::get('/claims', [ClaimController::class, 'index'])->name('claims.index');
-    Route::post('/claims', [ClaimController::class, 'store'])->name('claims.store');
-    Route::get('/claims/{claim}/edit', [ClaimController::class, 'edit'])->name('claims.edit');
-    Route::put('/claims/{claim}', [ClaimController::class, 'update'])->name('claims.update');
-    Route::delete('/claims/{claim}', [ClaimController::class, 'destroy'])->name('claims.destroy');
     Route::get('/claims/export', [ClaimController::class, 'export'])->name('claims.export');
     Route::post('/claims/save-column-settings', [ClaimController::class, 'saveColumnSettings'])->name('claims.save-column-settings');
+    Route::get('/claims/{claim}/edit', [ClaimController::class, 'edit'])->name('claims.edit');
+    Route::get('/claims/{claim}', [ClaimController::class, 'show'])->name('claims.show');
+    Route::get('/claims', [ClaimController::class, 'index'])->name('claims.index');
+    Route::post('/claims', [ClaimController::class, 'store'])->name('claims.store');
+    Route::put('/claims/{claim}', [ClaimController::class, 'update'])->name('claims.update');
+    Route::delete('/claims/{claim}', [ClaimController::class, 'destroy'])->name('claims.destroy');
 
     // Income Routes
     Route::get('/incomes/export', [IncomeController::class, 'export'])->name('incomes.export');
     Route::post('/incomes/save-column-settings', [IncomeController::class, 'saveColumnSettings'])->name('incomes.save-column-settings');
+    Route::get('/incomes/{income}/edit', [IncomeController::class, 'edit'])->name('incomes.edit');
+    Route::get('/incomes/{income}', [IncomeController::class, 'show'])->name('incomes.show');
     Route::get('/incomes', [IncomeController::class, 'index'])->name('incomes.index');
     Route::post('/incomes', [IncomeController::class, 'store'])->name('incomes.store');
-    Route::get('/incomes/{income}/edit', [IncomeController::class, 'edit'])->name('incomes.edit');
     Route::put('/incomes/{income}', [IncomeController::class, 'update'])->name('incomes.update');
     Route::delete('/incomes/{income}', [IncomeController::class, 'destroy'])->name('incomes.destroy');
 
     // Commissions Routes
     Route::get('/commissions/export', [CommissionController::class, 'export'])->name('commissions.export');
     Route::post('/commissions/save-column-settings', [CommissionController::class, 'saveColumnSettings'])->name('commissions.save-column-settings');
+    Route::get('/commissions/{commission}/edit', [CommissionController::class, 'edit'])->name('commissions.edit');
+    Route::get('/commissions/{commission}', [CommissionController::class, 'show'])->name('commissions.show');
     Route::get('/commissions', [CommissionController::class, 'index'])->name('commissions.index');
     Route::post('/commissions', [CommissionController::class, 'store'])->name('commissions.store');
-    Route::get('/commissions/{commission}/edit', [CommissionController::class, 'edit'])->name('commissions.edit');
     Route::put('/commissions/{commission}', [CommissionController::class, 'update'])->name('commissions.update');
     Route::delete('/commissions/{commission}', [CommissionController::class, 'destroy'])->name('commissions.destroy');
 
     // Statements Routes
     Route::get('/statements/export', [StatementController::class, 'export'])->name('statements.export');
     Route::post('/statements/save-column-settings', [StatementController::class, 'saveColumnSettings'])->name('statements.save-column-settings');
+    Route::get('/statements/{statement}/edit', [StatementController::class, 'edit'])->name('statements.edit');
+    Route::get('/statements/{statement}', [StatementController::class, 'show'])->name('statements.show');
     Route::get('/statements', [StatementController::class, 'index'])->name('statements.index');
     Route::post('/statements', [StatementController::class, 'store'])->name('statements.store');
-    Route::get('/statements/{statement}/edit', [StatementController::class, 'edit'])->name('statements.edit');
     Route::put('/statements/{statement}', [StatementController::class, 'update'])->name('statements.update');
     Route::delete('/statements/{statement}', [StatementController::class, 'destroy'])->name('statements.destroy');
 
@@ -327,8 +340,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [DebitNoteController::class, 'index'])->name('index');
         Route::get('/create', [DebitNoteController::class, 'create'])->name('create');
         Route::post('/', [DebitNoteController::class, 'store'])->name('store');
-        Route::get('/{debitNote}', [DebitNoteController::class, 'show'])->name('show');
+        Route::post('/save-column-settings', [DebitNoteController::class, 'saveColumnSettings'])->name('save-column-settings');
         Route::get('/{debitNote}/edit', [DebitNoteController::class, 'edit'])->name('edit');
+        Route::get('/{debitNote}', [DebitNoteController::class, 'show'])->name('show');
         Route::put('/{debitNote}', [DebitNoteController::class, 'update'])->name('update');
         Route::delete('/{debitNote}', [DebitNoteController::class, 'destroy'])->name('destroy');
     });
@@ -338,8 +352,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [PaymentPlanController::class, 'create'])->name('create');
         Route::post('/', [PaymentPlanController::class, 'store'])->name('store');
         Route::post('/create-instalments', [PaymentPlanController::class, 'createInstalments'])->name('create-instalments');
-        Route::get('/{paymentPlan}', [PaymentPlanController::class, 'show'])->name('show');
+        Route::post('/save-column-settings', [PaymentPlanController::class, 'saveColumnSettings'])->name('save-column-settings');
         Route::get('/{paymentPlan}/edit', [PaymentPlanController::class, 'edit'])->name('edit');
+        Route::get('/{paymentPlan}', [PaymentPlanController::class, 'show'])->name('show');
         Route::put('/{paymentPlan}', [PaymentPlanController::class, 'update'])->name('update');
         Route::delete('/{paymentPlan}', [PaymentPlanController::class, 'destroy'])->name('destroy');
     });
@@ -349,8 +364,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/report', [PaymentController::class, 'report'])->name('report');
         Route::get('/create', [PaymentController::class, 'create'])->name('create');
         Route::post('/', [PaymentController::class, 'store'])->name('store');
-        Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+        Route::post('/save-column-settings', [PaymentController::class, 'saveColumnSettings'])->name('save-column-settings');
         Route::get('/{payment}/edit', [PaymentController::class, 'edit'])->name('edit');
+        Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
         Route::put('/{payment}', [PaymentController::class, 'update'])->name('update');
         Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
     });

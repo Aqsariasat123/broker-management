@@ -1,166 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Life Proposals</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; color: #000; margin: 10px; background: #fff; }
-    .container-table { max-width: 100%; margin: 0 auto; }
-    h3 { background: #f1f1f1; padding: 8px; margin-bottom: 10px; font-weight: bold; border: 1px solid #ddd; }
-    .top-bar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-    .left-group { display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:220px; }
-    .left-buttons { display:flex; gap:10px; align-items:center; }
-    .records-found { font-size:14px; color:#555; min-width:150px; }
-    .action-buttons { margin-left:auto; display:flex; gap:10px; }
-    .btn { border:none; cursor:pointer; padding:6px 12px; font-size:13px; border-radius:2px; white-space:nowrap; transition:background-color .2s; text-decoration:none; color:inherit; background:#fff; border:1px solid #ccc; }
-    .btn-add { background:#df7900; color:#fff; border-color:#df7900; }
-    .btn-export, .btn-column { background:#fff; color:#000; border:1px solid #ccc; }
-    .btn-back { background:#ccc; color:#333; border-color:#ccc; }
-    .btn-submitted { background:#000; color:#fff; border-color:#000; }
-    .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; max-height: 420px; overflow-y: auto; background: #fff; }
-    .footer { display:flex; justify-content:center; align-items:center; padding:5px 0; gap:10px; border-top:1px solid #ccc; flex-wrap:wrap; margin-top:15px; position:relative; }
-    .paginator { display:flex; align-items:center; gap:5px; font-size:12px; color:#555; white-space:nowrap; justify-content:center; }
-    .page-info { padding:0 8px; display:inline-flex; align-items:center; justify-content:center; min-width:120px; }
-    .btn-page { color:#2d2d2d; font-size:25px; width:22px; height:50px; padding:5px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
-    .btn-page[disabled] { cursor:not-allowed; opacity:.5; }
-    table { width:100%; border-collapse:collapse; font-size:13px; min-width:1600px; }
-    thead tr { background-color: black; color: white; height:35px; font-weight: normal; }
-    thead th { padding:6px 5px; text-align:left; border-right:1px solid #444; white-space:nowrap; font-weight: normal; }
-    thead th:last-child { border-right:none; }
-    tbody tr { background-color:#fefefe; border-bottom:1px solid #ddd; min-height:28px; }
-    tbody tr:nth-child(even) { background-color:#f8f8f8; }
-    tbody tr.submitted-row { background:#d4edda !important; }
-    tbody td { padding:5px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
-    tbody td:last-child { border-right:none; }
-    .icon-expand { cursor:pointer; color:black; text-align:center; width:20px; }
-    .btn-action { padding:2px 6px; font-size:11px; margin:1px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:2px; display:inline-block; }
-    .badge-status { font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; }
-    /* Modal styles (like contacts) */
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
-    .modal.show { display:flex; }
-    .modal-content { background:#fff; border-radius:6px; width:92%; max-width:1100px; max-height:calc(100vh - 40px); overflow:auto; box-shadow:0 4px 6px rgba(0,0,0,.1); padding:0; }
-    .modal-header { padding:12px 15px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; background:#f5f5f5; }
-    .modal-body { padding:15px; }
-    .modal-close { background:none; border:none; font-size:18px; cursor:pointer; color:#666; }
-    .modal-footer { padding:12px 15px; border-top:1px solid #ddd; display:flex; justify-content:flex-end; gap:8px; background:#f9f9f9; }
-    .form-row { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-start; }
-    .form-group { flex:0 0 calc((100% - 20px) / 3); }
-    .form-group label { display:block; margin-bottom:4px; font-weight:600; font-size:13px; }
-    .form-control, select, textarea { width:100%; padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px; }
-    .btn-save { background:#007bff; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
-    .btn-cancel { background:#6c757d; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
-    .btn-delete { background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
-    .column-selection { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-bottom:15px; }
-    .column-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #ddd; border-radius:2px; cursor:move; }
-    .column-item.dragging { opacity: 0.5; }
-    .column-item.drag-over { border-color: #007bff; background-color: #f0f8ff; }
-    .btn-print { background:#fff; color:#000; border:1px solid #ccc; }
-    @media (max-width:1200px) { table { min-width:1200px; } }
-    @media (max-width:768px) { .form-row .form-group { flex:0 0 calc((100% - 20px) / 2); } .table-responsive { max-height:500px; } }
-  </style>
-</head>
-<body>
 @extends('layouts.app')
 @section('content')
 
+@include('partials.table-styles')
+
 @php
-  $selectedColumns = session('life_proposal_columns', [
-    'proposers_name','insurer','policy_plan','sum_assured','term','add_ons','offer_date','premium','frequency','stage','date','age','status','source_of_payment','mcr','doctor','date_sent','date_completed','notes','agency','prid','class','is_submitted'
-  ]);
+  $config = \App\Helpers\TableConfigHelper::getConfig('life-proposals');
+  $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('life-proposals');
+  $columnDefinitions = $config['column_definitions'];
+  $mandatoryColumns = $config['mandatory_columns'];
 @endphp
 
 <div class="dashboard">
+  <!-- Main Life Proposals Table View -->
+  <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
-    <h3>Life Proposals</h3>
+    <!-- Life Proposals Card -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+      <div class="page-title-section">
+        <h3>Life Proposals</h3>
+        <div class="records-found">Records Found - {{ $proposals->total() }}</div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-add" id="addProposalBtn">Add</button>
+      </div>
+    </div>
 
     @if(session('success'))
-      <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin-bottom:12px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
+      <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
         {{ session('success') }}
         <button type="button" class="alert-close" onclick="document.getElementById('successAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
       </div>
     @endif
-
-    <div class="top-bar">
-      <div class="left-group">
-        <div class="records-found">Records Found - {{ $proposals->total() }}</div>
-        <div class="left-buttons" aria-label="left action buttons">
-          <a class="btn btn-export" href="{{ route('life-proposals.export', array_merge(request()->query(), ['page' => $proposals->currentPage()])) }}">Export</a>
-          <button class="btn btn-column" id="columnBtn" type="button">Column</button>
-          <button class="btn btn-print" id="printBtn" type="button">Print</button>
-        </div>
-      </div>
-      <div class="action-buttons">
-        <button class="btn btn-add" id="addProposalBtn">Add</button>
-        <button class="btn btn-back" onclick="window.history.back()">Back</button>
-      </div>
-    </div>
 
     <div class="table-responsive" id="tableResponsive">
       <table id="proposalsTable">
         <thead>
           <tr>
             <th>Action</th>
-            @if(in_array('proposers_name',$selectedColumns))<th data-column="proposers_name">Proposer's Name</th>@endif
-            @if(in_array('insurer',$selectedColumns))<th data-column="insurer">Insurer</th>@endif
-            @if(in_array('policy_plan',$selectedColumns))<th data-column="policy_plan">Policy Plan</th>@endif
-            @if(in_array('sum_assured',$selectedColumns))<th data-column="sum_assured">Sum Assured</th>@endif
-            @if(in_array('term',$selectedColumns))<th data-column="term">Term</th>@endif
-            @if(in_array('add_ons',$selectedColumns))<th data-column="add_ons">Add Ons</th>@endif
-            @if(in_array('offer_date',$selectedColumns))<th data-column="offer_date">Offer Date</th>@endif
-            @if(in_array('premium',$selectedColumns))<th data-column="premium">Premium</th>@endif
-            @if(in_array('frequency',$selectedColumns))<th data-column="frequency">Freq</th>@endif
-            @if(in_array('stage',$selectedColumns))<th data-column="stage">Stage</th>@endif
-            @if(in_array('date',$selectedColumns))<th data-column="date">Date</th>@endif
-            @if(in_array('age',$selectedColumns))<th data-column="age">Age</th>@endif
-            @if(in_array('status',$selectedColumns))<th data-column="status">Status</th>@endif
-            @if(in_array('source_of_payment',$selectedColumns))<th data-column="source_of_payment">Source Of Payment</th>@endif
-            @if(in_array('mcr',$selectedColumns))<th data-column="mcr">MCR</th>@endif
-            @if(in_array('doctor',$selectedColumns))<th data-column="doctor">Doctor</th>@endif
-            @if(in_array('date_sent',$selectedColumns))<th data-column="date_sent">Date Sent</th>@endif
-            @if(in_array('date_completed',$selectedColumns))<th data-column="date_completed">Date Completed</th>@endif
-            @if(in_array('notes',$selectedColumns))<th data-column="notes">Notes</th>@endif
-            @if(in_array('agency',$selectedColumns))<th data-column="agency">Agency</th>@endif
-            @if(in_array('prid',$selectedColumns))<th data-column="prid">PRID</th>@endif
-            @if(in_array('class',$selectedColumns))<th data-column="class">Class</th>@endif
-            @if(in_array('is_submitted',$selectedColumns))<th data-column="is_submitted">Submitted</th>@endif
+            @foreach($selectedColumns as $col)
+              @if(isset($columnDefinitions[$col]))
+                <th data-column="{{ $col }}">{{ $columnDefinitions[$col] }}</th>
+              @endif
+            @endforeach
           </tr>
         </thead>
         <tbody>
           @foreach($proposals as $proposal)
             <tr class="{{ $proposal->is_submitted ? 'submitted-row' : '' }}">
-              <td class="icon-expand" onclick="openEditProposal({{ $proposal->id }})">⤢</td>
-              @if(in_array('proposers_name',$selectedColumns))<td data-column="proposers_name">{{ $proposal->proposers_name }}</td>@endif
-              @if(in_array('insurer',$selectedColumns))<td data-column="insurer">{{ $proposal->insurer }}</td>@endif
-              @if(in_array('policy_plan',$selectedColumns))<td data-column="policy_plan">{{ $proposal->policy_plan }}</td>@endif
-              @if(in_array('sum_assured',$selectedColumns))<td data-column="sum_assured">{{ $proposal->sum_assured ? number_format($proposal->sum_assured,2) : '##########' }}</td>@endif
-              @if(in_array('term',$selectedColumns))<td data-column="term">{{ $proposal->term }}</td>@endif
-              @if(in_array('add_ons',$selectedColumns))<td data-column="add_ons">{{ $proposal->add_ons ?? '-' }}</td>@endif
-              @if(in_array('offer_date',$selectedColumns))<td data-column="offer_date">{{ $proposal->offer_date ? $proposal->offer_date->format('d-M-y') : '##########' }}</td>@endif
-              @if(in_array('premium',$selectedColumns))<td data-column="premium">{{ number_format($proposal->premium,2) }}</td>@endif
-              @if(in_array('frequency',$selectedColumns))<td data-column="frequency">{{ $proposal->frequency }}</td>@endif
-              @if(in_array('stage',$selectedColumns))<td data-column="stage">{{ $proposal->stage }}</td>@endif
-              @if(in_array('date',$selectedColumns))<td data-column="date">{{ $proposal->date ? $proposal->date->format('d-M-y') : '##########' }}</td>@endif
-              @if(in_array('age',$selectedColumns))<td data-column="age">{{ $proposal->age }}</td>@endif
-              @if(in_array('status',$selectedColumns))<td data-column="status"><span class="badge-status" style="background:{{ $proposal->status == 'Approved' ? '#28a745' : ($proposal->status=='Pending' ? '#ffc107' : ($proposal->status=='Declined' ? '#dc3545' : '#6c757d')) }}">{{ $proposal->status }}</span></td>@endif
-              @if(in_array('source_of_payment',$selectedColumns))<td data-column="source_of_payment">{{ $proposal->source_of_payment }}</td>@endif
-              @if(in_array('mcr',$selectedColumns))<td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>@endif
-              @if(in_array('doctor',$selectedColumns))<td data-column="doctor">{{ $proposal->doctor ?? '-' }}</td>@endif
-              @if(in_array('date_sent',$selectedColumns))<td data-column="date_sent">{{ $proposal->date_sent ? $proposal->date_sent->format('d-M-y') : '##########' }}</td>@endif
-              @if(in_array('date_completed',$selectedColumns))<td data-column="date_completed">{{ $proposal->date_completed ? $proposal->date_completed->format('d-M-y') : '##########' }}</td>@endif
-              @if(in_array('notes',$selectedColumns))<td data-column="notes">{{ $proposal->notes ?? '-' }}</td>@endif
-              @if(in_array('agency',$selectedColumns))<td data-column="agency">{{ $proposal->agency ?? '-' }}</td>@endif
-              @if(in_array('prid',$selectedColumns))<td data-column="prid">{{ $proposal->prid }}</td>@endif
-              @if(in_array('class',$selectedColumns))<td data-column="class">{{ $proposal->class }}</td>@endif
-              @if(in_array('is_submitted',$selectedColumns))<td data-column="is_submitted">{{ $proposal->is_submitted ? 'Yes' : 'No' }}</td>@endif
+              <td class="action-cell">
+                <svg class="action-expand" onclick="openProposalDetails({{ $proposal->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <rect x="9" y="9" width="6" height="6" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
+                  <path d="M12 9L12 5M12 15L12 19M9 12L5 12M15 12L19 12" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M12 5L10 7M12 5L14 7M12 19L10 17M12 19L14 17M5 12L7 10M5 12L7 14M19 12L17 10M19 12L17 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </td>
+              @foreach($selectedColumns as $col)
+                @if($col == 'proposers_name')
+                  <td data-column="proposers_name">
+                    <a href="javascript:void(0)" onclick="openProposalDetails({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->proposers_name }}</a>
+                  </td>
+                @elseif($col == 'prid')
+                  <td data-column="prid">
+                    <a href="javascript:void(0)" onclick="openProposalDetails({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->prid }}</a>
+                  </td>
+                @elseif($col == 'insurer')
+                  <td data-column="insurer">{{ $proposal->insurer }}</td>
+                @elseif($col == 'policy_plan')
+                  <td data-column="policy_plan">{{ $proposal->policy_plan }}</td>
+                @elseif($col == 'sum_assured')
+                  <td data-column="sum_assured">{{ $proposal->sum_assured ? number_format($proposal->sum_assured,2) : '##########' }}</td>
+                @elseif($col == 'term')
+                  <td data-column="term">{{ $proposal->term }}</td>
+                @elseif($col == 'add_ons')
+                  <td data-column="add_ons">{{ $proposal->add_ons ?? '-' }}</td>
+                @elseif($col == 'offer_date')
+                  <td data-column="offer_date">{{ $proposal->offer_date ? $proposal->offer_date->format('d-M-y') : '##########' }}</td>
+                @elseif($col == 'premium')
+                  <td data-column="premium">{{ number_format($proposal->premium,2) }}</td>
+                @elseif($col == 'frequency')
+                  <td data-column="frequency">{{ $proposal->frequency }}</td>
+                @elseif($col == 'stage')
+                  <td data-column="stage">{{ $proposal->stage }}</td>
+                @elseif($col == 'date')
+                  <td data-column="date">{{ $proposal->date ? $proposal->date->format('d-M-y') : '##########' }}</td>
+                @elseif($col == 'age')
+                  <td data-column="age">{{ $proposal->age }}</td>
+                @elseif($col == 'status')
+                  <td data-column="status"><span class="badge-status" style="background:{{ $proposal->status == 'Approved' ? '#28a745' : ($proposal->status=='Pending' ? '#ffc107' : ($proposal->status=='Declined' ? '#dc3545' : '#6c757d')) }}">{{ $proposal->status }}</span></td>
+                @elseif($col == 'source_of_payment')
+                  <td data-column="source_of_payment">{{ $proposal->source_of_payment }}</td>
+                @elseif($col == 'mcr')
+                  <td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>
+                @elseif($col == 'doctor')
+                  <td data-column="doctor">{{ $proposal->doctor ?? '-' }}</td>
+                @elseif($col == 'date_sent')
+                  <td data-column="date_sent">{{ $proposal->date_sent ? $proposal->date_sent->format('d-M-y') : '##########' }}</td>
+                @elseif($col == 'date_completed')
+                  <td data-column="date_completed">{{ $proposal->date_completed ? $proposal->date_completed->format('d-M-y') : '##########' }}</td>
+                @elseif($col == 'notes')
+                  <td data-column="notes">{{ $proposal->notes ?? '-' }}</td>
+                @elseif($col == 'agency')
+                  <td data-column="agency">{{ $proposal->agency ?? '-' }}</td>
+                @elseif($col == 'class')
+                  <td data-column="class">{{ $proposal->class }}</td>
+                @elseif($col == 'is_submitted')
+                  <td data-column="is_submitted">{{ $proposal->is_submitted ? 'Yes' : 'No' }}</td>
+                @endif
+              @endforeach
             </tr>
           @endforeach
         </tbody>
       </table>
     </div>
 
+    </div>
+
     <div class="footer">
+      <div class="footer-left">
+        <a class="btn btn-export" href="{{ route('life-proposals.export') }}">Export</a>
+        <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+      </div>
       <div class="paginator">
         @php
           $base = url()->current();
@@ -169,7 +129,6 @@
           $last = max(1,$proposals->lastPage());
           function page_url($base,$q,$p){ $params = array_merge($q,['page'=>$p]); return $base . '?' . http_build_query($params); }
         @endphp
-
         <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
         <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
         <span class="page-info">Page {{ $current }} of {{ $last }}</span>
@@ -177,9 +136,55 @@
         <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
       </div>
     </div>
+    </div>
   </div>
 
-  <!-- Add/Edit Proposal Modal (single) -->
+  <!-- Proposal Page View (Full Page) -->
+  <div class="client-page-view" id="proposalPageView" style="display:none;">
+    <div class="client-page-header">
+      <div class="client-page-title">
+        <span id="proposalPageTitle">Life Proposal</span> - <span class="client-name" id="proposalPageName"></span>
+      </div>
+      <div class="client-page-actions">
+        <button class="btn btn-edit" id="editProposalFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
+        <button class="btn" id="closeProposalPageBtn" onclick="closeProposalPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+      </div>
+    </div>
+    <div class="client-page-body">
+      <div class="client-page-content">
+        <!-- Proposal Details View -->
+        <div id="proposalDetailsPageContent" style="display:none;">
+          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
+            <div id="proposalDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
+              <!-- Content will be loaded via JavaScript -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Proposal Edit/Add Form -->
+        <div id="proposalFormPageContent" style="display:none;">
+          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
+            <div style="display:flex; justify-content:flex-end; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+              <div class="client-page-actions">
+                <button type="button" class="btn-delete" id="proposalDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteProposal()">Delete</button>
+                <button type="submit" form="proposalPageForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
+                <button type="button" class="btn" id="closeProposalFormBtn" onclick="closeProposalPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Close</button>
+              </div>
+            </div>
+            <form id="proposalPageForm" method="POST" action="{{ route('life-proposals.store') }}">
+              @csrf
+              <div id="proposalPageFormMethod" style="display:none;"></div>
+              <div style="padding:12px;">
+                <!-- Form content will be cloned from modal -->
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Proposal Modal (hidden, used for form structure) -->
   <div class="modal" id="proposalModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -216,7 +221,7 @@
               <input id="sum_assured" name="sum_assured" type="number" step="0.01" class="form-control">
             </div>
             <div class="form-group">
-              <label for="term">Term (Years) *</label>
+              <label for="term">Term *</label>
               <input id="term" name="term" type="number" min="1" class="form-control" required>
             </div>
             <div class="form-group">
@@ -338,112 +343,360 @@
     </div>
   </div>
 
-  <!-- Column Selection Modal -->
-  <div class="modal" id="columnModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4>Column Select & Sort</h4>
-        <button type="button" class="modal-close" onclick="closeColumnModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          <button class="btn" onclick="selectAllColumns()">Select All</button>
-          <button class="btn" onclick="deselectAllColumns()">Deselect All</button>
-        </div>
-        <form id="columnForm" action="{{ route('life-proposals.save-column-settings') }}" method="POST">
-          @csrf
-          <div class="column-selection" id="columnSelection">
-            @php
-              $all = [
-                'proposers_name'=>"Proposer's Name",'insurer'=>'Insurer','policy_plan'=>'Policy Plan','sum_assured'=>'Sum Assured','term'=>'Term','add_ons'=>'Add Ons','offer_date'=>'Offer Date','premium'=>'Premium','frequency'=>'Freq','stage'=>'Stage','date'=>'Date','age'=>'Age','status'=>'Status','source_of_payment'=>'Source Of Payment','mcr'=>'MCR','doctor'=>'Doctor','date_sent'=>'Date Sent','date_completed'=>'Date Completed','notes'=>'Notes','agency'=>'Agency','prid'=>'PRID','class'=>'Class','is_submitted'=>'Submitted'
-              ];
-            @endphp
-            @foreach($all as $key => $label)
-              <div class="column-item" draggable="true" data-column="{{ $key }}" style="cursor:move;">
-                <span style="cursor:move; margin-right:8px; font-size:16px; color:#666;">☰</span>
-                <input type="checkbox" class="column-checkbox" id="col_{{ $key }}" value="{{ $key }}" @if(in_array($key,$selectedColumns)) checked @endif>
-                <label for="col_{{ $key }}" style="cursor:pointer; flex:1; user-select:none;">{{ $label }}</label>
-              </div>
-            @endforeach
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeColumnModal()">Cancel</button>
-        <button class="btn-save" onclick="saveColumnSettings()">Save Settings</button>
-      </div>
-    </div>
-  </div>
-</div>
+@include('partials.column-selection-modal', [
+  'selectedColumns' => $selectedColumns,
+  'columnDefinitions' => $columnDefinitions,
+  'mandatoryColumns' => $mandatoryColumns,
+  'columnSettingsRoute' => route('life-proposals.save-column-settings'),
+])
 
 <script>
   let currentProposalId = null;
   const lookupData = @json($lookupData);
   const selectedColumns = @json($selectedColumns);
 
-  document.getElementById('addProposalBtn').addEventListener('click', () => openProposalModal('add'));
+  // Format date helper function
+  function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${date.getDate()}-${months[date.getMonth()]}-${String(date.getFullYear()).slice(-2)}`;
+  }
+
+  // Format number helper function
+  function formatNumber(num) {
+    if (!num && num !== 0) return '-';
+    return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Open proposal details (full page view) - MUST be defined before HTML onclick handlers
+  async function openProposalDetails(id) {
+    try {
+      const res = await fetch(`/life-proposals/${id}`, {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const proposal = await res.json();
+      currentProposalId = id;
+      
+      // Get all required elements
+      const proposalPageName = document.getElementById('proposalPageName');
+      const proposalPageTitle = document.getElementById('proposalPageTitle');
+      const clientsTableView = document.getElementById('clientsTableView');
+      const proposalPageView = document.getElementById('proposalPageView');
+      const proposalDetailsPageContent = document.getElementById('proposalDetailsPageContent');
+      const proposalFormPageContent = document.getElementById('proposalFormPageContent');
+      const editProposalFromPageBtn = document.getElementById('editProposalFromPageBtn');
+      const closeProposalPageBtn = document.getElementById('closeProposalPageBtn');
+      
+      if (!proposalPageName || !proposalPageTitle || !clientsTableView || !proposalPageView || 
+          !proposalDetailsPageContent || !proposalFormPageContent) {
+        console.error('Required elements not found');
+        alert('Error: Page elements not found');
+        return;
+      }
+      
+      // Set proposal name in header
+      const proposalName = proposal.proposers_name || proposal.prid || 'Unknown';
+      proposalPageName.textContent = proposalName;
+      proposalPageTitle.textContent = 'Life Proposal';
+      
+      populateProposalDetails(proposal);
+      
+      // Hide table view, show page view
+      clientsTableView.classList.add('hidden');
+      proposalPageView.style.display = 'block';
+      proposalPageView.classList.add('show');
+      proposalDetailsPageContent.style.display = 'block';
+      proposalFormPageContent.style.display = 'none';
+      if (editProposalFromPageBtn) editProposalFromPageBtn.style.display = 'inline-block';
+      if (closeProposalPageBtn) closeProposalPageBtn.style.display = 'inline-block';
+    } catch (e) {
+      console.error(e);
+      alert('Error loading proposal details: ' + e.message);
+    }
+  }
+
+  // Populate proposal details view
+  function populateProposalDetails(proposal) {
+    const content = document.getElementById('proposalDetailsContent');
+    if (!content) return;
+
+    const col1 = `
+      <div class="detail-section">
+        <div class="detail-section-header">PROPOSAL DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">PRID</span>
+            <div class="detail-value">${proposal.prid || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Proposer's Name</span>
+            <div class="detail-value">${proposal.proposers_name || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Insurer</span>
+            <div class="detail-value">${proposal.insurer || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Policy Plan</span>
+            <div class="detail-value">${proposal.policy_plan || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Class</span>
+            <div class="detail-value">${proposal.class || '-'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const col2 = `
+      <div class="detail-section">
+        <div class="detail-section-header">COVERAGE</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Sum Assured</span>
+            <div class="detail-value">${formatNumber(proposal.sum_assured)}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Term</span>
+            <div class="detail-value">${proposal.term || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Add Ons</span>
+            <div class="detail-value">${proposal.add_ons || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Premium</span>
+            <div class="detail-value">${formatNumber(proposal.premium)}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Frequency</span>
+            <div class="detail-value">${proposal.frequency || '-'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const col3 = `
+      <div class="detail-section">
+        <div class="detail-section-header">STATUS & DATES</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <div class="detail-value">${proposal.status || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Stage</span>
+            <div class="detail-value">${proposal.stage || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Offer Date</span>
+            <div class="detail-value">${formatDate(proposal.offer_date)}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date</span>
+            <div class="detail-value">${formatDate(proposal.date)}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Age</span>
+            <div class="detail-value">${proposal.age || '-'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const col4 = `
+      <div class="detail-section">
+        <div class="detail-section-header">MEDICAL & PAYMENT</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Source Of Payment</span>
+            <div class="detail-value">${proposal.source_of_payment || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">MCR</span>
+            <div class="detail-value">${proposal.mcr || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Doctor</span>
+            <div class="detail-value">${proposal.doctor || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date Sent</span>
+            <div class="detail-value">${formatDate(proposal.date_sent)}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date Completed</span>
+            <div class="detail-value">${formatDate(proposal.date_completed)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-header">ADDITIONAL INFO</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Agency</span>
+            <div class="detail-value">${proposal.agency || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Submitted</span>
+            <div class="detail-value">
+              <input type="checkbox" ${proposal.is_submitted ? 'checked' : ''} disabled>
+            </div>
+          </div>
+          <div class="detail-row" style="align-items:flex-start;">
+            <span class="detail-label">Notes</span>
+            <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${proposal.notes || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+
+    content.innerHTML = col1 + col2 + col3 + col4;
+  }
+
+  // Open proposal page (Add or Edit)
+  async function openProposalPage(mode) {
+    if (mode === 'add') {
+      openProposalForm('add');
+    } else {
+      if (currentProposalId) {
+        openEditProposal(currentProposalId);
+      }
+    }
+  }
+
+  // Add Proposal Button
+  document.getElementById('addProposalBtn').addEventListener('click', () => openProposalPage('add'));
   document.getElementById('columnBtn').addEventListener('click', () => openColumnModal());
 
-  async function openEditProposal(id){
+  async function openEditProposal(id) {
     try {
-      const res = await fetch(`/life-proposals/${id}/edit`);
+      const res = await fetch(`/life-proposals/${id}/edit`, {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
       if (!res.ok) throw new Error('Network error');
       const proposal = await res.json();
       currentProposalId = id;
-      openProposalModal('edit', proposal);
+      openProposalForm('edit', proposal);
     } catch (e) {
       console.error(e);
       alert('Error loading proposal data');
     }
   }
 
-  function openProposalModal(mode, proposal = null){
-    const modal = document.getElementById('proposalModal');
-    const title = document.getElementById('proposalModalTitle');
-    const form = document.getElementById('proposalForm');
-    const formMethod = document.getElementById('proposalFormMethod');
+  function openProposalForm(mode, proposal = null) {
+    // Clone form from modal
+    const modalForm = document.getElementById('proposalModal').querySelector('form');
+    const pageForm = document.getElementById('proposalPageForm');
+    const formContentDiv = pageForm.querySelector('div[style*="padding:12px"]');
+    
+    // Clone the modal form body
+    const modalBody = modalForm.querySelector('.modal-body');
+    if (modalBody && formContentDiv) {
+      formContentDiv.innerHTML = modalBody.innerHTML;
+    }
+
+    const formMethod = document.getElementById('proposalPageFormMethod');
     const deleteBtn = document.getElementById('proposalDeleteBtn');
+    const editBtn = document.getElementById('editProposalFromPageBtn');
+    const closeBtn = document.getElementById('closeProposalPageBtn');
+    const closeFormBtn = document.getElementById('closeProposalFormBtn');
 
     if (mode === 'add') {
-      title.textContent = 'Add Life Proposal';
-      form.action = '{{ route("life-proposals.store") }}';
+      document.getElementById('proposalPageTitle').textContent = 'Add Life Proposal';
+      document.getElementById('proposalPageName').textContent = '';
+      pageForm.action = '{{ route("life-proposals.store") }}';
       formMethod.innerHTML = '';
       deleteBtn.style.display = 'none';
-      form.reset();
-      document.getElementById('is_submitted').checked = false;
-      document.getElementById('prid').value = '';
+      if (editBtn) editBtn.style.display = 'none';
+      if (closeBtn) closeBtn.style.display = 'inline-block';
+      if (closeFormBtn) closeFormBtn.style.display = 'none';
+      pageForm.reset();
     } else {
-      title.textContent = 'Edit Life Proposal';
-      form.action = `/life-proposals/${currentProposalId}`;
-      formMethod.innerHTML = `@method('PUT')`;
+      const proposalName = proposal.proposers_name || proposal.prid || 'Unknown';
+      document.getElementById('proposalPageTitle').textContent = 'Edit Life Proposal';
+      document.getElementById('proposalPageName').textContent = proposalName;
+      pageForm.action = `/life-proposals/${currentProposalId}`;
+      const methodInput = document.createElement('input');
+      methodInput.type = 'hidden';
+      methodInput.name = '_method';
+      methodInput.value = 'PUT';
+      formMethod.innerHTML = '';
+      formMethod.appendChild(methodInput);
       deleteBtn.style.display = 'inline-block';
+      if (editBtn) editBtn.style.display = 'none';
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (closeFormBtn) closeFormBtn.style.display = 'inline-block';
 
       const fields = ['proposers_name','insurer','policy_plan','sum_assured','term','add_ons','offer_date','premium','frequency','stage','date','age','status','source_of_payment','mcr','doctor','date_sent','date_completed','notes','agency','class','prid'];
       fields.forEach(k => {
-        const el = document.getElementById(k);
+        const el = formContentDiv ? formContentDiv.querySelector(`#${k}`) : null;
         if (!el) return;
         if (el.type === 'checkbox') {
           el.checked = !!proposal[k];
         } else if (el.type === 'date') {
-          el.value = proposal[k] ? proposal[k].substring(0,10) : '';
+          el.value = proposal[k] ? (typeof proposal[k] === 'string' ? proposal[k].substring(0,10) : proposal[k]) : '';
         } else {
           el.value = proposal[k] ?? '';
         }
       });
-      document.getElementById('is_submitted').checked = !!proposal.is_submitted;
+      const isSubmittedCheckbox = formContentDiv ? formContentDiv.querySelector('#is_submitted') : null;
+      if (isSubmittedCheckbox) {
+        isSubmittedCheckbox.checked = !!proposal.is_submitted;
+      }
     }
 
-    document.body.style.overflow = 'hidden';
-    modal.classList.add('show');
+    // Hide table view, show page view
+    document.getElementById('clientsTableView').classList.add('hidden');
+    const proposalPageView = document.getElementById('proposalPageView');
+    proposalPageView.style.display = 'block';
+    proposalPageView.classList.add('show');
+    document.getElementById('proposalDetailsPageContent').style.display = 'none';
+    document.getElementById('proposalFormPageContent').style.display = 'block';
   }
 
-  function closeProposalModal(){
-    document.getElementById('proposalModal').classList.remove('show');
+  function closeProposalPageView() {
+    const proposalPageView = document.getElementById('proposalPageView');
+    proposalPageView.classList.remove('show');
+    proposalPageView.style.display = 'none';
+    document.getElementById('clientsTableView').classList.remove('hidden');
+    document.getElementById('proposalDetailsPageContent').style.display = 'none';
+    document.getElementById('proposalFormPageContent').style.display = 'none';
     currentProposalId = null;
-    document.body.style.overflow = '';
   }
 
-  function deleteProposal(){
+  // Edit button from details page
+  const editBtn = document.getElementById('editProposalFromPageBtn');
+  if (editBtn) {
+    editBtn.addEventListener('click', function() {
+      if (currentProposalId) {
+        openEditProposal(currentProposalId);
+      }
+    });
+  }
+
+  // Legacy function for backward compatibility
+  function openProposalModal(mode, proposal = null) {
+    if (mode === 'add') {
+      openProposalPage('add');
+    } else if (proposal && currentProposalId) {
+      openEditProposal(currentProposalId);
+    }
+  }
+
+  function closeProposalModal() {
+    closeProposalPageView();
+  }
+
+  function deleteProposal() {
     if (!currentProposalId) return;
     if (!confirm('Delete this proposal?')) return;
     const form = document.createElement('form');
@@ -454,192 +707,10 @@
     document.body.appendChild(form);
     form.submit();
   }
-
-  // Column modal functions
-  function openColumnModal(){
-    document.getElementById('tableResponsive').classList.add('no-scroll');
-    document.querySelectorAll('.column-checkbox').forEach(cb => cb.checked = selectedColumns.includes(cb.value));
-    document.body.style.overflow = 'hidden';
-    document.getElementById('columnModal').classList.add('show');
-    setTimeout(initDragAndDrop, 100);
-  }
-  function closeColumnModal(){
-    document.getElementById('tableResponsive').classList.remove('no-scroll');
-    document.getElementById('columnModal').classList.remove('show');
-    document.body.style.overflow = '';
-  }
-  function selectAllColumns(){ document.querySelectorAll('.column-checkbox').forEach(cb=>cb.checked=true); }
-  function deselectAllColumns(){ document.querySelectorAll('.column-checkbox').forEach(cb=>cb.checked=false); }
-  function saveColumnSettings(){
-    const items = Array.from(document.querySelectorAll('#columnSelection .column-item'));
-    const order = items.map(item => item.dataset.column);
-    const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n=>n.value);
-    const orderedChecked = order.filter(col => checked.includes(col));
-    const form = document.getElementById('columnForm');
-    const existing = form.querySelectorAll('input[name="columns[]"]'); existing.forEach(e=>e.remove());
-    orderedChecked.forEach(c => {
-      const i = document.createElement('input'); i.type='hidden'; i.name='columns[]'; i.value=c; form.appendChild(i);
-    });
-    form.submit();
-    toggleTableScroll();
-  }
-
-  // Drag and drop functionality
-  let draggedElement = null;
-  let dragOverElement = null;
-  
-  function initDragAndDrop() {
-    const columnSelection = document.getElementById('columnSelection');
-    if (!columnSelection) return;
-    const columnItems = columnSelection.querySelectorAll('.column-item');
-    columnItems.forEach(item => {
-      item.addEventListener('dragstart', function(e) {
-        draggedElement = this;
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', '');
-        const dragImage = this.cloneNode(true);
-        dragImage.style.opacity = '0.5';
-        document.body.appendChild(dragImage);
-        e.dataTransfer.setDragImage(dragImage, 0, 0);
-        setTimeout(() => document.body.removeChild(dragImage), 0);
-      });
-      item.addEventListener('dragend', function(e) {
-        this.classList.remove('dragging');
-        if (dragOverElement) {
-          dragOverElement.classList.remove('drag-over');
-          dragOverElement = null;
-        }
-        draggedElement = null;
-      });
-      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        if (draggedElement && this !== draggedElement) {
-          if (dragOverElement && dragOverElement !== this) {
-            dragOverElement.classList.remove('drag-over');
-          }
-          this.classList.add('drag-over');
-          dragOverElement = this;
-          const rect = this.getBoundingClientRect();
-          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-          if (next) {
-            if (this.nextSibling && this.nextSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else if (!this.nextSibling) {
-              this.parentNode.appendChild(draggedElement);
-            }
-          } else {
-            if (this.previousSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this);
-            }
-          }
-        }
-      });
-      item.addEventListener('dragleave', function(e) {
-        if (!this.contains(e.relatedTarget)) {
-          this.classList.remove('drag-over');
-          if (dragOverElement === this) {
-            dragOverElement = null;
-          }
-        }
-      });
-      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('drag-over');
-        dragOverElement = null;
-        return false;
-      });
-    });
-  }
-
-  // Print table function
-  function printTable() {
-    const table = document.getElementById('proposalsTable');
-    if (!table) return;
-    const headers = [];
-    const headerCells = table.querySelectorAll('thead th');
-    headerCells.forEach(th => {
-      let headerText = th.textContent.trim();
-      if (headerText) headers.push(headerText);
-    });
-    const rows = [];
-    const tableRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
-    tableRows.forEach(row => {
-      if (row.style.display === 'none') return;
-      const cells = [];
-      const rowCells = row.querySelectorAll('td');
-      rowCells.forEach((cell) => {
-        let cellContent = '';
-        if (cell.querySelector('.icon-expand')) {
-          cellContent = '⤢';
-        } else {
-          const link = cell.querySelector('a');
-          cellContent = link ? link.textContent.trim() : cell.textContent.trim();
-        }
-        cells.push(cellContent || '-');
-      });
-      rows.push(cells);
-    });
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-    const headersHTML = headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('');
-    const rowsHTML = rows.map(row => {
-      const cellsHTML = row.map(cell => {
-        return '<td>' + escapeHtml(String(cell || '-')) + '</td>';
-      }).join('');
-      return '<tr>' + cellsHTML + '</tr>';
-    }).join('');
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    const printHTML = '<!DOCTYPE html><html><head><title>Life Proposals - Print</title><style>@page { margin: 1cm; size: A4 landscape; }html, body { margin: 0; padding: 0; background: #fff !important; }body { font-family: Arial, sans-serif; font-size: 10px; }table { width: 100%; border-collapse: collapse; page-break-inside: auto; }thead { display: table-header-group; }thead th { background-color: #000 !important; color: #fff !important; padding: 8px 5px; text-align: left; border: 1px solid #333; font-weight: normal; -webkit-print-color-adjust: exact; print-color-adjust: exact; }tbody tr { page-break-inside: avoid; border-bottom: 1px solid #ddd; }tbody tr:nth-child(even) { background-color: #f8f8f8; }tbody td { padding: 6px 5px; border: 1px solid #ddd; white-space: nowrap; }</style></head><body><table><thead><tr>' + headersHTML + '</tr></thead><tbody>' + rowsHTML + '</tbody></table><scr' + 'ipt>window.onload = function() { setTimeout(function() { window.print(); }, 100); };window.onafterprint = function() { window.close(); };</scr' + 'ipt></body></html>';
-    if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(printHTML);
-      printWindow.document.close();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const printBtn = document.getElementById('printBtn');
-    if (printBtn) {
-      printBtn.addEventListener('click', function() {
-        printTable();
-      });
-    }
-  });
-
-  // Close modals on ESC or backdrop
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeProposalModal(); closeColumnModal(); } });
-  document.querySelectorAll('.modal').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
-  });
-
-  // Simple validation
-  document.getElementById('proposalForm').addEventListener('submit', function(e){
-    const req = this.querySelectorAll('[required]');
-    let ok = true;
-    req.forEach(f => { if (!String(f.value||'').trim()) { ok = false; f.style.borderColor='red'; } else { f.style.borderColor=''; } });
-    if (!ok) { e.preventDefault(); alert('Please fill required fields'); }
-  });
-
-  // Toggle scrollbar helper for responsive table
-  function toggleTableScroll() {
-    const table = document.getElementById('proposalsTable');
-    const wrapper = document.getElementById('tableResponsive');
-    if (!table || !wrapper) return;
-    const hasHorizontalOverflow = table.offsetWidth > wrapper.offsetWidth;
-    const hasVerticalOverflow = table.offsetHeight > wrapper.offsetHeight;
-    wrapper.classList.toggle('no-scroll', !hasHorizontalOverflow && !hasVerticalOverflow);
-  }
-  window.addEventListener('load', toggleTableScroll);
-  window.addEventListener('resize', toggleTableScroll);
-
 </script>
+
+@include('partials.table-scripts', [
+  'mandatoryColumns' => $mandatoryColumns,
+])
+
 @endsection
-</body>
-</html>

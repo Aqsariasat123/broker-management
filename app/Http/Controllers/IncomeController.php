@@ -21,7 +21,11 @@ class IncomeController extends Controller
             $q->where('name', 'Mode Of Payment (Life)');
         })->where('active', 1)->orderBy('seq')->get();
 
-        return view('incomes.index', compact('incomes', 'incomeSources', 'modesOfPayment'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('incomes');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('incomes');
+
+        return view('incomes.index', compact('incomes', 'incomeSources', 'modesOfPayment', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -47,9 +51,20 @@ class IncomeController extends Controller
         return redirect()->route('incomes.index')->with('success', 'Income created successfully.');
     }
 
+    public function show(Request $request, Income $income)
+    {
+        if ($request->expectsJson()) {
+            return response()->json($income->load(['incomeSource', 'modeOfPayment']));
+        }
+        return view('incomes.show', compact('income'));
+    }
+
     public function edit(Income $income)
     {
-        return response()->json($income->load(['incomeSource', 'modeOfPayment']));
+        if (request()->expectsJson()) {
+            return response()->json($income->load(['incomeSource', 'modeOfPayment']));
+        }
+        return view('incomes.edit', compact('income'));
     }
 
     public function update(Request $request, Income $income)

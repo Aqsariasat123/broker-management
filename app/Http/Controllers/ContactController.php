@@ -70,12 +70,18 @@ class ContactController extends Controller
 
     public function show(Contact $contact)
     {
-        return response()->json($contact);
+        if (request()->expectsJson()) {
+            return response()->json($contact);
+        }
+        return view('contacts.show', compact('contact'));
     }
 
     public function edit(Contact $contact)
     {
-        return response()->json($contact);
+        if (request()->expectsJson()) {
+            return response()->json($contact);
+        }
+        return view('contacts.edit', compact('contact'));
     }
 
     public function update(Request $request, Contact $contact)

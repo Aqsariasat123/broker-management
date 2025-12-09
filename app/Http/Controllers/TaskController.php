@@ -24,8 +24,9 @@ class TaskController extends Controller
         // paginate 10 per page
         $tasks = $query->orderBy('due_date', 'desc')->paginate(10);
 
-        // Get selected columns from session
-        $selectedColumns = session('selected_columns', $this->getDefaultColumns());
+        // Get selected columns from session using TableConfigHelper
+        $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
+        $selectedColumns = session($config['session_key'], $config['default_columns']);
 
         return view('tasks.index', compact('tasks', 'selectedColumns'));
     }
@@ -96,10 +97,27 @@ class TaskController extends Controller
         return response()->json($task);
     }
 
+    public function show(Task $task)
+    {
+        if (request()->expectsJson()) {
+            return response()->json($task);
+        }
+        return view('tasks.show', compact('task'));
+    }
+
+    public function edit(Task $task)
+    {
+        if (request()->expectsJson()) {
+            return response()->json($task);
+        }
+        return view('tasks.edit', compact('task'));
+    }
+
     public function saveColumnSettings(Request $request): RedirectResponse
     {
         $selectedColumns = $request->input('columns', []);
-        session(['selected_columns' => $selectedColumns]);
+        $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
+        session([$config['session_key'] => $selectedColumns]);
 
         return redirect()->route('tasks.index')->with('success', 'Column settings saved successfully.');
     }
@@ -115,7 +133,8 @@ class TaskController extends Controller
                   ->where('task_status', '!=', 'Completed');
         }
 
-        $selectedColumns = session('selected_columns', $this->getDefaultColumns());
+        $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
+        $selectedColumns = session($config['session_key'], $config['default_columns']);
 
         // get paginator for the requested page (10 per page)
         $paginator = $query->orderBy('due_date', 'desc')->paginate(10, ['*'], 'page', $page);

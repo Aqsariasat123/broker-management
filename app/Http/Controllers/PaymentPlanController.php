@@ -45,7 +45,11 @@ class PaymentPlanController extends Controller
         // Get schedules for filter
         $schedules = Schedule::with('policy')->orderBy('created_at', 'desc')->get();
 
-        return view('payment-plans.index', compact('paymentPlans', 'schedules'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('payment-plans');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payment-plans');
+
+        return view('payment-plans.index', compact('paymentPlans', 'schedules', 'selectedColumns'));
     }
 
     public function create(Request $request)
@@ -90,14 +94,24 @@ class PaymentPlanController extends Controller
             ->with('success', 'Payment plan created successfully.');
     }
 
-    public function show(PaymentPlan $paymentPlan)
+    public function show(Request $request, PaymentPlan $paymentPlan)
     {
         $paymentPlan->load(['schedule.policy.client', 'debitNotes.payments']);
+        
+        if ($request->expectsJson()) {
+            return response()->json($paymentPlan);
+        }
         return view('payment-plans.show', compact('paymentPlan'));
     }
 
     public function edit(PaymentPlan $paymentPlan)
     {
+        $paymentPlan->load(['schedule.policy.client']);
+        
+        if (request()->expectsJson()) {
+            return response()->json($paymentPlan);
+        }
+        
         $schedules = Schedule::with(['policy.client'])->orderBy('created_at', 'desc')->get();
         
         // Get frequencies from lookup
@@ -196,5 +210,12 @@ class PaymentPlanController extends Controller
                 ->with('error', 'Failed to create instalments: ' . $e->getMessage())
                 ->withInput();
         }
+    }
+
+    public function saveColumnSettings(Request $request)
+    {
+        session(['payment_plan_columns' => $request->columns ?? []]);
+        return redirect()->route('payment-plans.index')
+            ->with('success', 'Column settings saved successfully.');
     }
 }

@@ -25,7 +25,11 @@ class ExpenseController extends Controller
             'modes' => ['Cash', 'Bank Transfer', 'Credit Card', 'Cheque']
         ];
 
-        return view('expenses.index', compact('expenses', 'lookupData'));
+        // Use TableConfigHelper for selected columns
+        $config = \App\Helpers\TableConfigHelper::getConfig('expenses');
+        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('expenses');
+
+        return view('expenses.index', compact('expenses', 'lookupData', 'selectedColumns'));
     }
 
     public function store(Request $request)
@@ -50,16 +54,20 @@ class ExpenseController extends Controller
         return redirect()->route('expenses.index')->with('success', 'Expense added successfully.');
     }
 
-    public function show(Expense $expense)
+    public function show(Request $request, Expense $expense)
     {
-        // Return all fields for AJAX details modal
-        return response()->json($expense);
+        if ($request->expectsJson()) {
+            return response()->json($expense);
+        }
+        return view('expenses.show', compact('expense'));
     }
 
     public function edit(Expense $expense)
     {
-        // Return all fields for AJAX edit modal
-        return response()->json($expense);
+        if (request()->expectsJson()) {
+            return response()->json($expense);
+        }
+        return view('expenses.edit', compact('expense'));
     }
 
     public function update(Request $request, Expense $expense)
