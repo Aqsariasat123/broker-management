@@ -45,4 +45,23 @@ class LifeProposal extends Model
         'date_completed' => 'date',
         'is_submitted' => 'boolean'
     ];
+
+    public function hasExpired()
+    {
+        if (!$this->offer_date || $this->is_submitted) {
+            return false;
+        }
+        return $this->offer_date < now()->startOfDay();
+    }
+
+    public function hasExpiring()
+    {
+        if (!$this->offer_date || $this->is_submitted || $this->hasExpired()) {
+            return false;
+        }
+        $today = now()->startOfDay();
+        $offerDate = \Carbon\Carbon::parse($this->offer_date)->startOfDay();
+        $daysUntilOffer = $today->diffInDays($offerDate, false);
+        return $daysUntilOffer >= 0 && $daysUntilOffer <= 7;
+    }
 }

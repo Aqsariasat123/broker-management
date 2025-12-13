@@ -4,6 +4,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\LookupCategory;
+use App\Models\LookupValue;
+use App\Models\Contact;
+use App\Models\Client;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -28,13 +33,25 @@ class TaskController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
         $selectedColumns = session($config['session_key'], $config['default_columns']);
 
-        return view('tasks.index', compact('tasks', 'selectedColumns'));
+        // Fetch dropdown data for form
+        $taskCategory = LookupCategory::where('name', 'Task Category')->first();
+        $categories = $taskCategory ? $taskCategory->values()->where('active', true)->orderBy('seq')->get() : collect();
+        
+        // Get contacts and clients for Name/Contact dropdown
+        $contacts = Contact::select('id', 'contact_name as name', 'contact_no')->orderBy('contact_name')->get();
+        $clients = Client::select('id', 'client_name as name', 'mobile_no as contact_no')->orderBy('client_name')->get();
+        
+        // Get users for assignee dropdown
+        $users = User::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
+
+        return view('tasks.index', compact('tasks', 'selectedColumns', 'categories', 'contacts', 'clients', 'users'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'category' => 'required|string|max:255',
+            'item' => 'nullable|string|max:255',
             'description' => 'required|string|max:500',
             'name' => 'required|string|max:255',
             'contact_no' => 'nullable|string|max:20',
@@ -63,6 +80,7 @@ class TaskController extends Controller
     {
         $validated = $request->validate([
             'category' => 'required|string|max:255',
+            'item' => 'nullable|string|max:255',
             'description' => 'required|string|max:500',
             'name' => 'required|string|max:255',
             'contact_no' => 'nullable|string|max:20',
@@ -189,6 +207,9 @@ class TaskController extends Controller
                     }
                 }
                 return '';
+            case 'due_in':
+                $dueIn = $task->getDueInDays();
+                return $dueIn !== null ? (string)$dueIn : '';
             case 'repeat':
                 return $task->repeat ? 'Y' : 'N';
             default:

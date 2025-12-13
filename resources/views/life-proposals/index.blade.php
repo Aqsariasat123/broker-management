@@ -3,6 +3,105 @@
 
 @include('partials.table-styles')
 
+<style>
+    * { box-sizing: border-box; }
+    .dashboard { padding-left:0 !important; }
+    body { font-family: Arial, sans-serif; color: #000; margin: 0; background: #f5f5f5; }
+    .container-table { max-width: 100%; margin: 0 auto; background: #fff; padding: 0; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; flex-wrap: wrap; gap: 15px; background: #f5f5f5; padding: 15px 20px; border-bottom: 1px solid #ddd; }
+    .page-title-section { display: flex; align-items: center; gap: 15px; flex: 1; }
+    h3 { background: transparent; padding: 0; margin: 0; font-weight: bold; color: #2d2d2d; font-size: 24px; }
+    .records-found { font-size: 14px; color: #2d2d2d; font-weight: normal; }
+    .action-buttons { margin-left:auto; display:flex; gap:10px; align-items:center; }
+    .btn { border:none; cursor:pointer; padding:6px 16px; font-size:13px; border-radius:2px; white-space:nowrap; transition:background-color .2s; text-decoration:none; color:inherit; background:#fff; border:1px solid #ccc; font-weight:normal; }
+    .btn-add { background:#f3742a; color:#fff; border-color:#f3742a; }
+    .btn-export, .btn-column { background:#fff; color:#000; border:1px solid #ccc; }
+    .btn-close { background:#e0e0e0; color:#000; border-color:#ccc; }
+    .btn-follow-up { background:#000; color:#fff; border-color:#000; }
+    .btn-follow-up.inactive { background:#e0e0e0; color:#000; border-color:#ccc; }
+    .btn-submitted { background:#e0e0e0; color:#000; border-color:#ccc; }
+    .btn-submitted.active { background:#000; color:#fff; border-color:#000; }
+    .filter-group { display:flex; align-items:center; gap:8px; }
+    .table-responsive { width: 100%; border: none; background: #fff; margin-bottom:0; overflow-x: auto; padding: 0 20px; }
+    .footer { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; gap:10px; border-top:1px solid #ddd; flex-wrap:wrap; margin-top:0; background:#f5f5f5; }
+    .footer-left { display:flex; gap:10px; }
+    .paginator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #555;
+      white-space: nowrap;
+      margin: 0 auto;
+    }
+    .btn-page{
+      color: #2d2d2d;
+      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      font-weight: normal;
+    }
+    .btn-page:hover:not([disabled]) { background: #e9e9e9; }
+    .btn-page[disabled] { opacity: 0.5; cursor: not-allowed; background: #f5f5f5; }
+    .page-info { padding: 0 12px; color: #555; font-size: 12px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
+    thead tr { background-color: #000; color: #fff; height:35px; font-weight: normal; }
+    thead th { padding:8px 5px; text-align:left; border-right:1px solid #444; white-space:nowrap; font-weight: normal; color: #fff !important; }
+    thead th:first-child { text-align:center; }
+    thead th:last-child { border-right:none; }
+    tbody tr { background-color:#fff; border-bottom:1px solid #ddd; min-height:32px; }
+    tbody tr:nth-child(even) { background-color:#f8f8f8; }
+    tbody td { padding:8px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
+    tbody td:last-child { border-right:none; }
+    .action-cell { display:flex; align-items:center; gap:8px; padding:8px; }
+    .action-expand { width:22px; height:22px; cursor:pointer; display:inline-block; }
+    .badge-status { font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; }
+    /* Toggle Switch Styling */
+    #filterToggle {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      width: 50px;
+      height: 24px;
+      background-color: #ccc;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      outline: none;
+    }
+    
+    #filterToggle:checked {
+      background-color: #28a745;
+    }
+    
+    #filterToggle::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    #filterToggle:checked::before {
+      left: 28px;
+    }
+</style>
+
 @php
   $config = \App\Helpers\TableConfigHelper::getConfig('life-proposals');
   $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('life-proposals');
@@ -20,9 +119,24 @@
       <div class="page-title-section">
         <h3>Life Proposals</h3>
         <div class="records-found">Records Found - {{ $proposals->total() }}</div>
+        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+          <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+            <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+              <span style="font-size:13px;">Filter</span>
+              @php
+                $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
+                $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
+              @endphp
+              <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
+            </label>
+            <button class="btn btn-follow-up {{ $hasFollowUp ? '' : 'inactive' }}" id="followUpBtn" type="button" style="background:{{ $hasFollowUp ? '#000' : '#e0e0e0' }}; color:{{ $hasFollowUp ? '#fff' : '#000' }}; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
+            <button class="btn btn-submitted {{ $hasSubmitted ? 'active' : '' }}" id="submittedBtn" type="button" style="background:{{ $hasSubmitted ? '#000' : '#e0e0e0' }}; color:{{ $hasSubmitted ? '#fff' : '#000' }}; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Submitted</button>
+          </div>
+        </div>
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addProposalBtn">Add</button>
+        <button class="btn btn-close" onclick="window.history.back()">Close</button>
       </div>
     </div>
 
@@ -37,6 +151,12 @@
       <table id="proposalsTable">
         <thead>
           <tr>
+             <th style="text-align:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+              </svg>
+            </th>
             <th>Action</th>
             @foreach($selectedColumns as $col)
               @if(isset($columnDefinitions[$col]))
@@ -46,23 +166,58 @@
           </tr>
         </thead>
         <tbody>
-          @foreach($proposals as $proposal)
+          @foreach($proposals as $index => $proposal)
             <tr class="{{ $proposal->is_submitted ? 'submitted-row' : '' }}">
+               <td class="bell-cell {{ $proposal->hasExpired ? 'expired' : ($proposal->hasExpiring ? 'expiring' : '') }}">
+                <div style="display:flex; align-items:center; justify-content:center;">
+                  @php
+                    $isExpired = $proposal->hasExpired;
+                    $isExpiring = $proposal->hasExpiring;
+                  
+                   $radioChecked = false;
+                  $radioDotColor = 'transparent';
+                  if ($index === 0 && ($isExpired || $isExpiring)) {
+                    $radioChecked = true;
+                    $radioDotColor = '#f3742a'; // Yellow
+                  } elseif ($isExpired) {
+                    $radioDotColor = '#dc3545'; // Red
+                  } elseif ($isExpiring) {
+                    $radioDotColor = '#f3742a'; // Yellow
+                  } elseif ($proposal->offer_date && !$proposal->is_submitted) {
+                    $radioDotColor = '#007bff'; // Blue
+                  }
+                @endphp
+                <div style="position:relative; display:inline-block;">
+                  <input type="radio" name="proposal_select" class="action-radio" value="{{ $proposal->id }}" data-proposal-id="{{ $proposal->id }}" data-dot-color="{{ $radioDotColor }}" style="width:16px; height:16px; cursor:pointer; opacity:0; position:absolute; z-index:2;" {{ $radioChecked ? 'checked' : '' }}>
+                  <div class="radio-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid #2d2d2d; background-color:{{ $radioDotColor !== 'transparent' ? $radioDotColor : 'transparent' }}; position:relative; z-index:1;"></div>
+                </div>
+              </td>
               <td class="action-cell">
-                <svg class="action-expand" onclick="openProposalDetails({{ $proposal->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+       
+               
+                <svg class="action-expand" onclick="openEditProposal({{ $proposal->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                   <rect x="9" y="9" width="6" height="6" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                   <path d="M12 9L12 5M12 15L12 19M9 12L5 12M15 12L19 12" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M12 5L10 7M12 5L14 7M12 19L10 17M12 19L14 17M5 12L7 10M5 12L7 14M19 12L17 10M19 12L17 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <circle cx="12" cy="12" r="10" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
+                  <path d="M12 6V12L16 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <circle cx="12" cy="5" r="1.5" fill="#2d2d2d"/>
+                  <circle cx="12" cy="12" r="1.5" fill="#2d2d2d"/>
+                  <circle cx="12" cy="19" r="1.5" fill="#2d2d2d"/>
                 </svg>
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'proposers_name')
                   <td data-column="proposers_name">
-                    <a href="javascript:void(0)" onclick="openProposalDetails({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->proposers_name }}</a>
+                    <a href="javascript:void(0)" onclick="openEditProposal({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->proposers_name }}</a>
                   </td>
                 @elseif($col == 'prid')
                   <td data-column="prid">
-                    <a href="javascript:void(0)" onclick="openProposalDetails({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->prid }}</a>
+                    <a href="javascript:void(0)" onclick="openEditProposal({{ $proposal->id }})" style="color:#007bff; text-decoration:underline;">{{ $proposal->prid }}</a>
                   </td>
                 @elseif($col == 'insurer')
                   <td data-column="insurer">{{ $proposal->insurer }}</td>
@@ -570,9 +725,106 @@
     }
   }
 
-  // Add Proposal Button
-  document.getElementById('addProposalBtn').addEventListener('click', () => openProposalPage('add'));
-  document.getElementById('columnBtn').addEventListener('click', () => openColumnModal());
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add Proposal Button
+    const addBtn = document.getElementById('addProposalBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => openProposalPage('add'));
+    }
+
+    // Column button
+    const columnBtn = document.getElementById('columnBtn');
+    if (columnBtn) {
+      columnBtn.addEventListener('click', () => openColumnModal());
+    }
+
+    // Filter toggle handler - just visual indicator, clears filters when unchecked
+    const filterToggle = document.getElementById('filterToggle');
+    if (filterToggle) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasFollowUp = urlParams.get('follow_up') === 'true' || urlParams.get('follow_up') === '1';
+      const hasSubmitted = urlParams.get('submitted') === 'true' || urlParams.get('submitted') === '1';
+      filterToggle.checked = hasFollowUp || hasSubmitted;
+      
+      filterToggle.addEventListener('change', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!this.checked) {
+          // Clear all filters when toggle is unchecked
+          const u = new URL(window.location.href);
+          u.searchParams.delete('follow_up');
+          u.searchParams.delete('submitted');
+          window.location.href = u.toString();
+        } else {
+          // If checked but no filters active, activate "To Follow Up" by default
+          if (!hasFollowUp && !hasSubmitted) {
+            const u = new URL(window.location.href);
+            u.searchParams.set('follow_up', '1');
+            window.location.href = u.toString();
+          }
+        }
+      });
+    }
+
+    // To Follow Up button handler
+    const followUpBtn = document.getElementById('followUpBtn');
+    if (followUpBtn) {
+      followUpBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const u = new URL(window.location.href);
+        const currentFollowUp = u.searchParams.get('follow_up');
+        if (currentFollowUp === 'true' || currentFollowUp === '1') {
+          // Deactivate filter
+          u.searchParams.delete('follow_up');
+        } else {
+          // Activate filter
+          u.searchParams.set('follow_up', '1');
+          u.searchParams.delete('submitted');
+        }
+        window.location.href = u.toString();
+      });
+    }
+
+    // Submitted button handler
+    const submittedBtn = document.getElementById('submittedBtn');
+    if (submittedBtn) {
+      submittedBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const u = new URL(window.location.href);
+        const currentSubmitted = u.searchParams.get('submitted');
+        if (currentSubmitted === 'true' || currentSubmitted === '1') {
+          // Deactivate filter
+          u.searchParams.delete('submitted');
+        } else {
+          // Activate filter
+          u.searchParams.set('submitted', '1');
+          u.searchParams.delete('follow_up');
+        }
+        window.location.href = u.toString();
+      });
+    }
+
+    // Radio button click handler - update visual dot
+    document.querySelectorAll('.action-radio').forEach(radio => {
+      radio.addEventListener('change', function() {
+        // Update all radio dots
+        document.querySelectorAll('.action-radio').forEach(r => {
+          const dot = r.nextElementSibling;
+          if (dot && dot.classList.contains('radio-dot')) {
+            const dotColor = r.dataset.dotColor || 'transparent';
+            if (r.checked) {
+              dot.style.backgroundColor = dotColor !== 'transparent' ? dotColor : 'transparent';
+            } else {
+              dot.style.backgroundColor = 'transparent';
+            }
+          }
+        });
+      });
+    });
+  });
 
   async function openEditProposal(id) {
     try {

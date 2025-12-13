@@ -1039,7 +1039,11 @@
             <tr class="{{ $client->status === 'Inactive' ? 'inactive-row' : '' }} {{ $client->hasExpired ?? false ? 'has-expired' : ($client->hasExpiring ?? false ? 'has-expiring' : '') }}">
               <td class="bell-cell {{ $client->hasExpired ?? false ? 'expired' : ($client->hasExpiring ?? false ? 'expiring' : '') }}">
                 <div style="display:flex; align-items:center; justify-content:center;">
-                  <input type="radio" name="client_select" class="action-radio {{ $client->hasExpired ?? false ? 'expired' : ($client->hasExpiring ?? false ? 'expiring' : '') }}" value="{{ $client->id }}" data-client-id="{{ $client->id }}" disabled {{ ($client->hasExpired ?? false) || ($client->hasExpiring ?? false) ? 'checked' : '' }}>
+                  @php
+                    $isExpired = $client->hasExpired ?? false;
+                    $isExpiring = $client->hasExpiring ?? false;
+                  @endphp
+                  <div class="status-indicator {{ $isExpired ? 'expired' : 'normal' }}" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : ($isExpiring ? '#f3742a' : 'transparent') }}; background-color:{{ $isExpired ? '#dc3545' : 'transparent' }};"></div>
                 </div>
               </td>
               <td class="action-cell">

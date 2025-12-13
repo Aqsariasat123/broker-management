@@ -88,7 +88,7 @@
     /* Modal styles */
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
     .modal.show { display:flex; }
-    .modal-content { background:#fff; border-radius:6px; width:92%; max-width:1100px; max-height:calc(100vh - 40px); overflow:auto; box-shadow:0 4px 6px rgba(0,0,0,.1); padding:0; }
+    .modal-content { background:#fff; border-radius:6px; width:92%; max-width:900px; max-height:calc(100vh - 40px); overflow:auto; box-shadow:0 4px 6px rgba(0,0,0,.1); padding:0; }
     .modal-header { padding:12px 15px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; background:white; }
     .modal-body { padding:15px; }
     .modal-close { background:none; border:none; font-size:18px; cursor:pointer; color:#666; }
@@ -115,6 +115,41 @@
     /* Drag and drop styles */
     .column-item.dragging { opacity:0.5; background:#e3f2fd; border-color:#2196F3; }
     .column-item.drag-over { border-top:2px solid #2196F3; }
+    /* Toggle Switch Styling */
+    #filterToggle {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      width: 50px;
+      height: 24px;
+      background-color: #ccc;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      outline: none;
+    }
+    
+    #filterToggle:checked {
+      background-color: #28a745;
+    }
+    
+    #filterToggle::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    #filterToggle:checked::before {
+      left: 28px;
+    }
     @media (max-width: 768px) { .form-row .form-group { flex: 0 0 calc((100% - 20px) / 2); } }
   </style>
 
@@ -129,20 +164,46 @@
   <!-- Main Contacts Table View -->
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
+    <!-- To Follow Up Card -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
+      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0; padding:15px 20px;">
+        <div class="page-title-section">
+          <h3>Contacts{{ request()->has('follow_up') && request()->follow_up ? ' - To Follow Up' : '' }}</h3>
+        </div>
+      </div>
+    </div>
+
     <!-- Contacts Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Contacts</h3>
-        <div class="records-found">Records Found - {{ $contacts->total() }}</div>
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-          <div class="filter-group">
-            <button class="btn btn-archived" id="archivedOnlyBtn" type="button">Archived Only</button>
+        @if(request()->has('follow_up') && request()->follow_up)
+          <div class="records-found">Records Found - {{ $contacts->total() }}</div>
+          <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+              <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+                <span style="font-size:13px;">Filter</span>
+                <input type="checkbox" id="filterToggle" checked>
+              </label>
+              <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+            </div>
           </div>
-        </div>
+        @else
+          <div class="records-found">Records Found - {{ $contacts->total() }}</div>
+          <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+              <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+                <span style="font-size:13px;">Filter</span>
+                <input type="checkbox" id="filterToggle">
+              </label>
+              <button class="btn btn-follow-up" id="followUpBtn" type="button" style="background:#2d2d2d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
+            </div>
+          </div>
+        @endif
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addContactBtn">Add</button>
+        <button class="btn btn-close" onclick="window.history.back()">Close</button>
       </div>
     </div>
 
@@ -157,6 +218,12 @@
       <table id="contactsTable">
         <thead>
           <tr>
+          <th style="text-align:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+              </svg>
+            </th>
             <th>Action</th>
             @foreach($selectedColumns as $col)
               @if(isset($columnDefinitions[$col]))
@@ -168,8 +235,33 @@
         <tbody>
           @foreach($contacts as $contact)
             <tr class="{{ $contact->status === 'Archived' ? 'archived-row' : '' }}">
+              <td class="bell-cell {{ $contact->hasExpired ? 'expired' : ($contact->hasExpiring ? 'expiring' : '') }}">
+                <div style="display:flex; align-items:center; justify-content:center;">
+                  @php
+                    $isExpired = $contact->hasExpired;
+                    $isExpiring = $contact->hasExpiring;
+                    $hasFollowUp = $contact->next_follow_up && $contact->status !== 'Archived';
+                    
+                    // Determine color based on status
+                    if ($isExpired) {
+                      $dotColor = '#dc3545'; // Red - expired
+                      $dotFill = '#dc3545';
+                    } elseif ($isExpiring) {
+                      $dotColor = '#f3742a'; // Yellow/Orange - expiring soon
+                      $dotFill = 'transparent';
+                    } elseif ($hasFollowUp) {
+                      $dotColor = '#007bff'; // Blue - has follow-up
+                      $dotFill = 'transparent';
+                    } else {
+                      $dotColor = '#ccc'; // Gray - no follow-up
+                      $dotFill = 'transparent';
+                    }
+                  @endphp
+                  <div class="status-indicator" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $dotColor }}; background-color:{{ $dotFill }};"></div>
+                </div>
+              </td>
               <td class="action-cell">
-                <svg class="action-expand" onclick="openContactDetails({{ $contact->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                <svg class="action-expand" onclick="openEditContact({{ $contact->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                   <rect x="9" y="9" width="6" height="6" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                   <path d="M12 9L12 5M12 15L12 19M9 12L5 12M15 12L19 12" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
                   <path d="M12 5L10 7M12 5L14 7M12 19L10 17M12 19L14 17M5 12L7 10M5 12L7 14M19 12L17 10M19 12L17 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -178,11 +270,11 @@
               @foreach($selectedColumns as $col)
                 @if($col == 'contact_name')
                   <td data-column="contact_name">
-                    <a href="javascript:void(0)" onclick="openContactDetails({{ $contact->id }})" style="color:#007bff; text-decoration:underline;">{{ $contact->contact_name }}</a>
+                    <a href="javascript:void(0)" onclick="openEditContact({{ $contact->id }})" style="color:#007bff; text-decoration:underline;">{{ $contact->contact_name }}</a>
                   </td>
                 @elseif($col == 'contact_id')
                   <td data-column="contact_id">
-                    <a href="javascript:void(0)" onclick="openContactDetails({{ $contact->id }})" style="color:#007bff; text-decoration:underline;">{{ $contact->contact_id }}</a>
+                    <a href="javascript:void(0)" onclick="openEditContact({{ $contact->id }})" style="color:#007bff; text-decoration:underline;">{{ $contact->contact_id }}</a>
                   </td>
                 @elseif($col == 'contact_no')
                   <td data-column="contact_no">{{ $contact->contact_no ?? '##########' }}</td>
@@ -270,217 +362,146 @@
     </div>
   </div>
 
-  <!-- Contact Page View (Full Page) -->
-  <div class="client-page-view" id="contactPageView" style="display:none;">
-    <div class="client-page-header">
-      <div class="client-page-title">
-        <span id="contactPageTitle">Contact</span> - <span class="client-name" id="contactPageName"></span>
-      </div>
-      <div class="client-page-actions">
-        <button class="btn btn-edit" id="editContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
-        <button class="btn" id="closeContactPageBtn" onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
-      </div>
-    </div>
-    <div class="client-page-body">
-      <div class="client-page-content">
-        <!-- Contact Details View -->
-        <div id="contactDetailsPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div id="contactDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
-              <!-- Content will be loaded via JavaScript -->
-            </div>
-          </div>
-        </div>
-        
-        <!-- Contact Edit/Add Form -->
-        <div id="contactFormPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div style="display:flex; justify-content:flex-end; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
-              <div class="client-page-actions">
-                <button type="button" class="btn-delete" id="contactDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteContact()">Delete</button>
-                <button type="submit" form="contactPageForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
-                <button type="button" class="btn" id="closeContactFormBtn" onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Close</button>
-              </div>
-            </div>
-            <form id="contactPageForm" method="POST" action="{{ route('contacts.store') }}">
-              @csrf
-              <div id="contactPageFormMethod" style="display:none;"></div>
-              <div style="padding:12px;">
-                <!-- Form content will be cloned from modal -->
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add/Edit Contact Modal (hidden, used for form structure) -->
+  <!-- Add/Edit Contact Modal -->
   <div class="modal" id="contactModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h4 id="contactModalTitle">Add Contact</h4>
-        <button type="button" class="modal-close" onclick="closeContactModal()">×</button>
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;">
+        <h4 id="contactModalTitle" style="margin: 0; font-size: 16px; font-weight: bold;">Add Contact</h4>
+        <div style="display: flex; gap: 8px;">
+          <button type="submit" form="contactForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
+          <button type="button" class="btn-cancel" onclick="closeContactModal()" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+        </div>
       </div>
 
       <form id="contactForm" method="POST" action="{{ route('contacts.store') }}">
         @csrf
         <div id="contactFormMethod" style="display:none;"></div>
 
-        <div class="modal-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="salutation">Salutation</label>
-              <select id="salutation" name="salutation" class="form-control" required>
-                <option value="">Select</option>
-                @foreach($lookupData['salutations'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="contact_name">Contact Name *</label>
-              <input id="contact_name" name="contact_name" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label for="contact_no">Contact No</label>
-              <input id="contact_no" name="contact_no" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="email_address">Email</label>
-              <input id="email_address" name="email_address" type="email" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="type">Type *</label>
-              <select id="type" name="type" class="form-control" required>
+        <div class="modal-body" style="padding: 12px;">
+          <h5 style="color: #f3742a; margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">Contact Details</h5>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 6px;">
+            <div>
+              <label for="type" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Type</label>
+              <select id="type" name="type" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
                 <option value="">Select</option>
                 @foreach($lookupData['contact_types'] as $t) <option value="{{ $t }}">{{ $t }}</option> @endforeach
               </select>
             </div>
-            <div class="form-group">
-              <label for="occupation">Occupation</label>
-              <input id="occupation" name="occupation" class="form-control">
+            <div>
+              <label for="contact_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Name</label>
+              <input id="contact_name" name="contact_name" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="employer">Employer</label>
-              <input id="employer" name="employer" class="form-control">
+            <div>
+              <label for="occupation" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Occupation</label>
+              <select id="occupation" name="occupation" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="">Select or Type</option>
+                @foreach($allOccupations as $occ) <option value="{{ $occ }}">{{ $occ }}</option> @endforeach
+              </select>
             </div>
-            <div class="form-group">
-              <label for="acquired">Acquired</label>
-              <input id="acquired" name="acquired" type="date" class="form-control">
+            <div>
+              <label for="employer" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Employer</label>
+              <select id="employer" name="employer" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="">Select or Type</option>
+                @foreach($allEmployers as $emp) <option value="{{ $emp }}">{{ $emp }}</option> @endforeach
+              </select>
             </div>
-            <div class="form-group">
-              <label for="source">Source *</label>
-              <select id="source" name="source" class="form-control" required>
+            <div>
+              <label for="contact_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact No.</label>
+              <div style="display: flex; gap: 6px;">
+                <input id="contact_no" name="contact_no" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <input id="wa" name="wa" placeholder="WA" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <input type="checkbox" id="wa_checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #f3742a; margin-top: 2px;">
+              </div>
+            </div>
+            <div>
+              <label for="email_address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Email Address</label>
+              <input id="email_address" name="email_address" type="email" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            </div>
+            <div>
+              <label for="address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Address / Location</label>
+              <div style="display: flex; gap: 6px;">
+                <input id="address" name="address" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <input id="location" name="location" placeholder="PR" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+              </div>
+            </div>
+            <div>
+              <label for="dob" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Of Birth / Age</label>
+              <div style="display: flex; gap: 6px;">
+                <input id="dob" name="dob" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <input id="age_display" type="text" placeholder="Age" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+              </div>
+            </div>
+            <div>
+              <label for="acquired" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Acquired</label>
+              <div style="display: flex; gap: 6px;">
+                <input id="acquired" name="acquired" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <input type="text" value="-" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+              </div>
+            </div>
+            <div>
+              <label for="source" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source</label>
+              <select id="source" name="source" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
                 <option value="">Select</option>
                 @foreach($lookupData['sources'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
               </select>
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="status">Status *</label>
-              <select id="status" name="status" class="form-control" required>
-                <option value="">Select</option>
-                @foreach($lookupData['contact_statuses'] as $st) <option value="{{ $st }}">{{ $st }}</option> @endforeach
-              </select>
+            <div>
+              <label for="source_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source Name</label>
+              <input id="source_name" name="source_name" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
             </div>
-            <div class="form-group">
-              <label for="rank">Rank</label>
-              <select id="rank" name="rank" class="form-control">
-                <option value="">Select</option>
-                @foreach($lookupData['ranks'] as $r) <option value="{{ $r }}">{{ $r }}</option> @endforeach
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="first_contact">First Contact</label>
-              <input id="first_contact" name="first_contact" type="date" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="next_follow_up">Next Follow Up</label>
-              <input id="next_follow_up" name="next_follow_up" type="date" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="coid">COID</label>
-              <input id="coid" name="coid" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="dob">DOB</label>
-              <input id="dob" name="dob" type="date" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="agency">Agency</label>
-              <select id="agency" name="agency" class="form-control">
+            <div>
+              <label for="agency" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agency</label>
+              <select id="agency" name="agency" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
                 <option value="">Select</option>
                 @foreach($lookupData['agencies'] as $a) <option value="{{ $a }}">{{ $a }}</option> @endforeach
               </select>
             </div>
-            <div class="form-group">
-              <label for="agent">Agent</label>
-              <select id="agent" name="agent" class="form-control">
+            <div>
+              <label for="agent" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agent</label>
+              <select id="agent" name="agent" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
                 <option value="">Select</option>
                 @foreach($lookupData['agents'] as $a) <option value="{{ $a }}">{{ $a }}</option> @endforeach
+                @foreach($users as $user) <option value="{{ $user->name }}">{{ $user->name }}</option> @endforeach
               </select>
             </div>
-            <div class="form-group">
-              <label for="savings_budget">Savings Budget</label>
-              <input id="savings_budget" name="savings_budget" type="number" step="0.01" class="form-control">
+            <div>
+              <label for="status" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Status</label>
+              <select id="status" name="status" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="">Select</option>
+                @foreach($lookupData['contact_statuses'] as $st) <option value="{{ $st }}">{{ $st }}</option> @endforeach
+              </select>
             </div>
-          </div>
+            <div>
+              <label for="rank" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Ranking</label>
+              <select id="rank" name="rank" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="">Select</option>
+                @foreach($lookupData['ranks'] as $r) <option value="{{ $r }}">{{ $r }}</option> @endforeach
+              </select>
+            </div>
+            <div>
+              <label for="savings_budget" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Savings Budget</label>
+              <input id="savings_budget" name="savings_budget" type="number" step="0.01" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            </div>
+            <div>
+              <label for="children" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Children</label>
+              <input id="children" name="children" type="number" min="0" class="form-control" value="0" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            </div>
 
-          <div class="form-row">
-            <div class="form-group" style="flex:1">
-              <label for="address">Address</label>
-              <textarea id="address" name="address" class="form-control" rows="2"></textarea>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="married" style="display:block;">Married</label>
-              <input id="married" name="married" type="checkbox" value="1">
-            </div>
-            <div class="form-group">
-              <label for="children">Children</label>
-              <input id="children" name="children" type="number" min="0" class="form-control" value="0">
-            </div>
-            <div class="form-group">
-              <label for="children_details">Children Details</label>
-              <input id="children_details" name="children_details" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="vehicle">Vehicle</label>
-              <input id="vehicle" name="vehicle" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="house">House</label>
-              <input id="house" name="house" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="business">Business</label>
-              <input id="business" name="business" class="form-control">
-            </div>
-          </div>
+          <input type="hidden" id="salutation" name="salutation" value="Mr">
+          <input type="hidden" id="first_contact" name="first_contact">
+          <input type="hidden" id="next_follow_up" name="next_follow_up">
+          <input type="hidden" id="coid" name="coid">
+          <input type="hidden" id="married" name="married" value="0">
+          <input type="hidden" id="children_details" name="children_details">
+          <input type="hidden" id="vehicle" name="vehicle">
+          <input type="hidden" id="house" name="house">
+          <input type="hidden" id="business" name="business">
+          <input type="hidden" id="other" name="other">
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeContactModal()">Cancel</button>
+        <div class="modal-footer" style="display: none;">
           <button type="button" class="btn-delete" id="contactDeleteBtn" style="display:none;" onclick="deleteContact()">Delete</button>
-          <button type="submit" class="btn-save">Save</button>
         </div>
       </form>
     </div>
@@ -569,256 +590,196 @@
     return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // Open contact details (full page view) - MUST be defined before HTML onclick handlers
-  async function openContactDetails(id) {
-    try {
-      const res = await fetch(`/contacts/${id}`, {
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', function(){
+    // Add button handler
+    const addBtn = document.getElementById('addContactBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', function() {
+        openContactModal('add');
+      });
+    }
+
+    // Column button
+    const columnBtn = document.getElementById('columnBtn2');
+    if (columnBtn) {
+      columnBtn.addEventListener('click', function() {
+        openColumnModal();
+      });
+    }
+
+    // Filter toggle handler
+    const filterToggle = document.getElementById('filterToggle');
+    if (filterToggle) {
+      const urlParams = new URLSearchParams(window.location.search);
+      filterToggle.checked = urlParams.get('follow_up') === 'true' || urlParams.get('follow_up') === '1';
+      
+      filterToggle.addEventListener('change', function(e) {
+        const u = new URL(window.location.href);
+        if (this.checked) {
+          u.searchParams.set('follow_up', '1');
+        } else {
+          u.searchParams.delete('follow_up');
+        }
+        window.location.href = u.toString();
+      });
+    }
+
+    // To Follow Up button handler
+    const followUpBtn = document.getElementById('followUpBtn');
+    if (followUpBtn) {
+      followUpBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const u = new URL(window.location.href);
+        u.searchParams.set('follow_up', '1');
+        window.location.href = u.toString();
+      });
+    }
+
+    // List ALL button handler
+    const listAllBtn = document.getElementById('listAllBtn');
+    if (listAllBtn) {
+      listAllBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const u = new URL(window.location.href);
+        u.searchParams.delete('follow_up');
+        window.location.href = u.toString();
+      });
+    }
+
+    // Setup form listeners on page load
+    setupContactFormListeners(document.getElementById('contactModal'));
+  });
+
+
+  // Open modal for add
+  function openContactModal(mode) {
+    const modal = document.getElementById('contactModal');
+    if (!modal) return;
+    
+    const title = document.getElementById('contactModalTitle');
+    const form = document.getElementById('contactForm');
+    const deleteBtn = document.getElementById('contactDeleteBtn');
+    const formMethod = document.getElementById('contactFormMethod');
+    
+    if (mode === 'add') {
+      if (title) title.textContent = 'Add Contact';
+      if (form) {
+        form.action = '{{ route("contacts.store") }}';
+        form.reset();
+      }
+      if (formMethod) formMethod.innerHTML = '';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+      currentContactId = null;
+      const ageDisplay = document.getElementById('age_display');
+      if (ageDisplay) ageDisplay.value = '';
+    }
+    
+    document.body.style.overflow = 'hidden';
+    modal.classList.add('show');
+    setTimeout(() => setupContactFormListeners(modal), 100);
+  }
+
+  // Open modal with contact data for editing
+  function openModalWithContact(mode, contact) {
+    const modal = document.getElementById('contactModal');
+    if (!modal) return;
+    
+    const title = document.getElementById('contactModalTitle');
+    const form = document.getElementById('contactForm');
+    const deleteBtn = document.getElementById('contactDeleteBtn');
+    const formMethod = document.getElementById('contactFormMethod');
+    
+    if (mode === 'edit' && contact) {
+      if (title) title.textContent = 'Edit Contact';
+      if (form) {
+        form.action = `/contacts/${currentContactId}`;
+      }
+      if (formMethod) {
+        formMethod.innerHTML = '';
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'PUT';
+        formMethod.appendChild(methodInput);
+      }
+      if (deleteBtn) deleteBtn.style.display = 'block';
+      
+      const fields = ['type','contact_name','contact_no','wa','occupation','employer','email_address','address','location','dob','acquired','source','source_name','agency','agent','status','rank','savings_budget','children'];
+      fields.forEach(id => {
+        const el = form.querySelector(`#${id}`);
+        if (!el) return;
+        if (el.type === 'checkbox') {
+          el.checked = !!contact[id];
+        } else if (el.type === 'date') {
+          if (contact[id]) {
+            let dateValue = contact[id];
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}/)) {
+              el.value = dateValue.substring(0, 10);
+            } else if (typeof dateValue === 'string') {
+              try {
+                const date = new Date(dateValue);
+                if (!isNaN(date.getTime())) el.value = date.toISOString().substring(0, 10);
+              } catch (e) {}
+            }
+          }
+        } else if (el.tagName === 'SELECT') {
+          el.value = contact[id] ?? '';
+        } else {
+          el.value = contact[id] ?? '';
         }
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const contact = await res.json();
-      currentContactId = id;
       
-      // Get all required elements
-      const contactPageName = document.getElementById('contactPageName');
-      const contactPageTitle = document.getElementById('contactPageTitle');
-      const clientsTableView = document.getElementById('clientsTableView');
-      const contactPageView = document.getElementById('contactPageView');
-      const contactDetailsPageContent = document.getElementById('contactDetailsPageContent');
-      const contactFormPageContent = document.getElementById('contactFormPageContent');
-      const editContactFromPageBtn = document.getElementById('editContactFromPageBtn');
-      const closeContactPageBtn = document.getElementById('closeContactPageBtn');
-      
-      if (!contactPageName || !contactPageTitle || !clientsTableView || !contactPageView || 
-          !contactDetailsPageContent || !contactFormPageContent) {
-        console.error('Required elements not found');
-        alert('Error: Page elements not found');
-        return;
+      const dobField = form.querySelector('#dob');
+      const ageDisplay = document.getElementById('age_display');
+      if (dobField && ageDisplay && contact.dob) {
+        try {
+          const dob = new Date(contact.dob);
+          const today = new Date();
+          let age = today.getFullYear() - dob.getFullYear();
+          const monthDiff = today.getMonth() - dob.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+          ageDisplay.value = age;
+        } catch (e) {}
       }
-      
-      // Set contact name in header
-      const contactName = contact.contact_name || contact.contact_id || 'Unknown';
-      contactPageName.textContent = contactName;
-      contactPageTitle.textContent = 'Contact';
-      
-      populateContactDetails(contact);
-      
-      // Hide table view, show page view
-      clientsTableView.classList.add('hidden');
-      contactPageView.style.display = 'block';
-      contactPageView.classList.add('show');
-      contactDetailsPageContent.style.display = 'block';
-      contactFormPageContent.style.display = 'none';
-      if (editContactFromPageBtn) editContactFromPageBtn.style.display = 'inline-block';
-      if (closeContactPageBtn) closeContactPageBtn.style.display = 'inline-block';
-    } catch (e) {
-      console.error(e);
-      alert('Error loading contact details: ' + e.message);
+    }
+    
+    document.body.style.overflow = 'hidden';
+    modal.classList.add('show');
+    setTimeout(() => setupContactFormListeners(modal), 100);
+  }
+
+  // Setup form event listeners
+  function setupContactFormListeners(container) {
+    if (!container) return;
+    const dobField = container.querySelector('#dob');
+    const ageDisplay = document.getElementById('age_display');
+    if (dobField && ageDisplay) {
+      dobField.addEventListener('change', function() {
+        if (this.value) {
+          try {
+            const dob = new Date(this.value);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+            ageDisplay.value = age;
+          } catch (e) {
+            ageDisplay.value = '';
+          }
+        } else {
+          ageDisplay.value = '';
+        }
+      });
     }
   }
 
-  // Populate contact details view
-  function populateContactDetails(contact) {
-    const content = document.getElementById('contactDetailsContent');
-    if (!content) return;
-
-    const col1 = `
-      <div class="detail-section">
-        <div class="detail-section-header">CONTACT DETAILS</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Contact ID</span>
-            <div class="detail-value">${contact.contact_id || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Salutation</span>
-            <div class="detail-value">${contact.salutation || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Contact Name</span>
-            <div class="detail-value">${contact.contact_name || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Contact No</span>
-            <div class="detail-value">${contact.contact_no || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Email Address</span>
-            <div class="detail-value">${contact.email_address || '-'}</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const col2 = `
-      <div class="detail-section">
-        <div class="detail-section-header">TYPE & SOURCE</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Type</span>
-            <div class="detail-value">${contact.type || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Occupation</span>
-            <div class="detail-value">${contact.occupation || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Employer</span>
-            <div class="detail-value">${contact.employer || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Source</span>
-            <div class="detail-value">${contact.source || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Source Name</span>
-            <div class="detail-value">${contact.source_name || '-'}</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const col3 = `
-      <div class="detail-section">
-        <div class="detail-section-header">STATUS & DATES</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Status</span>
-            <div class="detail-value">${contact.status || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Rank</span>
-            <div class="detail-value">${contact.rank || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Acquired</span>
-            <div class="detail-value">${formatDate(contact.acquired)}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">1st Contact</span>
-            <div class="detail-value">${formatDate(contact.first_contact)}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Next Follow Up</span>
-            <div class="detail-value">${formatDate(contact.next_follow_up)}</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const col4 = `
-      <div class="detail-section">
-        <div class="detail-section-header">ADDITIONAL INFO</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">COID</span>
-            <div class="detail-value">${contact.coid || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">DOB</span>
-            <div class="detail-value">${formatDate(contact.dob)}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Agency</span>
-            <div class="detail-value">${contact.agency || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Agent</span>
-            <div class="detail-value">${contact.agent || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Savings Budget</span>
-            <div class="detail-value">${formatNumber(contact.savings_budget)}</div>
-          </div>
-        </div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-header">PERSONAL INFO</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Married</span>
-            <div class="detail-value">
-              <input type="checkbox" ${contact.married ? 'checked' : ''} disabled>
-            </div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Children</span>
-            <div class="detail-value">${contact.children || '0'}</div>
-          </div>
-          <div class="detail-row" style="align-items:flex-start;">
-            <span class="detail-label">Address</span>
-            <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${contact.address || ''}</textarea>
-          </div>
-          <div class="detail-row" style="align-items:flex-start;">
-            <span class="detail-label">Children Details</span>
-            <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${contact.children_details || ''}</textarea>
-          </div>
-        </div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-header">ASSETS</div>
-        <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Vehicle</span>
-            <div class="detail-value">${contact.vehicle || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">House</span>
-            <div class="detail-value">${contact.house || '-'}</div>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Business</span>
-            <div class="detail-value">${contact.business || '-'}</div>
-          </div>
-          <div class="detail-row" style="align-items:flex-start;">
-            <span class="detail-label">Other</span>
-            <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${contact.other || ''}</textarea>
-          </div>
-        </div>
-      </div>
-    `;
-
-    content.innerHTML = col1 + col2 + col3 + col4;
+  function closeContactModal(){
+    document.getElementById('contactModal').classList.remove('show');
+    currentContactId = null;
+    document.body.style.overflow = '';
   }
-
-  // Open contact page (Add or Edit)
-  async function openContactPage(mode) {
-    if (mode === 'add') {
-      openContactForm('add');
-    } else {
-      if (currentContactId) {
-        openEditContact(currentContactId);
-      }
-    }
-  }
-
-  // open add button - use full-page view
-  document.getElementById('addContactBtn').addEventListener('click', () => {
-    openContactPage('add');
-  });
-
-  // column modals for both buttons
-  document.getElementById('columnBtn2').addEventListener('click', () => {
-    openColumnModal();
-  });
-
-  // archived filter toggles query param 'archived'
-  document.addEventListener('DOMContentLoaded', function(){
-    const btn = document.getElementById('archivedOnlyBtn');
-    const params = new URLSearchParams(window.location.search);
-    const active = params.get('archived') === 'true' || params.get('archived') === '1';
-    if (active) { btn.classList.add('active'); }
-    btn.addEventListener('click', () => {
-      const u = new URL(window.location.href);
-      const val = u.searchParams.get('archived');
-      if (val === 'true' || val === '1') { u.searchParams.delete('archived'); } else { u.searchParams.set('archived','1'); }
-      window.location.href = u.toString();
-    });
-
-  });
 
   // show edit: fetch /contacts/{id}/edit which returns JSON in controller
   async function openEditContact(id){
@@ -832,121 +793,11 @@
       if (!res.ok) throw new Error('Network error');
       const contact = await res.json();
       currentContactId = id;
-      openContactForm('edit', contact);
+      openModalWithContact('edit', contact);
     } catch (e) {
       console.error(e);
       alert('Error loading contact data');
     }
-  }
-
-  function openContactForm(mode, contact = null) {
-    // Clone form from modal
-    const modalForm = document.getElementById('contactModal').querySelector('form');
-    const pageForm = document.getElementById('contactPageForm');
-    const formContentDiv = pageForm.querySelector('div[style*="padding:12px"]');
-    
-    // Clone the modal form body
-    const modalBody = modalForm.querySelector('.modal-body');
-    if (modalBody && formContentDiv) {
-      formContentDiv.innerHTML = modalBody.innerHTML;
-    }
-
-    const formMethod = document.getElementById('contactPageFormMethod');
-    const deleteBtn = document.getElementById('contactDeleteBtn');
-    const editBtn = document.getElementById('editContactFromPageBtn');
-    const closeBtn = document.getElementById('closeContactPageBtn');
-    const closeFormBtn = document.getElementById('closeContactFormBtn');
-
-    if (mode === 'add') {
-      document.getElementById('contactPageTitle').textContent = 'Add Contact';
-      document.getElementById('contactPageName').textContent = '';
-      pageForm.action = '{{ route("contacts.store") }}';
-      formMethod.innerHTML = '';
-      deleteBtn.style.display = 'none';
-      if (editBtn) editBtn.style.display = 'none';
-      if (closeBtn) closeBtn.style.display = 'inline-block';
-      if (closeFormBtn) closeFormBtn.style.display = 'none';
-      pageForm.reset();
-      // reset checkboxes
-      const marriedCheckbox = formContentDiv ? formContentDiv.querySelector('#married') : null;
-      if (marriedCheckbox) marriedCheckbox.checked = false;
-    } else {
-      const contactName = contact.contact_name || contact.contact_id || 'Unknown';
-      document.getElementById('contactPageTitle').textContent = 'Edit Contact';
-      document.getElementById('contactPageName').textContent = contactName;
-      pageForm.action = `/contacts/${currentContactId}`;
-      const methodInput = document.createElement('input');
-      methodInput.type = 'hidden';
-      methodInput.name = '_method';
-      methodInput.value = 'PUT';
-      formMethod.innerHTML = '';
-      formMethod.appendChild(methodInput);
-      deleteBtn.style.display = 'inline-block';
-      if (editBtn) editBtn.style.display = 'none';
-      if (closeBtn) closeBtn.style.display = 'none';
-      if (closeFormBtn) closeFormBtn.style.display = 'inline-block';
-
-      // populate fields safely
-      const fields = ['salutation','contact_name','contact_no','email_address','type','occupation','employer','acquired','source','status','rank','first_contact','next_follow_up','coid','dob','source_name','agency','agent','savings_budget','address','children','children_details','vehicle','house','business','other'];
-      fields.forEach(k => {
-        const el = formContentDiv ? formContentDiv.querySelector(`#${k}`) : null;
-        if (!el) return;
-        if (el.type === 'checkbox') {
-          el.checked = !!contact[k];
-        } else if (el.type === 'date') {
-          el.value = contact[k] ? (typeof contact[k] === 'string' ? contact[k].substring(0,10) : contact[k]) : '';
-        } else {
-          el.value = contact[k] ?? '';
-        }
-      });
-      const marriedCheckbox = formContentDiv ? formContentDiv.querySelector('#married') : null;
-      if (marriedCheckbox) marriedCheckbox.checked = !!contact.married;
-    }
-
-    // Hide table view, show page view
-    document.getElementById('clientsTableView').classList.add('hidden');
-    const contactPageView = document.getElementById('contactPageView');
-    contactPageView.style.display = 'block';
-    contactPageView.classList.add('show');
-    document.getElementById('contactDetailsPageContent').style.display = 'none';
-    document.getElementById('contactFormPageContent').style.display = 'block';
-  }
-
-  function closeContactPageView() {
-    const contactPageView = document.getElementById('contactPageView');
-    contactPageView.classList.remove('show');
-    contactPageView.style.display = 'none';
-    document.getElementById('clientsTableView').classList.remove('hidden');
-    document.getElementById('contactDetailsPageContent').style.display = 'none';
-    document.getElementById('contactFormPageContent').style.display = 'none';
-    currentContactId = null;
-  }
-
-  // Edit button from details page
-  const editBtn = document.getElementById('editContactFromPageBtn');
-  if (editBtn) {
-    editBtn.addEventListener('click', function() {
-      if (currentContactId) {
-        openEditContact(currentContactId);
-      }
-    });
-  }
-
-  // Legacy function for backward compatibility - redirects to details view
-  function openContactModal(mode, contact = null){
-    if (mode === 'add') {
-      openContactPage('add');
-    } else if (contact && currentContactId) {
-      openEditContact(currentContactId);
-    }
-  }
-
-  function closeContactModal(){
-    // Also close page view if open
-    closeContactPageView();
-    document.getElementById('contactModal').classList.remove('show');
-    currentContactId = null;
-    document.body.style.overflow = '';
   }
 
   function deleteContact(){
@@ -1151,17 +1002,22 @@
   }
 
   // close modals on ESC and clicking backdrop
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); } });
-  document.querySelectorAll('.modal').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
-  });
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); } });
+    document.querySelectorAll('.modal').forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
+    });
 
-  // Basic client-side validation for contact form (prevent empty required)
-  document.getElementById('contactForm').addEventListener('submit', function(e){
-    const req = this.querySelectorAll('[required]');
-    let ok = true;
-    req.forEach(f => { if (!String(f.value||'').trim()) { ok = false; f.style.borderColor='red'; } else { f.style.borderColor=''; } });
-    if (!ok) { e.preventDefault(); alert('Please fill required fields'); }
+    // Basic client-side validation for contact form (prevent empty required)
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+      contactForm.addEventListener('submit', function(e){
+        const req = this.querySelectorAll('[required]');
+        let ok = true;
+        req.forEach(f => { if (!String(f.value||'').trim()) { ok = false; f.style.borderColor='red'; } else { f.style.borderColor=''; } });
+        if (!ok) { e.preventDefault(); alert('Please fill required fields'); }
+      });
+    }
   });
 </script>
 

@@ -14,12 +14,28 @@ class LifeProposalController extends Controller
     {
         $query = LifeProposal::query();
         
+        // Filter for "To Follow Up" - proposals with offer_date in the past or within next 7 days, and not submitted
+        $followUp = $request->input('follow_up');
+        if ($followUp && ($followUp == 'true' || $followUp == '1')) {
+            $query->whereNotNull('offer_date')
+                  ->where('offer_date', '<=', now()->addDays(7))
+                  ->where('is_submitted', false);
+        }
+        
         // Filter for Submitted proposals
-        if ($request->has('submitted') && $request->submitted == 'true') {
+        $submitted = $request->input('submitted');
+        if ($submitted && ($submitted == 'true' || $submitted == '1')) {
             $query->where('is_submitted', true);
         }
         
-        $proposals = $query->orderBy('created_at', 'desc')->paginate(10); // <-- paginate here
+        $proposals = $query->orderBy('created_at', 'desc')->paginate(10);
+        
+        // Calculate expiration status for each proposal
+        $proposals->getCollection()->transform(function ($proposal) {
+            $proposal->hasExpired = $proposal->hasExpired();
+            $proposal->hasExpiring = $proposal->hasExpiring();
+            return $proposal;
+        });
         
         // Get lookup data for dropdowns
         $lookupData = $this->getLookupData();

@@ -5,6 +5,49 @@
 
 @include('partials.table-styles')
 
+<style>
+  /* Toggle Switch Styling */
+  #filterToggle {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    outline: none;
+  }
+  
+  #filterToggle:checked {
+    background-color: #28a745;
+  }
+  
+  #filterToggle::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  #filterToggle:checked::before {
+    left: 28px;
+  }
+  
+  #filterToggleLabel {
+    min-width: 30px;
+    display: inline-block;
+  }
+</style>
+
 @php
   $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
   $selectedColumns = session('task_columns', $config['default_columns'] ?? []);
@@ -20,11 +63,19 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Tasks</h3>
+        <h3>{{ request()->has('overdue') && request()->overdue ? 'Tasks - Overdue' : 'Tasks' }}</h3>
         <div class="records-found">Records Found - {{ $tasks->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-          <div class="filter-group">
-            <button class="btn btn-overdue" id="overdueOnly" type="button">Overdue Only</button>
+          <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+            <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+              <span style="font-size:13px;">Filter</span>
+              <input type="checkbox" id="filterToggle" {{ request()->has('overdue') && request()->overdue ? 'checked' : '' }}>
+            </label>
+            @if(request()->has('overdue') && request()->overdue)
+              <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+            @else
+              <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:{{ request()->has('overdue') && request()->overdue ? '#000' : '#6c757d' }}; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
+            @endif
           </div>
         </div>
       </div>
@@ -44,8 +95,14 @@
     <div class="table-responsive" id="tableResponsive">
             <table id="tasksTable">
               <thead>
+                
                 <tr>
-            
+                  <th style="text-align:center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                      <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                      <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+                    </svg>
+                  </th>
                   <th>Action</th>
                   @foreach($selectedColumns as $col)
                     @if(isset($columnDefinitions[$col]))
@@ -60,9 +117,17 @@
               <tbody>
                 @foreach($tasks as $task)
                 <tr class="{{ $task->isOverdue() ? 'overdue' : '' }}">
-            
+                <td class="bell-cell {{ $task->isOverdue() ? 'expired' : ($task->isExpiringSoon() ? 'expiring' : '') }}">
+                  <div style="display:flex; align-items:center; justify-content:center;">
+                    @php
+                      $isExpired = $task->isOverdue();
+                      $isExpiring = $task->isExpiringSoon();
+                    @endphp
+                    <div class="status-indicator {{ $isExpired ? 'expired' : 'normal' }}" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : ($isExpiring ? '#f3742a' : 'transparent') }}; background-color:{{ $isExpired ? '#dc3545' : 'transparent' }};"></div>
+                  </div>
+                </td>
                   <td class="action-cell">
-                    <svg class="action-expand" onclick="openTaskDetails({{ $task->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                    <svg class="action-expand" onclick="openEditTask({{ $task->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                       <rect x="9" y="9" width="6" height="6" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                       <path d="M12 9L12 5M12 15L12 19M9 12L5 12M15 12L19 12" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
                       <path d="M12 5L10 7M12 5L14 7M12 19L10 17M12 19L14 17M5 12L7 10M5 12L7 14M19 12L17 10M19 12L17 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -71,10 +136,12 @@
                       @foreach($selectedColumns as $col)
                       @if($col == 'task_id')
                         <td data-column="task_id">
-                          <a href="javascript:void(0)" onclick="openTaskDetails({{ $task->id }})" style="color:#007bff; text-decoration:underline;">{{ $task->task_id }}</a>
+                          <a href="javascript:void(0)" onclick="openEditTask({{ $task->id }})" style="color:#007bff; text-decoration:underline;">{{ $task->task_id }}</a>
                         </td>
                       @elseif($col == 'category')
                         <td data-column="category">{{ $task->category }}</td>
+                      @elseif($col == 'item')
+                        <td data-column="item">{{ $task->item ?? '-' }}</td>
                       @elseif($col == 'description')
                         <td data-column="description">{{ $task->description }}</td>
                       @elseif($col == 'name')
@@ -85,6 +152,17 @@
                         <td data-column="due_date">{{ $task->due_date? \Carbon\Carbon::parse($task->due_date)->format('d-M-y') : '' }}</td>
                       @elseif($col == 'due_time')
                         <td data-column="due_time">{{ $task->due_time ? $task->due_time : '' }}</td>
+                      @elseif($col == 'due_in')
+                        <td data-column="due_in">
+                          @php
+                            $dueIn = $task->getDueInDays();
+                          @endphp
+                          @if($dueIn !== null)
+                            {{ $dueIn }}
+                          @else
+                            -
+                          @endif
+                        </td>
                       @elseif($col == 'date_in')
                         <td data-column="date_in">{{ $task->date_in ? \Carbon\Carbon::parse($task->date_in)->format('d-M-y') : '' }}</td>
                       @elseif($col == 'assignee')
@@ -142,88 +220,63 @@
      </div>
   </div>
 
-  <!-- Task Page View (Full Page) -->
-  <div class="client-page-view" id="taskPageView" style="display:none;">
-    <div class="client-page-header">
-      <div class="client-page-title">
-        <span id="taskPageTitle">Task</span> - <span class="client-name" id="taskPageName"></span>
-      </div>
-      <div class="client-page-actions">
-        <button class="btn btn-edit" id="editTaskFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
-        <button class="btn" id="closeTaskPageBtn" onclick="closeTaskPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
-      </div>
-    </div>
-    <div class="client-page-body">
-      <div class="client-page-content">
-        <!-- Task Details View -->
-        <div id="taskDetailsPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div id="taskDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
-              <!-- Content will be loaded via JavaScript -->
-            </div>
-          </div>
-        </div>
-        
-        <!-- Task Edit/Add Form -->
-        <div id="taskFormPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div style="display:flex; justify-content:flex-end; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
-              <div class="client-page-actions">
-                <button type="button" class="btn-delete" id="taskDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteTask()">Delete</button>
-                <button type="submit" form="taskPageForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
-                <button type="button" class="btn" id="closeTaskFormBtn" onclick="closeTaskPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Close</button>
-              </div>
-            </div>
-            <form id="taskPageForm" method="POST" action="{{ route('tasks.store') }}">
-              @csrf
-              <div id="taskPageFormMethod" style="display:none;"></div>
-              <div style="padding:12px;">
-                <!-- Form content will be cloned from modal -->
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Add/Edit Task Modal (hidden, used for form structure) -->
   <div class="modal" id="taskModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h4 id="modalTitle">Add Task</h4>
-        <button type="button" class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #ddd;">
+        <h4 id="modalTitle" style="margin: 0; font-size: 18px; font-weight: bold;">Add Task</h4>
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" form="taskForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 6px 16px; border-radius: 2px; cursor: pointer;">Save</button>
+          <button type="button" class="btn-cancel" onclick="closeModal()" style="background: #000; color: #fff; border: none; padding: 6px 16px; border-radius: 2px; cursor: pointer;">Cancel</button>
+        </div>
       </div>
       <form id="taskForm" method="POST">
         @csrf
         <div id="formMethod" style="display: none;"></div>
         
-        <div class="modal-body">
+        <div class="modal-body" style="padding: 20px;">
           <!-- ALWAYS render inputs for add/edit so JS can set values and server validation can run.
                Column selection only affects table display, not the add/edit form. -->
-          <div class="form-row">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-              <label for="category">Category</label>
-              <input type="text" class="form-control" id="category" name="category" required>
+              <label for="category" style="display: block; margin-bottom: 5px; font-weight: 500;">Category</label>
+              <select class="form-control" id="category" name="category" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Category</option>
+                @foreach($categories as $cat)
+                  <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group">
-              <label for="description">Description</label>
-              <input type="text" class="form-control" id="description" name="description" required>
+              <label for="item" style="display: block; margin-bottom: 5px; font-weight: 500;">Item</label>
+              <input type="text" class="form-control" id="item" name="item" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
             <div class="form-group">
-              <label for="task_id_hidden" style="visibility:hidden">placeholder</label>
-              <input type="hidden" id="task_id_hidden" name="task_id_hidden">
+              <label for="description" style="visibility:hidden">Description</label>
+              <input type="hidden" id="description" name="description" value="">
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-              <label for="name">Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
+              <label for="name" style="display: block; margin-bottom: 5px; font-weight: 500;">Name</label>
+              <select class="form-control" id="name" name="name" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Name</option>
+                <optgroup label="Contacts">
+                  @foreach($contacts as $contact)
+                    <option value="{{ $contact->name }}" data-contact-no="{{ $contact->contact_no }}">{{ $contact->name }}</option>
+                  @endforeach
+                </optgroup>
+                <optgroup label="Clients">
+                  @foreach($clients as $client)
+                    <option value="{{ $client->name }}" data-contact-no="{{ $client->contact_no }}">{{ $client->name }}</option>
+                  @endforeach
+                </optgroup>
+              </select>
             </div>
             <div class="form-group">
-              <label for="contact_no">Contact No</label>
-              <input type="text" class="form-control" id="contact_no" name="contact_no">
+              <label for="contact_no" style="display: block; margin-bottom: 5px; font-weight: 500;">Contact No.</label>
+              <input type="text" class="form-control" id="contact_no" name="contact_no" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
             <div class="form-group">
               <label for="assignee_small" style="visibility:hidden">placeholder</label>
@@ -231,82 +284,80 @@
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-              <label for="due_date">Due Date</label>
-              <input type="date" class="form-control" id="due_date" name="due_date" required>
+              <label for="due_date" style="display: block; margin-bottom: 5px; font-weight: 500;">Due Date</label>
+              <input type="date" class="form-control" id="due_date" name="due_date" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
             <div class="form-group">
-              <label for="due_time">Due Time</label>
-              <input type="time" class="form-control" id="due_time" name="due_time">
+              <label for="due_time" style="display: block; margin-bottom: 5px; font-weight: 500;">Due Time</label>
+              <input type="time" class="form-control" id="due_time" name="due_time" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
             <div class="form-group">
-              <label for="date_in">Date In</label>
-              <input type="date" class="form-control" id="date_in" name="date_in">
+              <label for="date_in" style="visibility:hidden">placeholder</label>
+              <input type="hidden" id="date_in" name="date_in">
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-              <label for="assignee">Assignee</label>
-              <input type="text" class="form-control" id="assignee" name="assignee" required>
+              <label for="assignee" style="display: block; margin-bottom: 5px; font-weight: 500;">Assignee</label>
+              <select class="form-control" id="assignee" name="assignee" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Assignee</option>
+                @foreach($users as $user)
+                  <option value="{{ $user->name }}">{{ $user->name }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group">
-              <label for="task_status">Task Status</label>
-              <select class="form-control" id="task_status" name="task_status" required>
+              <label for="task_status" style="display: block; margin-bottom: 5px; font-weight: 500;">Task Status</label>
+              <select class="form-control" id="task_status" name="task_status" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
                 <option value="Not Done">Not Done</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Completed">Completed</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="date_done">Date Done</label>
-              <input type="date" class="form-control" id="date_done" name="date_done">
+              <label for="date_done" style="display: block; margin-bottom: 5px; font-weight: 500;">Date Done</label>
+              <input type="date" class="form-control" id="date_done" name="date_done" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
-              <label for="task_notes">Task Notes</label>
-              <input type="text" class="form-control" id="task_notes" name="task_notes">
-            </div>
-            <div class="form-group" style="align-items: center; display:flex; gap:8px;">
-              <label style="display: flex; align-items: center; gap: 8px; margin:0;">
-                <input type="checkbox" id="repeat" name="repeat" value="1">
-                Repeat
-              </label>
-            </div>
-            <div class="form-group">
-              <label for="frequency">Frequency</label>
-              <input type="text" class="form-control" id="frequency" name="frequency">
+              <label for="task_notes" style="display: block; margin-bottom: 5px; font-weight: 500;">Task Notes</label>
+              <textarea class="form-control" id="task_notes" name="task_notes" rows="3" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px; resize: vertical;"></textarea>
             </div>
           </div>
 
           <div style="border: 1px solid #ddd; padding: 12px; margin-bottom: 12px;">
-            <h5 style="margin: 0 0 10px 0; font-size: 14px;">Repeat / Frequency</h5>
+            <h5 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 500;">Repeat / Frequency</h5>
             
-            <div class="form-row">
-              <div class="form-group">
-                <label for="rpt_date">Repeat Date</label>
-                <input type="date" class="form-control" id="rpt_date" name="rpt_date">
+            <div class="form-row" style="display: grid; grid-template-columns: auto 1fr; gap: 15px; margin-bottom: 15px; align-items: center;">
+              <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="repeat" name="repeat" value="1" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="repeat" style="margin: 0; cursor: pointer;">Repeat</label>
               </div>
               <div class="form-group">
-                <label for="rpt_stop_date">Repeat Stop Date</label>
-                <input type="date" class="form-control" id="rpt_stop_date" name="rpt_stop_date">
+                <input type="text" class="form-control" id="frequency" name="frequency" placeholder="Frequency" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+              </div>
+            </div>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div class="form-group">
+                <label for="rpt_date" style="display: block; margin-bottom: 5px; font-weight: 500;">Repeat Date</label>
+                <input type="date" class="form-control" id="rpt_date" name="rpt_date" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
               </div>
               <div class="form-group">
-                <!-- empty placeholder to keep three-column layout -->
-                <label style="visibility:hidden">placeholder</label>
-                <input type="hidden">
+                <label for="rpt_stop_date" style="display: block; margin-bottom: 5px; font-weight: 500;">Repeat Stop Date</label>
+                <input type="date" class="form-control" id="rpt_stop_date" name="rpt_stop_date" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
               </div>
             </div>
           </div>
         </div>
         
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <div class="modal-footer" style="display: none;">
           <button type="button" class="btn-delete" id="deleteBtn" style="display: none;" onclick="deleteTask()">Delete</button>
-          <button type="submit" class="btn-save">Save</button>
         </div>
       </form>
     </div>
@@ -331,11 +382,13 @@
               $all = [
                 'task_id'=>'Task ID',
                 'category'=>'Category',
+                'item'=>'Item',
                 'description'=>'Description',
                 'name'=>'Name',
                 'contact_no'=>'Contact No',
                 'due_date'=>'Due Date',
                 'due_time'=>'Due Time',
+                'due_in'=>'Due in',
                 'date_in'=>'Date In',
                 'assignee'=>'Assignee',
                 'task_status'=>'Task Status',
@@ -462,162 +515,6 @@
       return `${date.getDate()}-${months[date.getMonth()]}-${String(date.getFullYear()).slice(-2)}`;
     }
 
-    // Open task details (full page view) - MUST be defined before event listeners
-    async function openTaskDetails(id) {
-      try {
-        const res = await fetch(`/tasks/${id}`, {
-          headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const task = await res.json();
-        currentTaskId = id;
-        
-        // Get all required elements
-        const taskPageName = document.getElementById('taskPageName');
-        const taskPageTitle = document.getElementById('taskPageTitle');
-        const clientsTableView = document.getElementById('clientsTableView');
-        const taskPageView = document.getElementById('taskPageView');
-        const taskDetailsPageContent = document.getElementById('taskDetailsPageContent');
-        const taskFormPageContent = document.getElementById('taskFormPageContent');
-        const editTaskFromPageBtn = document.getElementById('editTaskFromPageBtn');
-        const closeTaskPageBtn = document.getElementById('closeTaskPageBtn');
-        
-        if (!taskPageName || !taskPageTitle || !clientsTableView || !taskPageView || 
-            !taskDetailsPageContent || !taskFormPageContent) {
-          console.error('Required elements not found');
-          alert('Error: Page elements not found');
-          return;
-        }
-        
-        // Set task name in header
-        const taskName = task.task_id || task.name || 'Unknown';
-        taskPageName.textContent = taskName;
-        taskPageTitle.textContent = 'Task';
-        
-        populateTaskDetails(task);
-        
-        // Hide table view, show page view
-        clientsTableView.classList.add('hidden');
-        taskPageView.style.display = 'block';
-        taskPageView.classList.add('show');
-        taskDetailsPageContent.style.display = 'block';
-        taskFormPageContent.style.display = 'none';
-        if (editTaskFromPageBtn) editTaskFromPageBtn.style.display = 'inline-block';
-        if (closeTaskPageBtn) closeTaskPageBtn.style.display = 'inline-block';
-      } catch (e) {
-        console.error(e);
-        alert('Error loading task details: ' + e.message);
-      }
-    }
-
-    // Populate task details view
-    function populateTaskDetails(task) {
-      const content = document.getElementById('taskDetailsContent');
-      if (!content) return;
-
-      const col1 = `
-        <div class="detail-section">
-          <div class="detail-section-header">TASK DETAILS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Task ID</span>
-              <div class="detail-value">${task.task_id || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Category</span>
-              <div class="detail-value">${task.category || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Description</span>
-              <div class="detail-value">${task.description || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Name</span>
-              <div class="detail-value">${task.name || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Contact No</span>
-              <div class="detail-value">${task.contact_no || '-'}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const col2 = `
-        <div class="detail-section">
-          <div class="detail-section-header">DATES & TIME</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Due Date</span>
-              <div class="detail-value">${formatDate(task.due_date)}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Due Time</span>
-              <div class="detail-value">${task.due_time || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Date In</span>
-              <div class="detail-value">${formatDate(task.date_in)}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Date Done</span>
-              <div class="detail-value">${formatDate(task.date_done)}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const col3 = `
-        <div class="detail-section">
-          <div class="detail-section-header">ASSIGNMENT & STATUS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Assignee</span>
-              <div class="detail-value">${task.assignee || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Task Status</span>
-              <div class="detail-value">${task.task_status || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Repeat</span>
-              <div class="detail-value">
-                <input type="checkbox" ${task.repeat ? 'checked' : ''} disabled>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Frequency</span>
-              <div class="detail-value">${task.frequency || '-'}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const col4 = `
-        <div class="detail-section">
-          <div class="detail-section-header">REPEAT SETTINGS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Repeat Date</span>
-              <div class="detail-value">${formatDate(task.rpt_date)}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Repeat Stop Date</span>
-              <div class="detail-value">${formatDate(task.rpt_stop_date)}</div>
-            </div>
-            <div class="detail-row" style="align-items:flex-start;">
-              <span class="detail-label">Task Notes</span>
-              <textarea class="detail-value" style="min-height:40px; resize:vertical; flex:1; font-size:11px; padding:4px 6px;" readonly>${task.task_notes || ''}</textarea>
-            </div>
-          </div>
-        </div>
-      `;
-
-      content.innerHTML = col1 + col2 + col3 + col4;
-    }
 
     // Initialize column checkboxes
     function initializeColumnCheckboxes() {
@@ -627,26 +524,9 @@
       });
     }
 
-    // Add Task Button
-    document.getElementById('addTaskBtn').addEventListener('click', function() {
-      openTaskPage('add');
-    });
+    // Add Task Button - moved to DOMContentLoaded to ensure button exists
+    // Column Button - moved to DOMContentLoaded to ensure button exists
 
-    // Column Button
-    document.getElementById('columnBtn').addEventListener('click', function() {
-      openColumnModal();
-    });
-
-    // Open task page (Add or Edit)
-    async function openTaskPage(mode) {
-      if (mode === 'add') {
-        openTaskForm('add');
-      } else {
-        if (currentTaskId) {
-          openEditTask(currentTaskId);
-        }
-      }
-    }
 
     async function openEditTask(id) {
       try {
@@ -659,133 +539,194 @@
         if (!res.ok) throw new Error('Network error');
         const task = await res.json();
         currentTaskId = id;
-        openTaskForm('edit', task);
+        openModalWithTask('edit', task);
       } catch (e) {
         console.error(e);
         alert('Error loading task data');
       }
     }
-
-    function openTaskForm(mode, task = null) {
-      // Clone form from modal
-      const modalForm = document.getElementById('taskModal').querySelector('form');
-      const pageForm = document.getElementById('taskPageForm');
-      const formContentDiv = pageForm.querySelector('div[style*="padding:12px"]');
-      
-      // Clone the modal form body
-      const modalBody = modalForm.querySelector('.modal-body');
-      if (modalBody && formContentDiv) {
-        formContentDiv.innerHTML = modalBody.innerHTML;
+    
+    // Open modal with task data for editing
+    function openModalWithTask(mode, task) {
+      const modal = document.getElementById('taskModal');
+      if (!modal) {
+        console.error('Modal not found');
+        return;
       }
-
-      const formMethod = document.getElementById('taskPageFormMethod');
-      const deleteBtn = document.getElementById('taskDeleteBtn');
-      const editBtn = document.getElementById('editTaskFromPageBtn');
-      const closeBtn = document.getElementById('closeTaskPageBtn');
-      const closeFormBtn = document.getElementById('closeTaskFormBtn');
-
-      if (mode === 'add') {
-        document.getElementById('taskPageTitle').textContent = 'Add Task';
-        document.getElementById('taskPageName').textContent = '';
-        pageForm.action = '{{ route("tasks.store") }}';
-        formMethod.innerHTML = '';
-        deleteBtn.style.display = 'none';
-        if (editBtn) editBtn.style.display = 'none';
-        if (closeBtn) closeBtn.style.display = 'inline-block';
-        if (closeFormBtn) closeFormBtn.style.display = 'none';
-        pageForm.reset();
-      } else {
-        const taskName = task.task_id || task.name || 'Unknown';
-        document.getElementById('taskPageTitle').textContent = 'Edit Task';
-        document.getElementById('taskPageName').textContent = taskName;
-        pageForm.action = `/tasks/${currentTaskId}`;
-        formMethod.innerHTML = `@method('PUT')`;
-        deleteBtn.style.display = 'inline-block';
-        if (editBtn) editBtn.style.display = 'none';
-        if (closeBtn) closeBtn.style.display = 'none';
-        if (closeFormBtn) closeFormBtn.style.display = 'inline-block';
-
-        const fields = ['category','description','name','contact_no','due_date','due_time','date_in','assignee','task_status','date_done','task_notes','frequency','rpt_date','rpt_stop_date'];
+      
+      const title = document.getElementById('modalTitle');
+      const form = document.getElementById('taskForm');
+      const deleteBtn = document.getElementById('deleteBtn');
+      const formMethod = document.getElementById('formMethod');
+      
+      if (mode === 'edit' && task) {
+        if (title) title.textContent = 'Edit Task';
+        if (form) {
+          form.action = `/tasks/${currentTaskId}`;
+          form.method = 'POST';
+        }
+        if (formMethod) formMethod.innerHTML = '@method("PUT")';
+        if (deleteBtn) deleteBtn.style.display = 'block';
+        
+        // Populate form fields
+        const fields = ['category','item','description','name','contact_no','due_date','due_time','date_in','assignee','task_status','date_done','task_notes','frequency','rpt_date','rpt_stop_date'];
         fields.forEach(id => {
-          const el = formContentDiv ? formContentDiv.querySelector(`#${id}`) : null;
+          const el = form.querySelector(`#${id}`);
           if (!el) return;
           if (el.type === 'checkbox') {
             el.checked = !!task[id];
           } else if (el.type === 'date') {
-            el.value = task[id] ? (typeof task[id] === 'string' ? task[id].substring(0,10) : task[id]) : '';
+            // Handle date fields - format to YYYY-MM-DD
+            if (task[id]) {
+              let dateValue = task[id];
+              if (typeof dateValue === 'string') {
+                // If it's already in YYYY-MM-DD format, use it directly
+                if (dateValue.match(/^\d{4}-\d{2}-\d{2}/)) {
+                  el.value = dateValue.substring(0, 10);
+                } else {
+                  // Try to parse and format the date
+                  try {
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                      el.value = date.toISOString().substring(0, 10);
+                    }
+                  } catch (e) {
+                    el.value = '';
+                  }
+                }
+              } else {
+                el.value = '';
+              }
+            } else {
+              el.value = '';
+            }
+          } else if (el.type === 'time') {
+            // Handle time fields
+            if (task[id]) {
+              let timeValue = task[id];
+              if (typeof timeValue === 'string') {
+                // If it's already in HH:MM format, use it directly
+                if (timeValue.match(/^\d{2}:\d{2}/)) {
+                  el.value = timeValue.substring(0, 5);
+                } else {
+                  el.value = timeValue;
+                }
+              } else {
+                el.value = '';
+              }
+            } else {
+              el.value = '';
+            }
+          } else if (el.tagName === 'SELECT') {
+            el.value = task[id] ?? '';
           } else {
             el.value = task[id] ?? '';
           }
         });
         
         // Handle repeat checkbox
-        const repeatCheckbox = formContentDiv ? formContentDiv.querySelector('#repeat') : null;
+        const repeatCheckbox = form.querySelector('#repeat');
         if (repeatCheckbox) {
           repeatCheckbox.checked = !!task.repeat;
         }
-      }
-
-      // Hide table view, show page view
-      document.getElementById('clientsTableView').classList.add('hidden');
-      const taskPageView = document.getElementById('taskPageView');
-      taskPageView.style.display = 'block';
-      taskPageView.classList.add('show');
-      document.getElementById('taskDetailsPageContent').style.display = 'none';
-      document.getElementById('taskFormPageContent').style.display = 'block';
-    }
-
-    function closeTaskPageView() {
-      const taskPageView = document.getElementById('taskPageView');
-      taskPageView.classList.remove('show');
-      taskPageView.style.display = 'none';
-      document.getElementById('clientsTableView').classList.remove('hidden');
-      document.getElementById('taskDetailsPageContent').style.display = 'none';
-      document.getElementById('taskFormPageContent').style.display = 'none';
-      currentTaskId = null;
-    }
-
-    // Edit button from details page
-    const editBtn = document.getElementById('editTaskFromPageBtn');
-    if (editBtn) {
-      editBtn.addEventListener('click', function() {
-        if (currentTaskId) {
-          openEditTask(currentTaskId);
+        
+        // Sync item to description if needed
+        const itemField = form.querySelector('#item');
+        const descField = form.querySelector('#description');
+        if (itemField && descField && !task.description && task.item) {
+          descField.value = task.item;
+        } else if (itemField && descField && !descField.value && itemField.value) {
+          descField.value = itemField.value;
         }
-      });
+      }
+      
+      // prevent body scrollbar when modal open
+      document.body.style.overflow = 'hidden';
+      modal.classList.add('show');
+      
+      // Setup event listeners for modal form
+      setTimeout(() => {
+        setupFormEventListeners(modal);
+      }, 100);
     }
+
+    // Setup event listeners for form dropdowns
+    function setupFormEventListeners(container) {
+      if (!container) return;
+      
+      // Handle name dropdown change to auto-fill contact_no
+      const nameSelect = container.querySelector('#name');
+      const contactNoInput = container.querySelector('#contact_no');
+      if (nameSelect && contactNoInput) {
+        nameSelect.addEventListener('change', function() {
+          const selectedOption = this.options[this.selectedIndex];
+          if (selectedOption && selectedOption.dataset.contactNo) {
+            contactNoInput.value = selectedOption.dataset.contactNo;
+          }
+        });
+      }
+      
+      // Sync item to description when item changes (since description is required)
+      const itemInput = container.querySelector('#item');
+      const descInput = container.querySelector('#description');
+      if (itemInput && descInput) {
+        itemInput.addEventListener('input', function() {
+          if (!descInput.value || descInput.value === itemInput.value) {
+            descInput.value = this.value;
+          }
+        });
+      }
+    }
+
+
+    // Edit button from details page - moved to DOMContentLoaded
 
     // Legacy editTask function for backward compatibility
     async function editTask(taskId) {
-      openTaskDetails(taskId);
+      openEditTask(taskId);
     }
 
     // Open Task Modal
     function openModal(mode) {
       const modal = document.getElementById('taskModal');
+      if (!modal) {
+        console.error('Modal not found');
+        return;
+      }
+      
       const title = document.getElementById('modalTitle');
       const form = document.getElementById('taskForm');
       const deleteBtn = document.getElementById('deleteBtn');
       const formMethod = document.getElementById('formMethod');
       
       if (mode === 'add') {
-        title.textContent = 'Add Task';
-        form.action = "{{ route('tasks.store') }}";
-        form.method = 'POST';
-        formMethod.innerHTML = '';
-        deleteBtn.style.display = 'none';
-        form.reset();
+        if (title) title.textContent = 'Add Task';
+        if (form) {
+          form.action = "{{ route('tasks.store') }}";
+          form.method = 'POST';
+          form.reset();
+        }
+        if (formMethod) formMethod.innerHTML = '';
+        if (deleteBtn) deleteBtn.style.display = 'none';
         currentTaskId = null;
       } else {
-        title.textContent = 'Edit Task';
-        form.action = `/tasks/${currentTaskId}`;
-        form.method = 'POST';
-        formMethod.innerHTML = '@method("PUT")';
-        deleteBtn.style.display = 'block';
+        if (title) title.textContent = 'Edit Task';
+        if (form) {
+          form.action = `/tasks/${currentTaskId}`;
+          form.method = 'POST';
+        }
+        if (formMethod) formMethod.innerHTML = '@method("PUT")';
+        if (deleteBtn) deleteBtn.style.display = 'block';
       }
       
       // prevent body scrollbar when modal open
       document.body.style.overflow = 'hidden';
       modal.classList.add('show');
+      
+      // Setup event listeners for modal form
+      setTimeout(() => {
+        setupFormEventListeners(modal);
+      }, 100);
     }
 
     // Close Task Modal
@@ -1001,6 +942,41 @@
     document.addEventListener('DOMContentLoaded', function() {
       // initialize column checkboxes and other startup code
       initializeColumnCheckboxes();
+      
+      // Add Task Button
+      const addTaskBtn = document.getElementById('addTaskBtn');
+      if (addTaskBtn) {
+        addTaskBtn.addEventListener('click', function() {
+          openModal('add');
+        });
+      }
+      
+      // Column Button
+      const columnBtn = document.getElementById('columnBtn');
+      if (columnBtn) {
+        columnBtn.addEventListener('click', function() {
+          openColumnModal();
+        });
+      }
+      
+      // Setup event listeners for modal form on page load
+      setupFormEventListeners(document.getElementById('taskModal'));
+      
+      // Handle form submission to ensure description is set
+      const taskForm = document.getElementById('taskForm');
+      if (taskForm) {
+        taskForm.addEventListener('submit', function(e) {
+          const itemField = this.querySelector('#item');
+          const descField = this.querySelector('#description');
+          if (descField && (!descField.value || descField.value.trim() === '') && itemField && itemField.value) {
+            descField.value = itemField.value;
+          }
+          // Ensure description is not empty (required field)
+          if (descField && (!descField.value || descField.value.trim() === '')) {
+            descField.value = 'Task';
+          }
+        });
+      }
 
       // Print button handler
       const printBtn = document.getElementById('printBtn');
@@ -1014,30 +990,53 @@
       const urlParams = new URLSearchParams(window.location.search);
       const overdueActive = urlParams.get('overdue') === 'true' || urlParams.get('overdue') === '1';
 
-      // overdue button handler
-      const overdueBtn = document.getElementById('overdueOnly');
-      if (overdueBtn) {
-        // optional visual state
-        if (overdueActive) overdueBtn.classList.add('active');
+      // Filter toggle handler
+      const filterToggle = document.getElementById('filterToggle');
+      const filterToggleLabel = document.getElementById('filterToggleLabel');
+      if (filterToggle) {
+        filterToggle.checked = overdueActive;
+        if (filterToggleLabel) {
+          filterToggleLabel.textContent = overdueActive ? 'ON' : 'OFF';
+        }
 
-        overdueBtn.addEventListener('click', function(e) {
-          e.preventDefault();
+        filterToggle.addEventListener('change', function(e) {
           const u = new URL(window.location.href);
-          const val = u.searchParams.get('overdue');
-          if (val === 'true' || val === '1') {
-            u.searchParams.delete('overdue');
-          } else {
+          if (this.checked) {
             u.searchParams.set('overdue', '1');
+            if (filterToggleLabel) filterToggleLabel.textContent = 'ON';
+          } else {
+            u.searchParams.delete('overdue');
+            if (filterToggleLabel) filterToggleLabel.textContent = 'OFF';
           }
-          // navigate keeping other params intact
           window.location.href = u.toString();
         });
       }
 
-      // keep compatibility for a (commented) filterToggle input if later enabled
-      const filterToggle = document.getElementById('filterToggle');
-      if (filterToggle) {
-        filterToggle.checked = overdueActive;
+      // Overdue Only button handler
+      const overdueBtn = document.getElementById('overdueOnly');
+      if (overdueBtn) {
+        if (overdueActive) {
+          overdueBtn.style.background = '#000';
+          overdueBtn.style.color = '#fff';
+        }
+
+        overdueBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const u = new URL(window.location.href);
+          u.searchParams.set('overdue', '1');
+          window.location.href = u.toString();
+        });
+      }
+
+      // List ALL button handler
+      const listAllBtn = document.getElementById('listAllBtn');
+      if (listAllBtn) {
+        listAllBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const u = new URL(window.location.href);
+          u.searchParams.delete('overdue');
+          window.location.href = u.toString();
+        });
       }
     });
 
@@ -1077,11 +1076,17 @@
         
         // Handle notification column (bell-cell)
         if (cell.classList.contains('bell-cell')) {
-          const radio = cell.querySelector('input[type="radio"]');
-          if (radio && radio.checked) {
-            cellContent = '●'; // Filled circle for checked
+          const statusIndicator = cell.querySelector('.status-indicator');
+          if (statusIndicator) {
+            if (statusIndicator.classList.contains('expired')) {
+              cellContent = '●'; // Red filled circle for overdue
+            } else if (cell.classList.contains('expiring')) {
+              cellContent = '○'; // Yellow/orange border for expiring
+            } else {
+              cellContent = ''; // No indicator
+            }
           } else {
-            cellContent = '○'; // Empty circle for unchecked
+            cellContent = '';
           }
         } 
         // Handle action column
@@ -1178,114 +1183,6 @@
       printWindow.document.write(printHTML);
       printWindow.document.close();
     }
-  }
-  
-  let draggedElement = null;
-  let dragOverElement = null;
-  
-  // Initialize drag and drop when column modal opens
-  let dragInitialized = false;
-  function initDragAndDrop() {
-    const columnSelection = document.getElementById('columnSelection');
-    if (!columnSelection) return;
-    
-    // Only initialize once to avoid duplicate event listeners
-    if (dragInitialized) {
-      // Re-enable draggable on all items
-      const columnItems = columnSelection.querySelectorAll('.column-item');
-      columnItems.forEach(item => {
-        item.setAttribute('draggable', 'true');
-      });
-      return;
-    }
-    
-    // Make all column items draggable
-    const columnItems = columnSelection.querySelectorAll('.column-item');
-    
-    columnItems.forEach(item => {
-      // Ensure draggable attribute is set
-      item.setAttribute('draggable', 'true');
-      item.style.cursor = 'move';
-      
-      // Drag start
-      item.addEventListener('dragstart', function(e) {
-        draggedElement = this;
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-        // Create a ghost image
-        const dragImage = this.cloneNode(true);
-        dragImage.style.opacity = '0.5';
-        document.body.appendChild(dragImage);
-        e.dataTransfer.setDragImage(dragImage, 0, 0);
-        setTimeout(() => {
-          if (document.body.contains(dragImage)) {
-            document.body.removeChild(dragImage);
-          }
-        }, 0);
-      });
-      
-      // Drag end
-      item.addEventListener('dragend', function(e) {
-        this.classList.remove('dragging');
-        if (dragOverElement) {
-          dragOverElement.classList.remove('drag-over');
-          dragOverElement = null;
-        }
-        draggedElement = null;
-      });
-      
-      // Drag over
-      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        
-        if (draggedElement && this !== draggedElement) {
-          if (dragOverElement && dragOverElement !== this) {
-            dragOverElement.classList.remove('drag-over');
-          }
-          
-          this.classList.add('drag-over');
-          dragOverElement = this;
-          
-          const rect = this.getBoundingClientRect();
-          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-          
-          if (next) {
-            if (this.nextSibling && this.nextSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else if (!this.nextSibling) {
-              this.parentNode.appendChild(draggedElement);
-            }
-          } else {
-            if (this.previousSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this);
-            }
-          }
-        }
-      });
-      
-      // Drag leave
-      item.addEventListener('dragleave', function(e) {
-        if (!this.contains(e.relatedTarget)) {
-          this.classList.remove('drag-over');
-          if (dragOverElement === this) {
-            dragOverElement = null;
-          }
-        }
-      });
-      
-      // Drop
-      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('drag-over');
-        dragOverElement = null;
-        return false;
-      });
-    });
-    
-    dragInitialized = true;
   }
   </script>
 

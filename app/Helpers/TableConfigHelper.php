@@ -200,18 +200,20 @@ class TableConfigHelper
                 'route_prefix' => 'tasks',
                 'session_key' => 'task_columns',
                 'default_columns' => [
-                    'task_id','category','description','name','contact_no','due_date','due_time',
+                    'task_id','category','item','description','name','contact_no','due_date','due_time','due_in',
                     'date_in','assignee','task_status','date_done','repeat','frequency','rpt_date','rpt_stop_date'
                 ],
                 'mandatory_columns' => ['task_id', 'description', 'task_status'],
                 'column_definitions' => [
                     'task_id' => 'Task ID',
                     'category' => 'Category',
+                    'item' => 'Item',
                     'description' => 'Description',
                     'name' => 'Name',
                     'contact_no' => 'Contact No',
                     'due_date' => 'Due Date',
-                    'due_time' => 'Due Time',
+                    'due_time' => 'Time',
+                    'due_in' => 'Due in',
                     'date_in' => 'Date In',
                     'assignee' => 'Assignee',
                     'task_status' => 'Task Status',

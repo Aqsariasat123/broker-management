@@ -13,6 +13,7 @@ class Task extends Model
     protected $fillable = [
         'task_id',
         'category',
+        'item',
         'description',
         'name',
         'contact_no',
@@ -40,6 +41,31 @@ class Task extends Model
     public function isOverdue()
     {
         return $this->due_date < now()->format('Y-m-d') && $this->task_status !== 'Completed';
+    }
+
+    public function isExpiringSoon($days = 7)
+    {
+        if ($this->task_status === 'Completed' || !$this->due_date) {
+            return false;
+        }
+        
+        $today = now()->startOfDay();
+        $dueDate = \Carbon\Carbon::parse($this->due_date)->startOfDay();
+        $daysUntilDue = $today->diffInDays($dueDate, false);
+        
+        // Return true if due date is within the next $days days and not overdue
+        return $daysUntilDue >= 0 && $daysUntilDue <= $days;
+    }
+
+    public function getDueInDays()
+    {
+        if (!$this->due_date || $this->task_status === 'Completed') {
+            return null;
+        }
+        
+        $today = now()->startOfDay();
+        $dueDate = \Carbon\Carbon::parse($this->due_date)->startOfDay();
+        return $today->diffInDays($dueDate, false);
     }
 
     public static function generateTaskId()

@@ -18,12 +18,44 @@ class ContactController extends Controller
             $query->where('status', 'Archived');
         }
         
+        // Filter for "To Follow Up" - contacts with next_follow_up in the past or within next 7 days
+        if ($request->has('follow_up') && ($request->follow_up == 'true' || $request->follow_up == '1')) {
+            $query->whereNotNull('next_follow_up')
+                  ->where('next_follow_up', '<=', now()->addDays(7))
+                  ->where('status', '!=', 'Archived');
+        }
+        
+        // Filter by contact_id from sidebar
+        if ($request->has('contact_id')) {
+            $query->where('contact_id', $request->contact_id);
+        }
+        
         // Use paginate instead of get
         $contacts = $query->orderBy('created_at', 'desc')->paginate(10);
 
+        // Calculate expiration status for each contact
+        $contacts->getCollection()->transform(function ($contact) {
+            $contact->hasExpired = $contact->hasExpired();
+            $contact->hasExpiring = $contact->hasExpiring();
+            return $contact;
+        });
+
         $lookupData = $this->getLookupData();
         
-        return view('contacts.index', compact('contacts', 'lookupData'));
+        // Get unique employers from contacts and clients for dropdown
+        $employersFromContacts = Contact::whereNotNull('employer')->distinct()->pluck('employer')->filter();
+        $employersFromClients = \App\Models\Client::whereNotNull('employer')->distinct()->pluck('employer')->filter();
+        $allEmployers = $employersFromContacts->merge($employersFromClients)->unique()->sort()->values();
+        
+        // Get unique occupations
+        $occupationsFromContacts = Contact::whereNotNull('occupation')->distinct()->pluck('occupation')->filter();
+        $occupationsFromClients = \App\Models\Client::whereNotNull('occupation')->distinct()->pluck('occupation')->filter();
+        $allOccupations = $occupationsFromContacts->merge($occupationsFromClients)->unique()->sort()->values();
+        
+        // Get users for agents
+        $users = \App\Models\User::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
+        
+        return view('contacts.index', compact('contacts', 'lookupData', 'allEmployers', 'allOccupations', 'users'));
     }
 
     public function store(Request $request)
@@ -31,6 +63,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'contact_name' => 'required|string|max:255',
             'contact_no' => 'nullable|string|max:20',
+            'wa' => 'nullable|string|max:20',
             'type' => 'required|string',
             'occupation' => 'nullable|string|max:255',
             'employer' => 'nullable|string|max:255',
@@ -47,6 +80,7 @@ class ContactController extends Controller
             'agency' => 'nullable|string|max:255',
             'agent' => 'nullable|string|max:255',
             'address' => 'nullable|string',
+            'location' => 'nullable|string|max:255',
             'email_address' => 'nullable|email',
             'savings_budget' => 'nullable|numeric',
             'married' => 'boolean',
@@ -89,6 +123,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'contact_name' => 'required|string|max:255',
             'contact_no' => 'nullable|string|max:20',
+            'wa' => 'nullable|string|max:20',
             'type' => 'required|string',
             'occupation' => 'nullable|string|max:255',
             'employer' => 'nullable|string|max:255',
@@ -105,6 +140,7 @@ class ContactController extends Controller
             'agency' => 'nullable|string|max:255',
             'agent' => 'nullable|string|max:255',
             'address' => 'nullable|string',
+            'location' => 'nullable|string|max:255',
             'email_address' => 'nullable|email',
             'savings_budget' => 'nullable|numeric',
             'married' => 'boolean',
@@ -198,14 +234,22 @@ class ContactController extends Controller
 
     private function getLookupData()
     {
+        $contactTypeCategory = LookupCategory::where('name', 'Contact Type')->first();
+        $sourceCategory = LookupCategory::where('name', 'Source')->first();
+        $agentCategory = LookupCategory::where('name', 'Agent')->first();
+        $agencyCategory = LookupCategory::where('name', 'APL Agency')->first();
+        $salutationCategory = LookupCategory::where('name', 'Salutation')->first();
+        $statusCategory = LookupCategory::where('name', 'Contact Status')->first();
+        $rankCategory = LookupCategory::where('name', 'Rank')->first();
+        
         return [
-            'contact_types' => LookupCategory::where('name', 'Contact Type')->first()->values()->where('active', true)->pluck('name')->toArray(),
-            'sources' => LookupCategory::where('name', 'Source')->first()->values()->where('active', true)->pluck('name')->toArray(),
-            'agents' => LookupCategory::where('name', 'Agent')->first()->values()->where('active', true)->pluck('name')->toArray(),
-            'contact_statuses' => ['Not Contacted', 'In Discussion', 'Proposal Made', 'Keep In View', 'Archived', 'RNR', 'Differed'],
-            'ranks' => ['VIP', 'High', 'Medium', 'Low', 'Warm'],
-            'agencies' => LookupCategory::where('name', 'APL Agency')->first()->values()->where('active', true)->pluck('name')->toArray(),
-            'salutations' => LookupCategory::where('name', 'Salutation')->first()->values()->where('active', true)->pluck('name')->toArray(),
+            'contact_types' => $contactTypeCategory ? $contactTypeCategory->values()->where('active', true)->pluck('name')->toArray() : [],
+            'sources' => $sourceCategory ? $sourceCategory->values()->where('active', true)->pluck('name')->toArray() : [],
+            'agents' => $agentCategory ? $agentCategory->values()->where('active', true)->pluck('name')->toArray() : [],
+            'contact_statuses' => $statusCategory ? $statusCategory->values()->where('active', true)->pluck('name')->toArray() : ['Not Contacted', 'In Discussion', 'Proposal Made', 'Keep In View', 'Archived', 'RNR', 'Differed'],
+            'ranks' => $rankCategory ? $rankCategory->values()->where('active', true)->pluck('name')->toArray() : ['VIP', 'High', 'Medium', 'Low', 'Warm'],
+            'agencies' => $agencyCategory ? $agencyCategory->values()->where('active', true)->pluck('name')->toArray() : [],
+            'salutations' => $salutationCategory ? $salutationCategory->values()->where('active', true)->pluck('name')->toArray() : [],
         ];
     }
 }
