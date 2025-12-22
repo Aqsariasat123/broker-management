@@ -17,13 +17,30 @@ class DocumentController extends Controller
             return response()->json($documents);
         }
         
-        $documents = Document::orderBy('created_at', 'desc')->paginate(10);
+        $query = Document::query();
+        
+        // Filter by client_id if provided
+        // Documents are tied to clients via the 'tied_to' field which stores the client's 'clid'
+        if ($request->has('client_id') && $request->client_id) {
+            $client = \App\Models\Client::find($request->client_id);
+            if ($client && $client->clid) {
+                $query->where('tied_to', $client->clid);
+            }
+        }
+        
+        $documents = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Use TableConfigHelper for selected columns
         $config = \App\Helpers\TableConfigHelper::getConfig('documents');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('documents');
         
-        return view('documents.index', compact('documents', 'selectedColumns'));
+        // Get client information if filtering by client_id
+        $client = null;
+        if ($request->has('client_id') && $request->client_id) {
+            $client = \App\Models\Client::find($request->client_id);
+        }
+        
+        return view('documents.index', compact('documents', 'selectedColumns', 'client'));
     }
 
     public function store(Request $request)

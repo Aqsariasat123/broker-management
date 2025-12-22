@@ -19,7 +19,7 @@ class Claim extends Model
 
     public function policy(): BelongsTo
     {
-        return $this->belongsTo(Policy::class);
+        return $this->belongsTo(Policy::class, 'policy_no', 'policy_no');
     }
 
     public function client(): BelongsTo

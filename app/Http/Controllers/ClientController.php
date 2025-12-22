@@ -32,6 +32,26 @@ class ClientController extends Controller
             });
         }
         
+        // Filter for IDs Expired
+        if ($request->has('filter') && $request->filter == 'ids_expired') {
+            $query->whereNotNull('dob_dor')
+                  ->whereDate('dob_dor', '<', now()->subYears(10));
+        }
+        
+        // Filter for Instalments Overdue
+        if ($request->has('filter') && $request->filter == 'overdue') {
+            $query->whereHas('paymentPlans', function($q) {
+                $q->where('due_date', '<', now()->toDateString())
+                  ->where('status', '!=', 'paid');
+            });
+        }
+        
+        // Filter for Birthdays Today
+        if ($request->has('filter') && $request->filter == 'birthday_today') {
+            $query->whereMonth('dob_dor', now()->month)
+                  ->whereDay('dob_dor', now()->day);
+        }
+        
         // Use paginate instead of get
         $clients = $query->with('policies')->orderBy('created_at', 'desc')->paginate(10);
 
@@ -69,16 +89,16 @@ class ClientController extends Controller
             'nin_bcrn' => 'nullable|string|max:50',
             'dob_dor' => 'nullable|date',
             'mobile_no' => 'required|string|max:20',
-            'wa' => 'nullable',
+            'wa' => 'nullable|string|max:20',
             'district' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
             'source' => 'required|string|max:255',
-            'status' => 'nullable|string|max:50',
+            'status' => 'required|string|max:50',
             'signed_up' => 'required|date',
             'employer' => 'nullable|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'income_source' => 'nullable|string|max:255',
-            'married' => 'nullable',
+            'married' => 'boolean',
             'spouses_name' => 'nullable|string|max:255',
             'alternate_no' => 'nullable|string|max:20',
             'email_address' => 'nullable|email',
@@ -86,9 +106,8 @@ class ClientController extends Controller
             'island' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
             'po_box_no' => 'nullable|string|max:50',
-            'pep' => 'nullable',
+            'pep' => 'boolean',
             'pep_comment' => 'nullable|string',
-            'image' => 'nullable|string|max:255',
             'salutation' => 'nullable|string|max:50',
             'first_name' => 'nullable|string|max:255',
             'other_names' => 'nullable|string|max:255',
@@ -99,10 +118,10 @@ class ClientController extends Controller
             'agency' => 'nullable|string|max:255',
             'agent' => 'nullable|string|max:255',
             'source_name' => 'nullable|string|max:255',
-            'has_vehicle' => 'nullable',
-            'has_house' => 'nullable',
-            'has_business' => 'nullable',
-            'has_boat' => 'nullable',
+            'has_vehicle' => 'boolean',
+            'has_house' => 'boolean',
+            'has_business' => 'boolean',
+            'has_boat' => 'boolean',
             'notes' => 'nullable|string',
             'business_name' => 'nullable|string|max:255',
             'designation' => 'nullable|string|max:255',
@@ -119,37 +138,23 @@ class ClientController extends Controller
         
         $validated = $request->validate($rules);
 
-        // Handle business_name for business clients - convert to first_name and surname
-        if (in_array($request->client_type, ['Business', 'Company', 'Organization']) && isset($validated['business_name'])) {
-            $businessName = trim($validated['business_name']);
-            // Split business name - use whole name as first_name, empty surname
-            $validated['first_name'] = $businessName;
-            $validated['surname'] = '';
-            unset($validated['business_name']);
-        }
-
         // Generate unique CLID
         $latestClient = Client::orderBy('id', 'desc')->first();
         $nextId = $latestClient ? (int)str_replace('CL', '', $latestClient->clid) + 1 : 1001;
         $validated['clid'] = 'CL' . $nextId;
 
-        // Set default status if not provided
-        if (!isset($validated['status']) || empty($validated['status'])) {
-            $validated['status'] = 'Active';
-        }
-
         // Set client_name - both Individual and Business use same format
         $validated['client_name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['other_names'] ?? '') . ' ' . ($validated['surname'] ?? ''));
         
-        // Handle checkbox values - convert to boolean
-        $validated['wa'] = $request->has('wa') && $request->wa == '1' ? '1' : null;
-        $validated['married'] = $request->has('married') && $request->married == '1' ? 1 : 0;
-        $validated['pep'] = $request->has('pep') && $request->pep == '1' ? 1 : 0;
-        $validated['has_vehicle'] = $request->has('has_vehicle') && $request->has_vehicle == '1' ? 1 : 0;
-        $validated['has_house'] = $request->has('has_house') && $request->has_house == '1' ? 1 : 0;
-        $validated['has_business'] = $request->has('has_business') && $request->has_business == '1' ? 1 : 0;
-        $validated['has_boat'] = $request->has('has_boat') && $request->has_boat == '1' ? 1 : 0;
+        // Remove business_name from validated as it's not a database field
+        // unset($validated['business_name']);
+        if (in_array($request->client_type, ['Business', 'Company', 'Organization'])) {
+            $validated['client_name'] = $validated['business_name'];
+            $validated['surname'] =  $validated['business_name'];
+            $validated['first_name'] = '';
+            $validated['other_names'] = '';
 
+        }
         $client = Client::create($validated);
 
         // Handle image upload - store in documents table
@@ -159,15 +164,7 @@ class ClientController extends Controller
             // Validate passport photo dimensions
             $imageInfo = getimagesize($file->getRealPath());
             if ($imageInfo === false) {
-                $errorMessage = 'Invalid image file.';
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $errorMessage,
-                        'errors' => ['image' => [$errorMessage]]
-                    ], 422);
-                }
-                return redirect()->back()->withErrors(['image' => $errorMessage])->withInput();
+                return redirect()->back()->withErrors(['image' => 'Invalid image file.'])->withInput();
             }
             
             $width = $imageInfo[0];
@@ -184,15 +181,9 @@ class ClientController extends Controller
             
             // Check if dimensions are within acceptable range
             if ($width < $minWidth || $width > $maxWidth || $height < $minHeight || $height > $maxHeight) {
-                $errorMessage = 'Photo must be passport size (approximately 600x600 pixels or 413x531 pixels). Current dimensions: ' . $width . 'x' . $height . ' pixels.';
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $errorMessage,
-                        'errors' => ['image' => [$errorMessage]]
-                    ], 422);
-                }
-                return redirect()->back()->withErrors(['image' => $errorMessage])->withInput();
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must be passport size (approximately 600x600 pixels or 413x531 pixels). Current dimensions: ' . $width . 'x' . $height . ' pixels.'
+                ])->withInput();
             }
             
             // Check aspect ratio (should be close to 1:1 for square or 0.78:1 for rectangular)
@@ -205,15 +196,9 @@ class ClientController extends Controller
             $isRectangular = abs($aspectRatio - $rectRatio) <= $tolerance;
             
             if (!$isSquare && !$isRectangular) {
-                $errorMessage = 'Photo must have passport size aspect ratio (square 1:1 or rectangular 35:45mm). Current ratio: ' . round($aspectRatio, 2) . ':1';
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $errorMessage,
-                        'errors' => ['image' => [$errorMessage]]
-                    ], 422);
-                }
-                return redirect()->back()->withErrors(['image' => $errorMessage])->withInput();
+                return redirect()->back()->withErrors([
+                    'image' => 'Photo must have passport size aspect ratio (square 1:1 or rectangular 35:45mm). Current ratio: ' . round($aspectRatio, 2) . ':1'
+                ])->withInput();
             }
             
             $filename = 'client_photo_' . uniqid() . '.' . $file->getClientOriginalExtension();
@@ -295,7 +280,7 @@ class ClientController extends Controller
             'district' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
             'source' => 'required|string|max:255',
-            'status' => 'nullable|string|max:50',
+            'status' => 'required|string|max:50',
             'signed_up' => 'required|date',
             'employer' => 'nullable|string|max:255',
             'contact_person' => 'nullable|string|max:255',
@@ -333,46 +318,20 @@ class ClientController extends Controller
         
         // Conditional validation based on client type
         // Both Individual and Business now use the same fields (first_name and surname)
-        if ($request->client_type === 'Individual' || in_array($request->client_type, ['Business', 'Company', 'Organization'])) {
+        if ($request->client_type === 'Individual' ) {
             $rules['first_name'] = 'required|string|max:255';
             $rules['surname'] = 'required|string|max:255';
         }
         
         $validated = $request->validate($rules);
 
-        // Handle business_name for business clients - convert to first_name and surname
-        if (in_array($request->client_type, ['Business', 'Company', 'Organization']) && isset($validated['business_name'])) {
-            $businessName = trim($validated['business_name']);
-            // Split business name - use whole name as first_name, empty surname
-            $validated['first_name'] = $businessName;
-            $validated['surname'] = '';
-            unset($validated['business_name']);
-        }
-
-        // Set default status if not provided
-        if (!isset($validated['status']) || empty($validated['status'])) {
-            $validated['status'] = 'Active';
-        }
-
         // Set client_name - both Individual and Business use same format
+
         $validated['client_name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['other_names'] ?? '') . ' ' . ($validated['surname'] ?? ''));
         
-        // Remove business_name from validated as it's not a database field
-        unset($validated['business_name']);
+     
 
-        // Handle checkbox values - convert to boolean
-        $validated['wa'] = $request->has('wa') && $request->wa == '1' ? '1' : null;
-        $validated['married'] = $request->has('married') && $request->married == '1' ? 1 : 0;
-        $validated['pep'] = $request->has('pep') && $request->pep == '1' ? 1 : 0;
-        $validated['has_vehicle'] = $request->has('has_vehicle') && $request->has_vehicle == '1' ? 1 : 0;
-        $validated['has_house'] = $request->has('has_house') && $request->has_house == '1' ? 1 : 0;
-        $validated['has_business'] = $request->has('has_business') && $request->has_business == '1' ? 1 : 0;
-        $validated['has_boat'] = $request->has('has_boat') && $request->has_boat == '1' ? 1 : 0;
-
-        // Validate that image is required if no existing image
-        if (!$client->image && !$request->hasFile('image')) {
-            return redirect()->back()->withErrors(['image' => 'Passport size photo is required.'])->withInput();
-        }
+        // Image is optional - no validation required
 
         // Handle image upload if new file provided - store in documents table
         if ($request->hasFile('image')) {
@@ -446,6 +405,19 @@ class ClientController extends Controller
             // Keep existing image
             $validated['image'] = $client->image;
         }
+
+        // Set client_name - both Individual and Business use same format
+        $validated['client_name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['other_names'] ?? '') . ' ' . ($validated['surname'] ?? ''));
+        
+        // Remove business_name from validated as it's not a database field
+        if (in_array($request->client_type, ['Business', 'Company', 'Organization'])) {
+            $validated['client_name'] = $validated['contact_person'];
+            $validated['surname'] =  $validated['contact_person'];
+            $validated['first_name'] = $validated['contact_person'];
+            $validated['other_names'] = $validated['contact_person'];
+
+        }
+        // Remove business_name from validated as it's not a database field
 
         $client->update($validated);
 

@@ -17,6 +17,15 @@ class LifeProposalController extends Controller
     {
         $query = LifeProposal::query();
         
+        // Filter by status
+        if ($request->has('status') && $request->status) {
+            if ($request->status == 'pending') {
+                $query->where('status', 'Pending');
+            } elseif ($request->status == 'processing') {
+                $query->where('status', 'Processing');
+            }
+        }
+        
         // Filter for "To Follow Up" - proposals with offer_date in the past or within next 7 days, and not submitted
         $followUp = $request->input('follow_up');
         if ($followUp && ($followUp == 'true' || $followUp == '1')) {
@@ -90,7 +99,6 @@ class LifeProposalController extends Controller
             'maturity_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'agency' => 'nullable|string|max:255',
-            'class' => 'nullable|string|max:255',
             'is_submitted' => 'sometimes|boolean',
         ]);
 

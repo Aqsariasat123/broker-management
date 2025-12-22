@@ -273,3 +273,10 @@
   background: #f5f5f5;
   z-index: 1;
 }
+.cards a,
+.cards a:hover,
+.cards a:focus,
+.cards a:active {
+  text-decoration: none !important;
+  color: inherit;
+}

@@ -15,6 +15,15 @@
 @endphp
 
 <div class="dashboard">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="page-title-section">
+              <h3 style="margin:0; font-size:18px; font-weight:600;">
+                  Expenses
+              </h3>
+           </div>
+      </div>
+  </div>
   <!-- Main Expenses Table View -->
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
@@ -22,7 +31,6 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Expenses</h3>
         <div class="records-found">Records Found - {{ $expenses->total() }}</div>
       </div>
       <div class="action-buttons">
@@ -71,17 +79,8 @@
               </td>
               <td class="action-cell">
                 @if(auth()->check() && (auth()->user()->hasPermission('expenses.view') || auth()->user()->hasPermission('expenses.edit') || auth()->user()->isAdmin()))
-                <svg class="action-expand" onclick="openExpenseDetails({{ $expense->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <!-- Maximize icon: four arrows pointing outward from center -->
-                  <!-- Top arrow -->
-                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Right arrow -->
-                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Bottom arrow -->
-                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Left arrow -->
-                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openExpenseDetails({{ $expense->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+               
                 @endif
               </td>
               @foreach($selectedColumns as $col)

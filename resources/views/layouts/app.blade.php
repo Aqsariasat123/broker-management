@@ -6,6 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Keystone Dashboard</title>
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>

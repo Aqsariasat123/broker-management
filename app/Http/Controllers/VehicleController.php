@@ -11,6 +11,7 @@ class VehicleController extends Controller
     public function index(Request $request)
     {
         $policyId = $request->get('policy_id');
+        $clientId = $request->get('client_id');
         $policy = null;
         
         if ($policyId) {
@@ -18,6 +19,14 @@ class VehicleController extends Controller
             $vehicles = Vehicle::where('policy_id', $policyId)
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
+        } elseif ($clientId) {
+            // Filter vehicles by client_id through policy relationship
+            $vehicles = Vehicle::whereHas('policy', function($q) use ($clientId) {
+                $q->where('client_id', $clientId);
+            })
+            ->with('policy.client')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         } else {
             // Show all vehicles without a policy_id or all vehicles
             $vehicles = Vehicle::whereNull('policy_id')
@@ -29,7 +38,13 @@ class VehicleController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('vehicles');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('vehicles');
         
-        return view('vehicles.index', compact('vehicles', 'selectedColumns', 'policy', 'policyId'));
+        // Get client information if filtering by client_id
+        $client = null;
+        if ($clientId) {
+            $client = \App\Models\Client::find($clientId);
+        }
+        
+        return view('vehicles.index', compact('vehicles', 'selectedColumns', 'policy', 'policyId', 'client', 'clientId'));
     }
 
     public function store(Request $request)

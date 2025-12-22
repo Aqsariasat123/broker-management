@@ -7,6 +7,12 @@
   // Constants
   const MANDATORY_FIELDS = ['client_name', 'client_type', 'mobile_no', 'source', 'status', 'signed_up', 'clid', 'first_name', 'surname'];
   const BUSINESS_TYPES = ['Business', 'Company', 'Organization'];
+  
+  // Pending documents for add mode (will be uploaded after client is created)
+  let pendingDocuments = [];
+  // Pending photo for add mode (will be uploaded after client is created)
+  let pendingPhoto = null;
+  
   const PASSPORT_PHOTO_DIMENSIONS = {
     minWidth: 350,
     maxWidth: 650,
@@ -32,6 +38,18 @@
     }
     element.style.display = '';
     element.style.removeProperty('display');
+  }
+
+  // Show/hide BOs button based on client_type
+  function updateBOsButtonVisibility(client) {
+    const bosButton = document.querySelector('#clientPageView .nav-tab[data-tab="bos"]');
+    if (bosButton && client) {
+      if (client.client_type === 'Individual') {
+        bosButton.style.setProperty('display', 'none', 'important');
+      } else {
+        bosButton.style.setProperty('display', 'inline-block', 'important');
+      }
+    }
   }
 
   // Helper: Hide element with !important
@@ -533,6 +551,62 @@
   }
 
   // ============================================================================
+  // NOTIFICATION SYSTEM
+  // ============================================================================
+
+  function showNotification(message, type = 'success') {
+    const banner = document.getElementById('notificationBanner');
+    const messageEl = document.getElementById('notificationMessage');
+    const closeBtn = banner?.querySelector('button');
+    if (!banner || !messageEl) return;
+    
+    // Set message
+    messageEl.textContent = message;
+    
+    // Set color based on type
+    if (type === 'success') {
+      banner.style.background = '#28a745';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    } else if (type === 'error') {
+      banner.style.background = '#dc3545';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    } else if (type === 'warning') {
+      banner.style.background = '#ffc107';
+      banner.style.color = '#000';
+      if (closeBtn) closeBtn.style.color = '#000';
+    } else {
+      banner.style.background = '#17a2b8';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    }
+    
+    // Show banner
+    banner.style.display = 'flex';
+    banner.style.alignItems = 'center';
+    banner.style.justifyContent = 'center';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      closeNotification();
+    }, 5000);
+  }
+
+  // Make showNotification globally accessible
+  window.showNotification = showNotification;
+
+  function closeNotification() {
+    const banner = document.getElementById('notificationBanner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
+  }
+
+  // Make closeNotification globally accessible
+  window.closeNotification = closeNotification;
+
+  // ============================================================================
   // INITIALIZATION
   // ============================================================================
 
@@ -556,6 +630,17 @@
         });
       }
     });
+    
+    // Navigate to follow_up view when toggle is checked, or list all when unchecked
+    // Preserve existing URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (filtersVisible) {
+      urlParams.set('follow_up', 'true');
+    } else {
+      urlParams.delete('follow_up');
+    }
+    const queryString = urlParams.toString();
+    window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
   }
 
   document.getElementById('filterToggle')?.addEventListener('change', handleFilterToggle);
@@ -640,13 +725,21 @@
 
   if (followUpBtn) {
     followUpBtn.addEventListener('click', () => {
-      window.location.href = clientsIndexRoute + '?follow_up=true';
+      // Preserve existing URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('follow_up', 'true');
+      const queryString = urlParams.toString();
+      window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
     });
   }
 
   if (listAllBtn) {
     listAllBtn.addEventListener('click', () => {
-      window.location.href = clientsIndexRoute;
+      // Preserve existing URL parameters except follow_up
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.delete('follow_up');
+      const queryString = urlParams.toString();
+      window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
     });
   }
 
@@ -668,7 +761,85 @@
       }
       const client = await res.json();
       currentClientId = id;
-      openClientModal('edit', client);
+
+      // Get form container
+      const formContainer = document.querySelector('#clientFormPageContent form div[style*="padding:12px"]');
+      if (!formContainer) {
+        console.error('Form container not found');
+        return;
+      }
+
+      // Set form action and method
+      const form = document.querySelector('#clientFormPageContent form');
+      if (form) {
+        form.action = `/clients/${id}`;
+        form.method = 'POST';
+        const methodDiv = form.querySelector('#clientFormMethod');
+        if (methodDiv) {
+          methodDiv.innerHTML = '@method("PUT")';
+        }
+      }
+
+      // Show delete button
+      const deleteBtn = document.querySelector('#clientFormPageContent .btn-delete');
+      if (deleteBtn) {
+        deleteBtn.style.display = 'inline-block';
+      }
+
+      // Populate edit form with same structure as detail page
+      populateClientEditForm(client, formContainer);
+
+      // Set page title (only if elements exist)
+      const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
+      const clientPageTitle = document.getElementById('clientPageTitle');
+      const clientPageName = document.getElementById('clientPageName');
+      const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
+      if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
+
+      // Set up documents section
+      const editFormDocumentsSection = document.getElementById('editFormDocumentsSection');
+      if (editFormDocumentsSection) {
+        // Create documents section HTML
+        const documentsHTML = `
+          <h4 style="font-weight:bold; margin-bottom:10px; color:#000; font-size:13px;">Documents</h4>
+          <div id="editClientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+            ${renderDocumentsList(client.documents || [])}
+          </div>
+          <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <input type="file" id="image" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
+            <button type="button" class="btn" onclick="document.getElementById('image').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
+            <button id="addDocumentBtn2" type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; display:inline-block;">Add Document</button>
+          </div>
+        
+        `;
+        editFormDocumentsSection.innerHTML = documentsHTML;
+        editFormDocumentsSection.style.display = 'block';
+      }
+
+      // Hide table view, show page view
+      document.getElementById('clientsTableView').classList.add('hidden');
+      const clientPageView = document.getElementById('clientPageView');
+      clientPageView.classList.add('show');
+      clientPageView.style.display = 'block';
+      document.getElementById('clientDetailsPageContent').style.display = 'none';
+      document.getElementById('clientFormPageContent').style.display = 'block';
+      
+      // Setup nav tab listeners for page view
+      document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+        newTab.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!currentClientId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?client_id=' + currentClientId;
+        });
+      });
     } catch (e) {
       console.error(e);
       alert('Error loading client data: ' + e.message);
@@ -691,8 +862,10 @@
       currentClientId = clientId;
 
       const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-      document.getElementById('clientPageName').textContent = clientName;
-      document.getElementById('clientPageTitle').textContent = 'Client';
+      const clientPageName = document.getElementById('clientPageName');
+      const clientPageTitle = document.getElementById('clientPageTitle');
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (clientPageTitle) clientPageTitle.textContent = 'Client';
 
       populateClientDetailsModal(client);
 
@@ -703,6 +876,24 @@
       document.getElementById('clientDetailsPageContent').style.display = 'block';
       document.getElementById('clientFormPageContent').style.display = 'none';
       document.getElementById('editClientFromPageBtn').style.display = 'inline-block';
+      
+      // Show/hide BOs button based on client_type
+      updateBOsButtonVisibility(client);
+      
+      // Setup nav tab listeners for page view
+      document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+        newTab.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!currentClientId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?client_id=' + currentClientId;
+        });
+      });
     } catch (e) {
       console.error(e);
       alert('Error loading client details: ' + e.message);
@@ -710,35 +901,403 @@
   }
 
   // Populate client details modal with data
+  // function populateClientDetailsModal(client) {
+  //   // Try page view first, then modal
+  //   let content = document.getElementById('clientDetailsContent');
+  //   if (!content) {
+  //     content = document.getElementById('clientDetailsContentModal');
+  //   }
+  //   if (!content) {
+  //     console.error('clientDetailsContent element not found');
+  //     return;
+  //   }
+
+  //   const dob = client.dob_dor ? formatDate(client.dob_dor) : '';
+  //   const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '';
+  //   const idExpiry = client.id_expiry_date ? formatDate(client.id_expiry_date) : '';
+  //   const idExpiryDays = client.id_expiry_date ? calculateDaysUntilExpiry(client.id_expiry_date) : '';
+  //   const signedUp = client.signed_up ? formatDate(client.signed_up) : '';
+  //   const photoUrl = client.image ? (client.image.startsWith('http') ? client.image : `/storage/${client.image}`) : '';
+
+  //   console.log(client.client_type);
+  //   // Column 1: CUSTOMER DETAILS
+  //   const col1 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">CUSTOMER DETAILS</div>
+  //         <div class="detail-section-body">
+  //           <div class="detail-row">
+  //             <span class="detail-label">Client Type</span>
+  //             <div class="detail-value">${client.client_type === 'Business' ? 'Business' : 'Individual'}</div>
+  //           </div>
+  //           <divclass="detail-row">
+  //             <span class="detail-label">DOB/DOR</span>
+  //             <div style="display:flex; gap:5px; align-items:center; flex:1;">
+  //               <div class="detail-value" style="flex:1;">${dob || '-'}</div>
+  //               <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge || '-'}</div>
+  //             </div>
+  //           </div>
+  //           <div  class="detail-row">
+  //             <span class="detail-label">NIN/BCRN</span>
+  //             <div class="detail-value">${client.nin_bcrn || '-'}</div>
+  //           </div>
+  //           <div class="detail-row">
+  //             <span class="detail-label">ID Expiry Date</span>
+  //             <div style="display:flex; gap:5px; align-items:center; flex:1;">
+  //               <div class="detail-value" style="flex:1;">${idExpiry || '-'}</div>
+  //               <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${idExpiryDays || '-'}</div>
+  //             </div>
+  //           </div>
+  //           <div  class="detail-row">
+  //             <span class="detail-label">Client Status</span>
+  //             <div class="detail-value">
+  //               ${client.status ? `<span class="badge-status" style="background:${client.status === 'Active' ? '#28a745' : '#6c757d'};">${client.status}</span>` : '-'}
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 2: CONTACT DETAILS
+  //   const col2 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">CONTACT DETAILS</div>
+  //         <div class="detail-section-body">
+  //           <div class="detail-row">
+  //             <span class="detail-label">Mobile No</span>
+  //             <div class="detail-value">${client.mobile_no || '-'}</div>
+  //           </div>
+  //           <div  ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none !important;"' : ''}   class="detail-row">
+  //             <span class="detail-label">On Whatsapp</span>
+  //             <div class="detail-value checkbox">
+  //               <input type="checkbox" ${client.wa ? 'checked' : ''} disabled>
+  //             </div>
+  //           </div>
+  //           <div class="detail-row">
+  //             <span class="detail-label">Alternate No</span>
+  //             <div class="detail-value">${client.alternate_no || '-'}</div>
+  //           </div>
+  //           <div  class="detail-row">
+  //             <span class="detail-label">Email Address</span>
+  //             <div class="detail-value">${client.email_address || '-'}</div>
+  //           </div>
+  //           <div class="detail-row">
+  //             <span class="detail-label">Contact Person</span>
+  //             <div class="detail-value">${client.contact_person || '-'}</div>
+  //           </div>
+
+  //           <div  ${client.client_type === 'Individual' ? 'style="display:none !important;"' : ''}  class="detail-row">
+  //             <span class="detail-label">Designation</span>
+  //             <div class="detail-value">${client.designation || '-'}</div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 3: ADDRESS DETAILS
+  //   const col3 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">ADDRESS DETAILS</div>
+  //         <div class="detail-section-body">
+  //           <div class="detail-row">
+  //             <span class="detail-label">District</span>
+  //             <div class="detail-value">${client.district || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Address</span>
+  //             <div class="detail-value">${client.location || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Island</span>
+  //             <div class="detail-value">${client.island || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Country</span>
+  //             <div class="detail-value">${client.country || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">P.O. Box No</span>
+  //             <div class="detail-value">${client.po_box_no || '-'}</div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 4: REGISTRATION DETAILS
+  //   const col4 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">REGISTRATION DETAILS</div>
+  //         <div class="detail-section-body">
+  //           <div class="detail-row">
+  //             <span class="detail-label">Sign Up Date</span>
+  //             <div class="detail-value">${signedUp || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Agency</span>
+  //             <div class="detail-value">${client.agency || 'Keystone'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Agent</span>
+  //             <div class="detail-value">${client.agent || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Source</span>
+  //             <div class="detail-value">${client.source || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Source Name</span>
+  //             <div class="detail-value">${client.source_name || '-'}</div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 5: INDIVIDUAL DETAILS
+  //   const col5 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">${client.client_type === 'Business' ? 'BUSINESS DETAILS' : 'INDIVIDUAL DETAILS'}</div>
+  //         <div class="detail-section-body">
+  //           <div style="display:flex; gap:10px; align-items:flex-start;">
+  //             <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+  //               <div class="detail-row" style="margin-bottom:0;">
+  //                 <span class="detail-label">Salutation</span>
+  //                 <div class="detail-value" style="flex:1;">${client.salutation || '-'}</div>
+  //               </div>
+  //               <div class="detail-row" style="margin-bottom:0;">
+  //                 <span class="detail-label">First Name</span>
+  //                 <div class="detail-value" style="flex:1;">${client.first_name || '-'}</div>
+  //               </div>
+  //               <div class="detail-row" style="margin-bottom:0;">
+  //                 <span class="detail-label">Other Names</span>
+  //                 <div class="detail-value" style="flex:1;">${client.other_names || '-'}</div>
+  //               </div>
+  //               <div class="detail-row" style="margin-bottom:0;">
+  //                 <span class="detail-label">Surname</span>
+  //                 <div class="detail-value" style="flex:1;">${client.surname || '-'}</div>
+  //               </div>
+  //             </div>
+  //             ${photoUrl ? `
+  //               <div style="flex-shrink:0; margin-top:13px;">
+  //                 <img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}')">
+  //               </div>
+  //             ` : `
+  //               <div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>
+  //             `}
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Other Names</span>
+  //             <div class="detail-value">${client.other_names || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Surname</span>
+  //             <div class="detail-value">${client.surname || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Passport No</span>
+  //             <div style="display:flex; gap:5px; align-items:center; flex:1;">
+  //               <div class="detail-value" style="flex:1;">${client.passport_no || '-'}</div>
+  //               <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; font-family:inherit; box-sizing:border-box; min-height:22px; flex-shrink:0;">
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 6: INCOME DETAILS
+  //   const col6 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">${client.client_type === 'Business' ? 'BUSINESS INCOME DETAILS' : 'INDIVIDUAL INCOME DETAILS'}</div>
+  //         <div class="detail-section-body">
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Occupation</span>
+  //             <div class="detail-value">${client.occupation || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Income Source</span>
+  //             <div class="detail-value">${client.income_source || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Employer</span>
+  //             <div class="detail-value">${client.employer || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Monthly Income</span>
+  //             <div class="detail-value">${client.monthly_income || '-'}</div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 7: OTHER DETAILS
+  //   const col7 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">${client.client_type === 'Business' ? 'BUSINESS OTHER DETAILS' : 'INDIVIDUAL OTHER DETAILS'}</div>
+  //         <div class="detail-section-body">
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Married</span>
+  //             <div class="detail-value checkbox">
+  //               <input type="checkbox" ${client.married ? 'checked' : ''} disabled>
+  //             </div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Spouse's Name</span>
+  //             <div class="detail-value">${client.spouses_name || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">PEP</span>
+  //             <div class="detail-value checkbox">
+  //               <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
+  //             </div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">PEP Details</span>
+  //             <div class="detail-value" style="min-height:40px; white-space:pre-wrap;">${client.pep_comment || '-'}</div>
+  //           </div>
+  //           <div ${['Business', 'Company', 'Organization'].includes(client.client_type) ? 'style="display:none;"' : ''} class="detail-row">
+  //             <span class="detail-label">Notes</span>
+  //             <textarea class="detail-value" style="min-height:40px; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Column 8: INSURABLES
+  //   const col8 = `
+  //     <div style="display:flex; flex-direction:column; gap:10px;">
+  //       <div class="detail-section">
+  //         <div class="detail-section-header">${client.client_type === 'Business' ? 'BUSINESS INSURABLES' : 'INDIVIDUAL INSURABLES'}</div>
+  //         <div class="detail-section-body">
+  //           <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+  //             <div ${client.client_type === 'Business' ? 'style="display:none;"' : ''} style="display:flex; align-items:center; gap:8px;">
+  //               <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:default;">Vehicle</label>
+  //               <div class="detail-value checkbox">
+  //                 <input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled>
+  //               </div>
+  //             </div>
+  //             <div ${client.client_type === 'Business' ? 'style="display:none;"' : ''}  style="display:flex; align-items:center; gap:8px;">
+  //               <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:default;">Home</label>
+  //               <div class="detail-value checkbox">
+  //                 <input type="checkbox" ${client.has_house ? 'checked' : ''} disabled>
+  //               </div>
+  //             </div>
+  //             <div ${client.client_type === 'Business' ? 'style="display:none;"' : ''} style="display:flex; align-items:center; gap:8px;">
+  //               <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:default;">Business</label>
+  //               <div class="detail-value checkbox">
+  //                 <input type="checkbox" ${client.has_business ? 'checked' : ''} disabled>
+  //               </div>
+  //             </div>
+  //             <div ${client.client_type === 'Business' ? 'style="display:none;"' : ''} style="display:flex; align-items:center; gap:8px;">
+  //               <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:default;">Boat</label>
+  //               <div class="detail-value checkbox">
+  //                 <input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled>
+  //               </div>
+  //             </div>
+  //           </div>
+  //           <div ${client.client_type === 'Business' ? 'style="display:none;"' : ''} style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
+  //             <label style="font-size:10px; color:#555; font-weight:600; display:block; margin-bottom:4px;">Notes</label>
+  //             <textarea class="detail-value" style="min-height:40px; width:100%; white-space:pre-wrap; resize:vertical; font-size:11px; padding:4px 6px; border:1px solid #ddd; background:#fff; border-radius:2px; box-sizing:border-box;" disabled>${client.notes || ''}</textarea>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   content.innerHTML = col1 + col2 + col3 + col4 + col5 + col6 + col7 + col8;
+
+  //   // Load documents
+  //   const documentsList = document.getElementById('clientDocumentsList');
+  //   if (documentsList) {
+  //     documentsList.innerHTML = renderDocumentsList(client.documents || []);
+  //   }
+
+  //   // Show Add Document button if client has documents or is loaded
+  //   const addDocumentBtn = document.getElementById('addDocumentBtn1');
+  //   if (addDocumentBtn && currentClientId) {
+  //     addDocumentBtn.style.display = 'inline-block';
+  //   }
+
+  //   // Set edit button action
+  //   const editBtn = document.getElementById('editClientFromPageBtn');
+  //   if (editBtn) {
+  //     editBtn.onclick = () => openEditClient(currentClientId);
+  //   }
+
+  //   // Tab navigation
+  //   document.querySelectorAll('.nav-tab').forEach(tab => {
+  //     tab.addEventListener('click', function(e) {
+  //       e.preventDefault();
+  //       const clientId = currentClientId;
+  //       if (!clientId) return;
+
+  //       closeClientDetailsModal();
+
+  //       const baseUrl = this.getAttribute('data-url');
+  //       if (!baseUrl) return;
+
+  //       window.location.href = baseUrl + '?client_id=' + clientId;
+  //     });
+  //   });
+  // }
   function populateClientDetailsModal(client) {
-    const content = document.getElementById('clientDetailsContent');
-    if (!content) return;
+    // Update BOs button visibility
+    updateBOsButtonVisibility(client);
 
-    const dob = client.dob_dor ? formatDate(client.dob_dor) : '';
-    const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '';
-    const idExpiry = client.id_expiry_date ? formatDate(client.id_expiry_date) : '';
-    const idExpiryDays = client.id_expiry_date ? calculateDaysUntilExpiry(client.id_expiry_date) : '';
+    let content = document.getElementById('clientDetailsContent') || document.getElementById('clientDetailsContentModal');
+    if (!content) {
+      console.error('clientDetailsContent element not found');
+      return;
+    }
 
+    const dob = client.dob_dor ? formatDate(client.dob_dor) : '-';
+    const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '-';
+    const idExpiry = client.id_expiry_date ? formatDate(client.id_expiry_date) : '-';
+    const idExpiryDays = client.id_expiry_date ? calculateDaysUntilExpiry(client.id_expiry_date) : '-';
+    const signedUp = client.signed_up ? formatDate(client.signed_up) : '-';
+    const photoUrl = client.image ? (client.image.startsWith('http') ? client.image : `/storage/${client.image}`) : '';
+  
+    const clientType = (client.client_type || '').trim().toLowerCase();
+    const isIndividual = clientType === 'individual';
+    const isBusinessLike = ['business', 'company', 'organization'].includes(clientType);
+  
+    // Helper to conditionally hide rows
+    const hideForBusiness = isBusinessLike ? 'style="display:none;"' : '';
+    const hideForIndividual = isIndividual ? 'style="display:none;"' : '';
+  
+    // Column 1: CUSTOMER DETAILS
     const col1 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">CUSTOMER DETAILS</div>
         <div class="detail-section-body">
           <div class="detail-row">
             <span class="detail-label">Client Type</span>
-            <div class="detail-value">${client.client_type || '-'}</div>
+              <div class="detail-value">${isBusinessLike ? 'Business' : 'Individual'}</div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">DOB/DOR</span>
             <div style="display:flex; gap:5px; align-items:center; flex:1;">
               <div class="detail-value" style="flex:1;">${dob}</div>
               <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge}</div>
             </div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">NIN/BCRN</span>
             <div class="detail-value">${client.nin_bcrn || '-'}</div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">ID Expiry Date</span>
             <div style="display:flex; gap:5px; align-items:center; flex:1;">
               <div class="detail-value" style="flex:1;">${idExpiry}</div>
@@ -747,13 +1306,18 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">Client Status</span>
-            <div class="detail-value">${client.status || 'Active'}</div>
+              <div class="detail-value">
+                ${client.status ? `<span class="badge-status" style="background:${client.status === 'Active' ? '#28a745' : '#6c757d'};">${client.status}</span>` : '-'}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     `;
 
+    // Column 2: CONTACT DETAILS
     const col2 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">CONTACT DETAILS</div>
         <div class="detail-section-body">
@@ -761,6 +1325,12 @@
             <span class="detail-label">Mobile No</span>
             <div class="detail-value">${client.mobile_no || '-'}</div>
           </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">On Whatsapp</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.wa ? 'checked' : ''} disabled>
+              </div>
+            </div>
           <div class="detail-row">
             <span class="detail-label">Alternate No</span>
             <div class="detail-value">${client.alternate_no || '-'}</div>
@@ -773,15 +1343,18 @@
             <span class="detail-label">Contact Person</span>
             <div class="detail-value">${client.contact_person || '-'}</div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForIndividual}>
             <span class="detail-label">Designation</span>
             <div class="detail-value">${client.designation || '-'}</div>
+            </div>
           </div>
         </div>
       </div>
     `;
 
+    // Column 3: ADDRESS DETAILS
     const col3 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">ADDRESS DETAILS</div>
         <div class="detail-section-body">
@@ -789,84 +1362,557 @@
             <span class="detail-label">District</span>
             <div class="detail-value">${client.district || '-'}</div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Address Location</span>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Address</span>
             <div class="detail-value">${client.location || '-'}</div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Location</span>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Island</span>
             <div class="detail-value">${client.island || '-'}</div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">Country</span>
             <div class="detail-value">${client.country || '-'}</div>
           </div>
-          <div class="detail-row">
+            <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">P.O. Box No</span>
             <div class="detail-value">${client.po_box_no || '-'}</div>
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    const col4 = `
+    // Column 7: OTHER DETAILS
+    const col7 = hideForBusiness ? ``: `
+      <div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">OTHER DETAILS</div>
         <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Sign Up Date</span>
-            <div class="detail-value">${client.signed_up ? formatDate(client.signed_up) : '-'}</div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Married</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.married ? 'checked' : ''} disabled>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Source</span>
-            <div class="detail-value">${client.source || '-'}</div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Source Name</span>
-            <div class="detail-value">${client.source_name || '-'}</div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Spouse's Name</span>
+              <div class="detail-value">${client.spouses_name || '-'}</div>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Agency</span>
-            <div class="detail-value">${client.agency || 'Keystone'}</div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">PEP</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
           </div>
-          <div class="detail-row">
-            <span class="detail-label">Agent</span>
-            <div class="detail-value">${client.agent || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">PEP Details</span>
+              <div class="detail-value" style="min-height:40px; white-space:pre-wrap;">${client.pep_comment || '-'}</div>
+            </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Notes</span>
+              <textarea class="detail-value" style="min-height:40px; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    content.innerHTML = col1 + col2 + col3 + col4;
+    // The remaining cards only for Individual
+    const col4 = isIndividual ? '' : /* Registration Details */ `<div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">REGISTRATION DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row"><span class="detail-label">Sign Up Date</span><div class="detail-value">${signedUp}</div></div>
+          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agency || 'Keystone'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agent || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.source || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source Name</span><div class="detail-value">${client.source_name || '-'}</div></div>
+        </div>
+      </div>
+    </div>`;
+  
+    const col5 = !isIndividual ? '' : /* Individual Details with photo */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL DETAILS</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Salutation</span><div class="detail-value">${client.salutation || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">First Name</span><div class="detail-value">${client.first_name || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Other Names</span><div class="detail-value">${client.other_names || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Surname</span><div class="detail-value">${client.surname || '-'}</div></div>
+              </div>
+              ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}')"></div>` 
+                : `<div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>`}
+            </div>
+            <div class="detail-row"><span class="detail-label">Passport No</span><div class="detail-value">${client.passport_no || '-'}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  
+    const col6 = !isIndividual ? '' : /* Income Details */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL INCOME DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row"><span class="detail-label">Occupation</span><div class="detail-value">${client.occupation || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Income Source</span><div class="detail-value">${client.income_source || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Employer</span><div class="detail-value">${client.employer || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Monthly Income</span><div class="detail-value">${client.monthly_income || '-'}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  
+    const col8 = !isIndividual ? '' : /* Insurable Details */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL INSURABLES</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Vehicle</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Home</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_house ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Business</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_business ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Boat</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled></div></div>
+            </div>
+            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
+              <label style="font-size:10px; color:#555;">Notes</label>
+              <textarea class="detail-value" style="min-height:40px; width:100%; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  
+    // Assemble HTML
+    content.innerHTML = col1 + col2 + col3 + col7 + col4 + col5 + col6 + col8;
 
-    // Load documents
+    // Documents
     const documentsList = document.getElementById('clientDocumentsList');
     if (documentsList) {
       documentsList.innerHTML = renderDocumentsList(client.documents || []);
     }
 
-    // Set edit button action
+    // Add Document button
+    const addDocumentBtn = document.getElementById('addDocumentBtn1');
+    if (addDocumentBtn && currentClientId) addDocumentBtn.style.display = 'inline-block';
+  
+    // Edit button
     const editBtn = document.getElementById('editClientFromPageBtn');
-    if (editBtn) {
-      editBtn.onclick = () => openEditClient(currentClientId);
-    }
+    if (editBtn) editBtn.onclick = () => openEditClient(currentClientId);
 
     // Tab navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', function(e) {
         e.preventDefault();
-        const clientId = currentClientId;
-        if (!clientId) return;
-
+        if (!currentClientId) return;
         closeClientDetailsModal();
-
         const baseUrl = this.getAttribute('data-url');
         if (!baseUrl) return;
-
-        window.location.href = baseUrl + '?client_id=' + clientId;
+        window.location.href = baseUrl + '?client_id=' + currentClientId;
       });
     });
   }
+  
+  // Helper function to format date for date input (YYYY-MM-DD)
+  function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    // If it's already in YYYY-MM-DD format, return as is
+    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr;
+    }
+    // Otherwise, parse and format
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Populate client edit form with editable fields (same structure as detail page)
+  function populateClientEditForm(client, formContainer) {
+    const dob = formatDateForInput(client.dob_dor);
+    const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '';
+    const idExpiry = formatDateForInput(client.id_expiry_date);
+    const idExpiryDays = client.id_expiry_date ? calculateDaysUntilExpiry(client.id_expiry_date) : '';
+    const signedUp = formatDateForInput(client.signed_up);
+    const photoUrl = client.image ? (client.image.startsWith('http') ? client.image : `/storage/${client.image}`) : '';
+
+    // Helper function to create select options
+    const createSelectOptions = (options, selectedValue) => {
+      if (!options || !Array.isArray(options)) return '';
+      return options.map(opt => 
+        `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`
+      ).join('');
+    };
+
+    const clientTypes = lookupData?.client_types || ['Individual', 'Business', 'Company', 'Organization'];
+    const clientStatuses = lookupData?.client_statuses || ['Active', 'Inactive', 'Suspended', 'Pending'];
+    const districts = lookupData?.districts || [];
+    const islands = lookupData?.islands || [];
+    const countries = lookupData?.countries || [];
+    const sources = lookupData?.sources || [];
+    const salutations = lookupData?.salutations || [];
+    const incomeSources = lookupData?.income_sources || [];
+    const occupations = lookupData?.occupations || [];
+    const clientType = (client.client_type || '').trim().toLowerCase();
+    const isIndividual = clientType === 'individual';
+    const isBusinessLike = ['business', 'company', 'organization'].includes(clientType);
+  
+    // Helper to conditionally hide rows
+    const hideForBusiness = isBusinessLike ? 'style="display:none;"' : '';
+    const hideForIndividual = isIndividual ? 'style="display:none;"' : '';
+  
+    // Column 1: CUSTOMER DETAILS
+    const col1 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">CUSTOMER DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Client Type</span>
+              <select name="client_type_display" class="detail-value" disabled style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px; background:#f5f5f5; cursor:not-allowed;">
+                ${createSelectOptions(clientTypes, client.client_type)}
+              </select>
+              <input type="hidden" name="client_type" value="${client.client_type || ''}">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">DOB/DOR</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="date" name="dob_dor" value="${dob}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" id="dob_age" value="${dobAge}" readonly class="detail-value" style="width:50px; text-align:center; flex-shrink:0; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">NIN/BCRN</span>
+              <input type="text" name="nin_bcrn" value="${client.nin_bcrn || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ID Expiry Date</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="date" name="id_expiry_date" value="${idExpiry}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" id="id_expiry_days" value="${idExpiryDays}" readonly class="detail-value" style="width:50px; text-align:center; flex-shrink:0; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Client Status</span>
+              <select name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(clientStatuses, client.status)}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 2: CONTACT DETAILS
+    const col2 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">CONTACT DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Mobile No</span>
+              <input type="text" name="mobile_no" value="${client.mobile_no || ''}" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">On Whatsapp</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="wa" value="1" ${client.wa ? 'checked' : ''}>
+              </div>
+            </div>
+            <div class="detail-row" id="alternate_no_row" style="${client.wa ? 'display:none;' : ''}">
+              <span class="detail-label">Alternate No</span>
+              <input type="text" name="alternate_no" value="${client.alternate_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email Address</span>
+              <input type="email" name="email_address" value="${client.email_address || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Contact Person</span>
+              <input type="text" name="contact_person" value="${client.contact_person || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 3: ADDRESS DETAILS
+    const col3 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">ADDRESS DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">District</span>
+              <select name="district" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(districts, client.district)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Address</span>
+              <input type="text" name="location" value="${client.location || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Island</span>
+              <select name="island" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(islands, client.island)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Country</span>
+              <select name="country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(countries, client.country)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">P.O. Box No</span>
+              <input type="text" name="po_box_no" value="${client.po_box_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 4: REGISTRATION DETAILS
+    const col4 =  hideForIndividual ? ``:`
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">REGISTRATION DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Sign Up Date</span>
+              <input type="date" name="signed_up" value="${signedUp}" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Agency</span>
+              <input type="text" name="agency" value="${client.agency || 'Keystone'}" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Agent</span>
+              <input type="text" name="agent" value="${client.agent || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Source</span>
+              <select name="source" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(sources, client.source)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Source Name</span>
+              <input type="text" name="source_name" value="${client.source_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 5: INDIVIDUAL DETAILS
+    const col5 =  hideForBusiness ? ``:`
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL DETAILS</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                <div class="detail-row" style="margin-bottom:0;">
+                  <span class="detail-label">Salutation</span>
+                  <select name="salutation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <option value="">Select</option>
+                    ${createSelectOptions(salutations, client.salutation)}
+                  </select>
+                </div>
+                <div class="detail-row" style="margin-bottom:0;">
+                  <span class="detail-label">First Name</span>
+                  <input type="text" name="first_name" value="${client.first_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                </div>
+              </div>
+              ${photoUrl ? `
+                <div style="flex-shrink:0; margin-top:13px; position:relative;">
+                  <img src="${photoUrl}" alt="Photo" class="detail-photo" id="clientPhotoImg" style="display:block; cursor:pointer;" onclick="document.querySelector('input[type=\\'file\\'][name=\\'image\\']').click()">
+                  <input type="file" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
+                  <input type="hidden" name="existing_image" id="existing_image" value="${client.image || ''}">
+                </div>
+              ` : `
+                <div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; cursor:pointer;" id="clientPhotoPreview" onclick="document.getElementById('image').click()">
+                  <span style="font-size:10px; color:#999;">Click to upload</span>
+                  <input type="file" id="image" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
+                </div>
+              `}
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Other Names</span>
+              <input type="text" name="other_names" value="${client.other_names || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Surname</span>
+              <input type="text" name="surname" value="${client.surname || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Passport No</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="text" name="passport_no" value="${client.passport_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; flex-shrink:0;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 6: INCOME DETAILS
+    const col6 =  hideForBusiness ? ``:`
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INCOME DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Occupation</span>
+              <select name="occupation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(occupations, client.occupation)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Income Source</span>
+              <select name="income_source" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(incomeSources, client.income_source)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Employer</span>
+              <input type="text" name="employer" value="${client.employer || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Monthly Income</span>
+              <input type="text" name="monthly_income" value="${client.monthly_income || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 7: OTHER DETAILS
+    const col7 =   hideForBusiness ? ``:`
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">OTHER DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Married</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="married" value="1" ${client.married ? 'checked' : ''}>
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Spouse's Name</span>
+              <input type="text" name="spouses_name" value="${client.spouses_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">PEP</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="pep" value="1" ${client.pep ? 'checked' : ''}>
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">PEP Details</span>
+              <textarea name="pep_comment" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;">${client.pep_comment || ''}</textarea>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Notes</span>
+              <textarea name="notes" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;">${client.notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Column 8: INSURABLES
+    const col8 = hideForBusiness ? ``: `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INSURABLES</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Vehicle</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_vehicle" value="1" ${client.has_vehicle ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Home</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_house" value="1" ${client.has_house ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Business</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_business" value="1" ${client.has_business ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Boat</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_boat" value="1" ${client.has_boat ? 'checked' : ''}>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
+              <label style="font-size:10px; color:#555; font-weight:600; display:block; margin-bottom:4px;">Notes</label>
+              <textarea name="insurables_notes" class="detail-value" style="min-height:40px; width:100%; resize:vertical; font-size:11px; padding:4px 6px; border:1px solid #ddd; background:#fff; border-radius:2px; box-sizing:border-box;">${client.insurables_notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Create the grid container
+    const gridHTML = `
+      <div id="clientEditFormGrid" style="display:grid; grid-template-columns:repeat(4, 1fr) !important; gap:10px !important;">
+        ${col1}${col2}${col3}${col4}${col5}${col6}${col7}${col8}
+      </div>
+    `;
+
+    formContainer.innerHTML = gridHTML;
+
+    // Setup event listeners
+    const dobInput = formContainer.querySelector('input[name="dob_dor"]');
+    const expiryInput = formContainer.querySelector('input[name="id_expiry_date"]');
+    if (dobInput) {
+      dobInput.addEventListener('change', calculateAgeFromDOB);
+    }
+    if (expiryInput) {
+      expiryInput.addEventListener('change', calculateIDExpiryDays);
+    }
+
+    // Setup WA toggle
+    const waCheckbox = formContainer.querySelector('input[name="wa"]');
+    if (waCheckbox) {
+      waCheckbox.addEventListener('change', function() {
+        const alternateNoRow = formContainer.querySelector('#alternate_no_row');
+        if (alternateNoRow) {
+          alternateNoRow.style.display = this.checked ? 'none' : '';
+        }
+      });
+    }
+
+    // Initial calculations are done above in the event listener setup
+  }
+ 
+  
 
   function closeClientDetailsModal() {
     closeClientPageView();
@@ -886,13 +1932,147 @@
   // PHOTO & DOCUMENT UPLOAD
   // ============================================================================
 
+  // Image preview handler for form
+  function handleImagePreview(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      showNotification('Please select an image file.', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    // Capture the file input reference before async operation
+    const fileInput = event.target;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const imageDataUrl = e.target.result;
+
+      // In add mode (no currentClientId), add photo to pending documents
+      if (!currentClientId) {
+        const photoDoc = {
+          file: file,
+          type: 'Photo',
+          name: 'Client Photo',
+          size: file.size,
+          preview: imageDataUrl,
+          isPhoto: true
+        };
+
+        // Check if photo already exists in pending documents
+        const existingPhotoIndex = pendingDocuments.findIndex(doc => doc.isPhoto);
+        if (existingPhotoIndex >= 0) {
+          pendingDocuments[existingPhotoIndex] = photoDoc;
+        } else {
+          pendingDocuments.push(photoDoc);
+        }
+
+        // Update pending documents display
+        updatePendingDocumentsDisplay();
+        
+        // Also show preview in the imagePreviewContainer if it exists
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreviewContainer && imagePreview) {
+          imagePreview.src = imageDataUrl;
+          imagePreviewContainer.style.display = 'block';
+        }
+      }
+
+      // Update photo in INDIVIDUAL DETAILS section (for edit mode or form preview)
+      const clientPhotoImg = document.getElementById('clientPhotoImg');
+      const clientPhotoPreview = document.getElementById('clientPhotoPreview');
+      
+      if (clientPhotoImg) {
+        // If photo img exists, update its src
+        clientPhotoImg.src = imageDataUrl;
+        clientPhotoImg.style.display = 'block';
+        clientPhotoImg.style.cursor = 'pointer';
+        // Make sure click handler allows changing photo
+        clientPhotoImg.onclick = function() {
+          if (fileInput) fileInput.click();
+        };
+      } else if (clientPhotoPreview) {
+        // If placeholder exists, replace it with image
+        const photoContainer = clientPhotoPreview.parentElement;
+        if (photoContainer) {
+          // Find the file input - it might be inside the placeholder or use the captured one
+          let inputElement = clientPhotoPreview.querySelector('input[type="file"]');
+          if (!inputElement) {
+            inputElement = fileInput;
+          }
+          
+          // Create new img element
+          const newImg = document.createElement('img');
+          newImg.src = imageDataUrl;
+          newImg.alt = 'Photo';
+          newImg.className = 'detail-photo';
+          newImg.id = 'clientPhotoImg';
+          newImg.style.cssText = 'display:block; cursor:pointer;';
+          newImg.onclick = function() {
+            if (inputElement) inputElement.click();
+          };
+          
+          // Replace placeholder with image
+          photoContainer.replaceChild(newImg, clientPhotoPreview);
+          
+          // Re-add the file input if it was removed or not in container
+          if (inputElement) {
+            // Remove from old location if needed
+            if (inputElement.parentElement && inputElement.parentElement !== photoContainer) {
+              inputElement.parentElement.removeChild(inputElement);
+            }
+            // Add to container if not already there
+            if (inputElement.parentElement !== photoContainer) {
+              inputElement.style.display = 'none';
+              inputElement.onchange = handleImagePreview;
+              photoContainer.appendChild(inputElement);
+            }
+          }
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Remove image preview
+  function removeImagePreview() {
+    const imageInput = document.getElementById('image');
+    const previewImg = document.getElementById('imagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    
+    if (imageInput) {
+      imageInput.value = '';
+    }
+ 
+    if (previewImg) {
+      previewImg.src = '';
+    }
+    
+    if (imagePreviewContainer) {
+      imagePreviewContainer.style.display = 'none';
+    }
+    
+    // Also remove from pending documents if in add mode
+    if (!currentClientId) {
+      const photoIndex = pendingDocuments.findIndex(doc => doc.isPhoto);
+      if (photoIndex >= 0) {
+        pendingDocuments.splice(photoIndex, 1);
+        updatePendingDocumentsDisplay();
+      }
+    }
+  }
+  
+  // Make removeImagePreview globally accessible
+  window.removeImagePreview = removeImagePreview;
+
   // Photo upload handler
   async function handlePhotoUpload(event) {
     const file = event.target.files[0];
-    if (!file || !currentClientId) {
-      if (!currentClientId) alert('No client selected');
-      return;
-    }
+    if (!file) return;
 
     const img = new Image();
     const reader = new FileReader();
@@ -901,6 +2081,73 @@
       img.onload = async function() {
         const isValid = validatePassportPhoto(img,
           async () => {
+            // In add mode, store photo for later upload
+            if (!currentClientId) {
+              // Store photo preview and file
+              pendingPhoto = {
+                file: file,
+                preview: e.target.result
+              };
+              
+              // Update photo preview in INDIVIDUAL DETAILS section
+              const clientPhotoImg = document.getElementById('clientPhotoImg');
+              const clientPhotoPreview = document.getElementById('clientPhotoPreview');
+              
+              if (clientPhotoImg) {
+                clientPhotoImg.src = e.target.result;
+                clientPhotoImg.style.display = 'block';
+                clientPhotoImg.style.cursor = 'pointer';
+              } else if (clientPhotoPreview) {
+                // Replace placeholder with image
+                const photoContainer = clientPhotoPreview.parentElement;
+                if (photoContainer) {
+                  const fileInput = clientPhotoPreview.querySelector('input[type="file"]') || event.target;
+                  
+                  const newImg = document.createElement('img');
+                  newImg.src = e.target.result;
+                  newImg.alt = 'Photo';
+                  newImg.className = 'detail-photo';
+                  newImg.id = 'clientPhotoImg';
+                  newImg.style.cssText = 'display:block; cursor:pointer;';
+                  newImg.onclick = function() {
+                    if (fileInput) fileInput.click();
+                  };
+                  
+                  photoContainer.replaceChild(newImg, clientPhotoPreview);
+                  
+                  if (fileInput && fileInput.parentElement !== photoContainer) {
+                    fileInput.style.display = 'none';
+                    fileInput.onchange = handleImagePreview;
+                    photoContainer.appendChild(fileInput);
+                  }
+                }
+              }
+              
+              // Add photo to pending documents list for preview
+              const photoDoc = {
+                file: file,
+                type: 'Photo',
+                name: 'Client Photo',
+                size: file.size,
+                preview: e.target.result,
+                isPhoto: true
+              };
+              
+              // Check if photo already exists in pending documents
+              const existingPhotoIndex = pendingDocuments.findIndex(doc => doc.isPhoto);
+              if (existingPhotoIndex >= 0) {
+                pendingDocuments[existingPhotoIndex] = photoDoc;
+              } else {
+                pendingDocuments.push(photoDoc);
+              }
+              
+              updatePendingDocumentsDisplay();
+              
+              event.target.value = '';
+              return;
+            }
+
+            // In edit mode, upload immediately
             const formData = new FormData();
             formData.append('photo', file);
 
@@ -924,7 +2171,20 @@
                   }
                 });
                 const client = await clientRes.json();
+                
+                // Refresh the details page if it's open
+                const clientDetailsPageContent = document.getElementById('clientDetailsPageContent');
+                if (clientDetailsPageContent && clientDetailsPageContent.style.display !== 'none') {
+                  // Reload the client data and refresh the view
                 populateClientDetailsModal(client);
+                }
+                
+                // Also refresh documents list
+                const documentsList = document.getElementById('clientDocumentsList');
+                if (documentsList) {
+                  documentsList.innerHTML = renderDocumentsList(client.documents || []);
+                }
+                
                 alert('Photo uploaded successfully!');
               } else {
                 alert('Error uploading photo: ' + (result.message || 'Unknown error'));
@@ -949,12 +2209,18 @@
 
   // Document upload modal functions
   function openDocumentUploadModal() {
-    if (!currentClientId) {
-      alert('No client selected');
-      return;
-    }
     document.getElementById('documentUploadModal').classList.add('show');
     document.body.style.overflow = 'hidden';
+    
+    // Update modal title based on mode
+    const modalTitle = document.querySelector('#documentUploadModal .modal-header h4');
+    if (modalTitle) {
+      if (!currentClientId) {
+        modalTitle.textContent = 'Add Document (Preview) - Will upload after saving client';
+      } else {
+        modalTitle.textContent = 'Upload Document';
+      }
+    }
   }
 
   function closeDocumentUploadModal() {
@@ -1016,6 +2282,109 @@
     }
   }
 
+  // Get file preview for pending documents
+  async function getFilePreview(file) {
+    return new Promise((resolve) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      } else {
+        resolve(null);
+      }
+    });
+  }
+
+  // Update pending documents display
+  function updatePendingDocumentsDisplay() {
+    const editDocumentsList = document.getElementById('editClientDocumentsList');
+    if (!editDocumentsList) return;
+
+    if (pendingDocuments.length === 0) {
+      editDocumentsList.innerHTML = '<div style="color:#999; font-size:12px;">No documents uploaded</div>';
+      return;
+    }
+
+    let docsHTML = '';
+    pendingDocuments.forEach((doc, index) => {
+      // For photos, use the preview directly; for other files, get extension from name or type
+      let fileExt = 'DOC';
+      let isImage = false;
+      let previewUrl = null;
+      
+      if (doc.isPhoto && doc.preview) {
+        // Photo document
+        isImage = true;
+        previewUrl = doc.preview;
+        fileExt = 'PHOTO';
+      } else if (doc.name) {
+        // Regular document
+        fileExt = doc.name.split('.').pop().toUpperCase();
+        isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
+        previewUrl = doc.preview;
+      } else if (doc.file) {
+        // File object - check type
+        const fileName = doc.file.name || '';
+        fileExt = fileName.split('.').pop().toUpperCase() || 'DOC';
+        isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
+        previewUrl = doc.preview;
+      }
+      
+      docsHTML += `
+        <div class="document-item" style="position:relative; cursor:default;">
+          ${isImage && previewUrl ? 
+            `<img src="${previewUrl}" alt="${doc.name || 'Photo'}" style="width:60px; height:60px; object-fit:cover; border-radius:4px; opacity:0.7;">` : 
+            `<div class="document-icon" style="opacity:0.7;">${fileExt}</div>`
+          }
+          <div style="font-size:11px; text-align:center;">${doc.name || 'Client Photo'}</div>
+          <div style="font-size:9px; text-align:center; color:#999;">(Pending)</div>
+          <button onclick="removePendingDocument(${index})" style="position:absolute; top:-5px; right:-5px; background:#dc3545; color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; line-height:1;">×</button>
+        </div>
+      `;
+    });
+    editDocumentsList.innerHTML = docsHTML;
+  }
+
+  // Remove pending document (make it globally accessible)
+  window.removePendingDocument = function(index) {
+    const doc = pendingDocuments[index];
+    // If removing photo, also clear photo preview
+    if (doc && doc.isPhoto) {
+      pendingPhoto = null;
+      const clientPhotoImg = document.getElementById('clientPhotoImg');
+      const photoContainer = clientPhotoImg?.parentElement;
+      if (photoContainer && clientPhotoImg) {
+        // Replace with placeholder
+        const fileInput = photoContainer.querySelector('input[type="file"]');
+        const placeholder = document.createElement('div');
+        placeholder.id = 'clientPhotoPreview';
+        placeholder.style.cssText = 'flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;';
+        placeholder.onclick = function() {
+          if (fileInput) fileInput.click();
+        };
+        placeholder.innerHTML = '<span style="font-size:10px; color:#999;">Click to upload</span>';
+        if (fileInput) {
+          fileInput.style.display = 'none';
+          fileInput.onchange = handleImagePreview;
+          placeholder.appendChild(fileInput);
+        }
+        photoContainer.replaceChild(placeholder, clientPhotoImg);
+      }
+      
+      // Also clear image preview container
+      const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+      const imagePreview = document.getElementById('imagePreview');
+      if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+      if (imagePreview) imagePreview.src = '';
+      
+      // Clear the file input
+      const imageInput = document.getElementById('image');
+      if (imageInput) imageInput.value = '';
+    }
+    pendingDocuments.splice(index, 1);
+    updatePendingDocumentsDisplay();
+  };
+
   // Document upload handler
   async function handleDocumentUpload() {
     const documentType = document.getElementById('documentType').value;
@@ -1031,8 +2400,23 @@
       return;
     }
 
+    // In add mode, store document for later upload
     if (!currentClientId) {
-      alert('No client selected');
+      // Add to pending documents
+      const preview = await getFilePreview(documentFile);
+      pendingDocuments.push({
+        file: documentFile,
+        type: documentType,
+        name: documentFile.name,
+        size: documentFile.size,
+        preview: preview
+      });
+      
+      // Update pending documents display
+      updatePendingDocumentsDisplay();
+      
+      closeDocumentUploadModal();
+      alert('Document added to pending list. It will be uploaded after you save the client.');
       return;
     }
 
@@ -1062,6 +2446,18 @@
         const client = await clientRes.json();
 
         updateDocumentsList(client);
+
+        // Refresh the details page if it's open
+        const clientDetailsPageContent = document.getElementById('clientDetailsPageContent');
+        if (clientDetailsPageContent && clientDetailsPageContent.style.display !== 'none') {
+          populateClientDetailsModal(client);
+        }
+
+        // Also refresh documents list in details page
+        const documentsList = document.getElementById('clientDocumentsList');
+        if (documentsList) {
+          documentsList.innerHTML = renderDocumentsList(client.documents || []);
+        }
 
         const clientDetailsModal = document.getElementById('clientDetailsModal');
         if (clientDetailsModal?.classList.contains('show')) {
@@ -1198,7 +2594,7 @@
       }
 
       const imageInput = document.getElementById('image');
-      if (imageInput) imageInput.required = true;
+      if (imageInput) imageInput.required = false;
 
       // Clear checkboxes
       ['married', 'pep', 'has_vehicle', 'has_house', 'has_business', 'has_boat'].forEach(id => {
@@ -1231,12 +2627,35 @@
       // Clear documents list
       const editDocumentsList = document.getElementById('editClientDocumentsList');
       if (editDocumentsList) editDocumentsList.innerHTML = '<div style="color:#999; font-size:12px;">No documents uploaded</div>';
+      
+      // Clear image preview container
+      const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+      if (imagePreviewContainer) {
+        imagePreviewContainer.style.display = 'none';
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreview) imagePreview.src = '';
+      }
 
-      // Hide "Add Document" buttons
-      ['addDocumentBtn1', 'addDocumentBtn2', 'addDocumentBtn3'].forEach(btnId => {
+      // Clear pending documents and photo when opening add form
+      pendingDocuments = [];
+      pendingPhoto = null;
+      updatePendingDocumentsDisplay();
+
+      // Show "Add Document" button in add mode
+      const addDocumentBtn2 = document.getElementById('addDocumentBtn2');
+      if (addDocumentBtn2) {
+        addDocumentBtn2.style.display = 'inline-block';
+      }
+      // Hide other document buttons
+      ['addDocumentBtn1', 'addDocumentBtn3'].forEach(btnId => {
         const btn = document.getElementById(btnId);
         if (btn) btn.style.display = 'none';
       });
+      
+      // Update pending documents display to show any pending photos/documents
+      setTimeout(() => {
+        updatePendingDocumentsDisplay();
+      }, 100);
 
       setupWaToggle();
     } else {
@@ -1293,7 +2712,7 @@
         }
         if (imageInput) imageInput.required = false;
       } else {
-        if (imageInput) imageInput.required = true;
+        if (imageInput) imageInput.required = false;
       }
 
       updateDocumentsList(client);
@@ -1410,10 +2829,17 @@
         pageForm.method = 'POST';
         pageForm.action = modalForm.action;
         pageForm.enctype = 'multipart/form-data';
+        pageForm.setAttribute('novalidate', 'novalidate');
 
         const pageMethodDiv = pageForm.querySelector('#clientFormMethod');
         if (pageMethodDiv && formMethod) {
           pageMethodDiv.innerHTML = formMethod.innerHTML;
+        }
+        
+        // Ensure form handler is attached to the cloned form
+        if (pageForm && !pageForm.hasAttribute('data-handler-attached')) {
+          attachFormSubmitHandler(pageForm);
+          pageForm.setAttribute('data-handler-attached', 'true');
         }
 
         // If editing, populate the cloned form fields
@@ -1558,16 +2984,20 @@
       }
     }
 
-    // Set page title
+    // Set page title (only if elements exist - they may not exist in modal view)
+    const clientPageTitle = document.getElementById('clientPageTitle');
+    const clientPageName = document.getElementById('clientPageName');
+    const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
+    
     if (mode === 'add') {
-      document.getElementById('clientPageTitle').textContent = 'Add Client';
-      document.getElementById('clientPageName').textContent = '';
-      document.getElementById('editClientFromPageBtn').style.display = 'none';
+      if (clientPageTitle) clientPageTitle.textContent = 'Client - Add New';
+      if (clientPageName) clientPageName.textContent = '';
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
     } else {
       const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-      document.getElementById('clientPageTitle').textContent = 'Edit Client';
-      document.getElementById('clientPageName').textContent = clientName;
-      document.getElementById('editClientFromPageBtn').style.display = 'none';
+      if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
     }
 
     // Hide table view, show page view
@@ -1577,6 +3007,9 @@
     clientPageView.style.display = 'block';
     document.getElementById('clientDetailsPageContent').style.display = 'none';
     document.getElementById('clientFormPageContent').style.display = 'block';
+    
+    // Ensure form handler is attached
+    setTimeout(initializeFormHandlers, 100);
 
     // Ensure Insurables section is always visible
     const insurablesSection = document.getElementById('insurablesSection');
@@ -1602,7 +3035,7 @@
 
       const addDocumentBtn2 = document.getElementById('addDocumentBtn2');
       if (addDocumentBtn2) {
-        addDocumentBtn2.style.display = mode === 'edit' ? 'inline-block' : 'none';
+        addDocumentBtn2.style.display = 'inline-block'; // Show in both add and edit modes
       }
     };
 
@@ -1922,33 +3355,50 @@
   // FORM SUBMISSION
   // ============================================================================
 
-  document.getElementById('clientForm')?.addEventListener('submit', async function(e) {
+  // Attach form submission handler to all forms with id="clientForm"
+  function attachFormSubmitHandler(form) {
+    if (!form || form.hasAttribute('data-handler-attached')) return;
+    
+    form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const form = this;
-    const clientType = form.querySelector('#client_type')?.value;
+      const clientType = form.querySelector('#client_type')?.value || form.querySelector('select[name="client_type"]')?.value;
     const isIndividual = isIndividualType(clientType);
     const isBusiness = isBusinessType(clientType);
 
-    // Remove required attribute from hidden fields to prevent browser validation errors
-    const fieldsWithRequiredRemoved = [];
-    form.querySelectorAll('input[required], select[required], textarea[required]').forEach(field => {
-      const parentRow = field.closest('[data-field-type]');
-      let isVisible = true;
-      
-      if (parentRow) {
-        isVisible = parentRow.offsetParent !== null && 
-                   !parentRow.style.display.includes('none') && 
-                   parentRow.style.display !== 'none' &&
-                   window.getComputedStyle(parentRow).display !== 'none';
-      } else {
-        isVisible = field.offsetParent !== null && 
-                   field.style.display !== 'none' && 
-                   !field.style.display.includes('none') &&
-                   window.getComputedStyle(field).display !== 'none';
+      // Helper function to check if element is visible
+      function isElementVisible(element) {
+        if (!element) return false;
+        
+        // Check computed style
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          return false;
+        }
+        
+        // Check offsetParent (hidden elements have null offsetParent)
+        if (element.offsetParent === null && style.position !== 'fixed') {
+          return false;
+        }
+        
+        // Check parent containers
+        let parent = element.parentElement;
+        while (parent && parent !== form) {
+          const parentStyle = window.getComputedStyle(parent);
+          if (parentStyle.display === 'none') {
+            return false;
+          }
+          parent = parent.parentElement;
+        }
+        
+        return true;
       }
-      
-      if (!isVisible) {
+
+      // Remove required attribute from hidden fields to prevent browser validation errors
+      const fieldsWithRequiredRemoved = [];
+      form.querySelectorAll('input[required], select[required], textarea[required]').forEach(field => {
+        if (!isElementVisible(field)) {
         field.removeAttribute('required');
         fieldsWithRequiredRemoved.push(field);
       }
@@ -1957,46 +3407,123 @@
     // Disable hidden duplicate fields to prevent submission conflicts
     if (isBusiness) {
       form.querySelectorAll('[data-field-type="individual"] input, [data-field-type="individual"] select, [data-field-type="individual"] textarea').forEach(field => {
-        if (field.offsetParent === null) {
+        if (!isElementVisible(field)) {
           field.disabled = true;
+          // Also remove required if not already removed
+          if (field.hasAttribute('required') && !fieldsWithRequiredRemoved.includes(field)) {
+            field.removeAttribute('required');
+            fieldsWithRequiredRemoved.push(field);
+          }
         }
       });
     } else if (isIndividual) {
       form.querySelectorAll('[data-field-type="business"] input, [data-field-type="business"] select, [data-field-type="business"] textarea').forEach(field => {
-        if (field.offsetParent === null) {
+        if (!isElementVisible(field)) {
           field.disabled = true;
+          // Also remove required if not already removed
+          if (field.hasAttribute('required') && !fieldsWithRequiredRemoved.includes(field)) {
+            field.removeAttribute('required');
+            fieldsWithRequiredRemoved.push(field);
+          }
         }
       });
     }
+    
+    // Also handle fields that might be hidden in the new edit form structure
+    // Check for fields with same name but different IDs (individual vs business)
+    const fieldNames = ['mobile_no', 'signed_up', 'source', 'status', 'district', 'alternate_no', 'email_address', 'location', 'island', 'country', 'po_box_no', 'source_name'];
+    fieldNames.forEach(name => {
+      const fields = form.querySelectorAll(`[name="${name}"]`);
+      if (fields.length > 1) {
+        // Multiple fields with same name - disable hidden ones
+        fields.forEach(field => {
+          if (!isElementVisible(field)) {
+            field.disabled = true;
+            if (field.hasAttribute('required') && !fieldsWithRequiredRemoved.includes(field)) {
+              field.removeAttribute('required');
+              fieldsWithRequiredRemoved.push(field);
+            }
+          }
+        });
+      }
+    });
 
     // Check required fields (only visible ones)
     const req = form.querySelectorAll('[required]:not([disabled])');
     let ok = true;
+    const missingFields = [];
+    
     req.forEach(f => {
       // Double check field is actually visible
-      const parentRow = f.closest('[data-field-type]');
-      const isVisible = !parentRow || (parentRow.offsetParent !== null && 
-                         !parentRow.style.display.includes('none') && 
-                         parentRow.style.display !== 'none');
+      if (!isElementVisible(f)) {
+        // Field is hidden, remove required and skip validation
+        if (!fieldsWithRequiredRemoved.includes(f)) {
+          f.removeAttribute('required');
+          fieldsWithRequiredRemoved.push(f);
+        }
+        return;
+      }
       
-      if (isVisible && !String(f.value || '').trim()) {
+      // For business types, skip individual-specific required fields
+      if (isBusiness) {
+        // Skip first_name, surname, and other individual-only fields
+        if (f.id === 'first_name' || f.id === 'surname' || f.name === 'first_name' || f.name === 'surname' ||
+            f.id === 'salutation' || f.name === 'salutation' || 
+            f.id === 'other_names' || f.name === 'other_names' ||
+            f.id === 'passport_no' || f.name === 'passport_no' ||
+            f.id === 'dob_dor' || f.name === 'dob_dor' ||
+            f.id === 'nin_bcrn' || (f.name === 'nin_bcrn' && f.closest('[data-field-type="individual"]'))) {
+          return;
+        }
+      }
+      
+      // For individual types, skip business-specific required fields
+      if (isIndividual) {
+        // Skip business_name and other business-only fields
+        if (f.id === 'business_name' || f.name === 'business_name' ||
+            f.id === 'contact_person' || (f.name === 'contact_person' && f.closest('[data-field-type="business"]'))) {
+          return;
+        }
+      }
+      
+      const fieldValue = String(f.value || '').trim();
+      if (!fieldValue) {
         ok = false;
         f.style.borderColor = 'red';
+        const label = f.closest('.detail-row')?.querySelector('.detail-label')?.textContent || f.name || f.id;
+        if (!missingFields.includes(label)) {
+          missingFields.push(label);
+        }
       } else {
         f.style.borderColor = '';
       }
     });
+    
+    // Additional validation for business types - check business_name
+    if (isBusiness) {
+      const businessNameField = form.querySelector('#business_name') || form.querySelector('input[name="business_name"]');
+      if (businessNameField && isElementVisible(businessNameField)) {
+        const businessName = String(businessNameField.value || '').trim();
+        if (!businessName) {
+          ok = false;
+          businessNameField.style.borderColor = 'red';
+          if (!missingFields.includes('Name')) {
+            missingFields.push('Name');
+          }
+        } else {
+          businessNameField.style.borderColor = '';
+        }
+      }
+    }
 
     if (!ok) {
       form.querySelectorAll('input[disabled], select[disabled], textarea[disabled]').forEach(f => f.disabled = false);
       // Restore required attributes for next attempt
-      form.querySelectorAll('input, select, textarea').forEach(field => {
-        if (field.hasAttribute('data-was-required')) {
+      fieldsWithRequiredRemoved.forEach(field => {
           field.setAttribute('required', '');
-          field.removeAttribute('data-was-required');
-        }
       });
-      alert('Please fill required fields');
+      const missingFieldsList = missingFields.length > 0 ? '\nMissing: ' + missingFields.join(', ') : '';
+      alert('Please fill required fields' + missingFieldsList);
       return;
     }
 
@@ -2022,64 +3549,168 @@
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: formData
       });
 
+      const contentType = response.headers.get('content-type');
+      console.log('Response status:', response.status, 'Content-Type:', contentType);
+      
       if (response.ok) {
-        const result = await response.json();
+        let result;
+        try {
+          // Check if response is JSON
+          if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+            console.log('Parsed JSON result:', result);
+          } else {
+            // Response is not JSON, might be HTML redirect
+            console.log('Response is not JSON, assuming success');
+            alert(isEdit ? 'Client updated successfully!' : 'Client created successfully!');
+            location.reload();
+            return;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+          // If response is not JSON, it might be a redirect or HTML
+          alert(isEdit ? 'Client updated successfully!' : 'Client created successfully!');
+          location.reload();
+          return;
+        }
 
-        if (result.success) {
+        if (result && result.success) {
+          console.log('Success response received:', result);
           if (!isEdit && result.client?.id) {
             currentClientId = result.client.id;
-            try {
-              const clientRes = await fetch(`/clients/${result.client.id}`, {
-                headers: {
-                  'Accept': 'application/json',
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              });
-              if (clientRes.ok) {
-                const clientData = await clientRes.json();
-                await openClientModal('edit', clientData);
-                alert('Client created successfully! You can now upload documents.');
-              } else {
-                alert('Client created successfully!');
-                closeClientModal();
-                location.reload();
+            
+            // Upload pending photo first if any
+            if (pendingPhoto) {
+              try {
+                const photoFormData = new FormData();
+                photoFormData.append('photo', pendingPhoto.file);
+                
+                await fetch(`/clients/${currentClientId}/upload-photo`, {
+                  method: 'POST',
+                  headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                  },
+                  body: photoFormData
+                });
+                pendingPhoto = null;
+              } catch (error) {
+                console.error('Error uploading pending photo:', error);
               }
-            } catch (error) {
-              console.error('Error fetching client:', error);
-              alert('Client created successfully!');
-              closeClientModal();
-              location.reload();
             }
-          } else {
-            alert('Client updated successfully!');
+            
+            // Upload pending documents if any
+            const pendingDocsCount = pendingDocuments.length;
+            if (pendingDocsCount > 0) {
+              try {
+                for (const doc of pendingDocuments) {
+                  // Skip photo as it's already uploaded
+                  if (doc.isPhoto) continue;
+                  
+                  const docFormData = new FormData();
+                  docFormData.append('document', doc.file);
+                  docFormData.append('document_type', doc.type);
+                  
+                  await fetch(`/clients/${currentClientId}/upload-document`, {
+                    method: 'POST',
+                    headers: {
+                      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
+                      'X-Requested-With': 'XMLHttpRequest',
+                      'Accept': 'application/json'
+                    },
+                    body: docFormData
+                  });
+                }
+                // Clear pending documents after upload
+                pendingDocuments = [];
+              } catch (error) {
+                console.error('Error uploading pending documents:', error);
+              }
+            }
+            
+            // Close modal and show clients table
             closeClientModal();
-            location.reload();
+            const successMessage = 'Client created successfully!' + (pendingDocsCount > 0 ? ` ${pendingDocsCount} document(s) uploaded.` : '');
+            showNotification(successMessage, 'success');
+            // Reload after a short delay to show notification
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
+          } else {
+            // Update success
+            console.log('Showing update success message');
+            closeClientModal();
+            showNotification('Client updated successfully!', 'success');
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
           }
         } else {
-          alert('Error: ' + (result.message || 'Unknown error'));
+          console.log('Response success is false:', result);
+          showNotification('Error: ' + (result.message || 'Unknown error'), 'error');
         }
       } else {
         const errorData = await response.json();
         if (errorData.errors) {
-          let errorMsg = 'Validation errors:\n';
+          let errorMsg = 'Validation errors: ';
           Object.keys(errorData.errors).forEach(key => {
-            errorMsg += errorData.errors[key][0] + '\n';
+            errorMsg += errorData.errors[key][0] + ' ';
           });
-          alert(errorMsg);
+          showNotification(errorMsg.trim(), 'error');
         } else {
-          alert('Error saving client: ' + (errorData.message || 'Unknown error'));
+          showNotification('Error saving client: ' + (errorData.message || 'Unknown error'), 'error');
         }
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error saving client: ' + error.message);
+      showNotification('Error saving client: ' + error.message, 'error');
     }
   });
+  }
+
+  // Initialize form handlers
+  function initializeFormHandlers() {
+    // Attach to modal form
+    const modalForm = document.getElementById('clientModal')?.querySelector('form');
+    if (modalForm && !modalForm.hasAttribute('data-handler-attached')) {
+      attachFormSubmitHandler(modalForm);
+      modalForm.setAttribute('data-handler-attached', 'true');
+    }
+    
+    // Attach to page view form
+    const pageForm = document.querySelector('#clientFormPageContent form');
+    if (pageForm && !pageForm.hasAttribute('data-handler-attached')) {
+      attachFormSubmitHandler(pageForm);
+      pageForm.setAttribute('data-handler-attached', 'true');
+    }
+  }
+
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeFormHandlers);
+  } else {
+    initializeFormHandlers();
+  }
+
+  // Re-initialize when page view is shown
+  const observer = new MutationObserver(function(mutations) {
+    const pageForm = document.querySelector('#clientFormPageContent form');
+    if (pageForm && !pageForm.hasAttribute('data-handler-attached')) {
+      initializeFormHandlers();
+    }
+  });
+  
+  const pageViewContainer = document.getElementById('clientFormPageContent');
+  if (pageViewContainer) {
+    observer.observe(pageViewContainer, { childList: true, subtree: true });
+  }
 
   // ============================================================================
   // TABLE FUNCTIONS

@@ -32,7 +32,7 @@ class LifeProposal extends Model
         'notes',
         'agency',
         'prid',
-        'class',
+        // 'class',
         'is_submitted',
         'sex',
         'anb',

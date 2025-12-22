@@ -52,10 +52,63 @@
       const policyDetailsNav = document.querySelector('#policyDetailsContentWrapper .client-page-nav');
       if (policyDetailsNav) {
         policyDetailsNav.innerHTML = `
-          <button type="button" class="policy-tab active" style="background:#000; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:12px; margin-right:8px;">Nominees</button>
-          <button type="button" class="policy-tab" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:12px; margin-right:8px;">Payments</button>
-          <button type="button" class="policy-tab" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:12px;">Commission</button>
-        `;
+  <button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.schedules">
+  Schedules
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.nominees">
+  Nominees
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.payments">
+  Payments
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.vehicles">
+  Vehicles
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.claims">
+  Claims
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.documents">
+  Documents
+</button>
+
+<button type="button"
+  style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;"
+  onmouseover="this.style.background='#fff';this.style.color='#000';"
+  onmouseout="this.style.background='#000';this.style.color='#fff';"
+  onclick="window.location.href = window.routes.commissions">
+  Commission
+</button>
+
+ `;
       }
       
       populatePolicyDetails(policy);
@@ -342,11 +395,157 @@
     }
   });
 
+  // Filter Toggle Handler - Open filter modal when checked
+  (function(){
+    const filterToggle = document.getElementById('filterToggle');
+    if (filterToggle) {
+      // Check if filters are active on page load
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasFilters = urlParams.has('search_term') || urlParams.has('client_name') || 
+                         urlParams.has('policy_number') || urlParams.has('insurer_id') || 
+                         urlParams.has('policy_class_id') || urlParams.has('agency_id') || 
+                         urlParams.has('agent') || urlParams.has('policy_status_id') || 
+                         urlParams.has('start_date_from') || urlParams.has('end_date_from') || 
+                         urlParams.has('premium_unpaid') || urlParams.has('comm_unpaid');
+      
+      // Set toggle based on DFR parameter or other filters
+      const hasDfr = urlParams.get('dfr') === 'true';
+      if (hasDfr || hasFilters) {
+        filterToggle.checked = true;
+      } else {
+        filterToggle.checked = false;
+      }
+
+      filterToggle.addEventListener('change', function() {
+        if (this.checked) {
+          openPolicyFilterModal();
+        } else {
+          // If unchecked, clear all filter parameters except client_id and dfr
+          const urlParams = new URLSearchParams(window.location.search);
+          const clientId = urlParams.get('client_id');
+          const dfr = urlParams.get('dfr');
+          
+          // Clear all filter params
+          urlParams.delete('record_lines');
+          urlParams.delete('search_term');
+          urlParams.delete('client_name');
+          urlParams.delete('policy_number');
+          urlParams.delete('insurer_id');
+          urlParams.delete('policy_class_id');
+          urlParams.delete('agency_id');
+          urlParams.delete('agent');
+          urlParams.delete('policy_status_id');
+          urlParams.delete('start_date_from');
+          urlParams.delete('start_date_to');
+          urlParams.delete('end_date_from');
+          urlParams.delete('end_date_to');
+          urlParams.delete('premium_unpaid');
+          urlParams.delete('comm_unpaid');
+          
+          // Restore client_id and dfr if they existed
+          if (clientId) urlParams.set('client_id', clientId);
+          if (dfr === 'true') urlParams.set('dfr', dfr);
+          
+          const queryString = urlParams.toString();
+          window.location.href = policiesIndexRoute + (queryString ? '?' + queryString : '');
+        }
+      });
+    }
+  })();
+
+  // Open Filter Modal
+  function openPolicyFilterModal() {
+    const modal = document.getElementById('policyFilterModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+
+  // Close Filter Modal
+  function closePolicyFilterModal() {
+    const modal = document.getElementById('policyFilterModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+    // Uncheck filter toggle when closing
+    const filterToggle = document.getElementById('filterToggle');
+    if (filterToggle) {
+      filterToggle.checked = false;
+    }
+  }
+
+  // Apply Policy Filters
+  function applyPolicyFilters() {
+    const form = document.getElementById('policyFilterForm');
+    if (!form) return;
+
+    const urlParams = new URLSearchParams();
+    
+    // Preserve existing client_id and dfr if they exist
+    const currentParams = new URLSearchParams(window.location.search);
+    const clientId = currentParams.get('client_id');
+    const dfr = currentParams.get('dfr');
+    if (clientId) urlParams.set('client_id', clientId);
+    if (dfr === 'true') urlParams.set('dfr', dfr);
+
+    // Get form values
+    const recordLines = document.getElementById('filterRecordLines')?.value;
+    const searchTerm = document.getElementById('filterSearchTerm')?.value;
+    const clientName = document.getElementById('filterClientName')?.value;
+    const policyNumber = document.getElementById('filterPolicyNumber')?.value;
+    const insurerId = document.getElementById('filterInsurer')?.value;
+    const policyClassId = document.getElementById('filterInsuranceClass')?.value;
+    const agencyId = document.getElementById('filterAgency')?.value;
+    const agent = document.getElementById('filterAgent')?.value;
+    const statusId = document.getElementById('filterStatus')?.value;
+    const startDateFrom = document.getElementById('filterStartDateFrom')?.value;
+    const startDateTo = document.getElementById('filterStartDateTo')?.value;
+    const endDateFrom = document.getElementById('filterEndDateFrom')?.value;
+    const endDateTo = document.getElementById('filterEndDateTo')?.value;
+    const premiumUnpaid = document.getElementById('filterPremiumUnpaid')?.value;
+    const commUnpaid = document.getElementById('filterCommUnpaid')?.value;
+
+    // Add filter values (include record_lines even if default, and agent even if 'Simon')
+    if (recordLines) urlParams.set('record_lines', recordLines);
+    if (searchTerm) urlParams.set('search_term', searchTerm);
+    if (clientName) urlParams.set('client_name', clientName);
+    if (policyNumber) urlParams.set('policy_number', policyNumber);
+    if (insurerId) urlParams.set('insurer_id', insurerId);
+    if (policyClassId) urlParams.set('policy_class_id', policyClassId);
+    if (agencyId) urlParams.set('agency_id', agencyId);
+    if (agent) urlParams.set('agent', agent);
+    if (statusId) urlParams.set('policy_status_id', statusId);
+    if (startDateFrom) urlParams.set('start_date_from', startDateFrom);
+    if (startDateTo) urlParams.set('start_date_to', startDateTo);
+    if (endDateFrom) urlParams.set('end_date_from', endDateFrom);
+    if (endDateTo) urlParams.set('end_date_to', endDateTo);
+    if (premiumUnpaid) urlParams.set('premium_unpaid', premiumUnpaid);
+    if (commUnpaid) urlParams.set('comm_unpaid', commUnpaid);
+
+    // Close modal
+    closePolicyFilterModal();
+
+    // Navigate with filters
+    const queryString = urlParams.toString();
+    window.location.href = policiesIndexRoute + (queryString ? '?' + queryString : '');
+  }
+
+  // Make functions globally accessible
+  window.openPolicyFilterModal = openPolicyFilterModal;
+  window.closePolicyFilterModal = closePolicyFilterModal;
+  window.applyPolicyFilters = applyPolicyFilters;
+
   // DFR Only Filter
   (function(){
     const btn = document.getElementById('dfrOnlyBtn');
     if (btn) {
       btn.addEventListener('click', () => {
+        // Set toggle switch to true
+        const filterToggle = document.getElementById('filterToggle');
+        if (filterToggle) {
+          filterToggle.checked = true;
+        }
+        
         const u = new URL(window.location.href);
         if (u.searchParams.get('dfr') === 'true') {
           u.searchParams.delete('dfr');
@@ -359,6 +558,12 @@
     const listAllBtn = document.getElementById('listAllBtn');
     if (listAllBtn) {
       listAllBtn.addEventListener('click', () => {
+        // Set toggle switch to false
+        const filterToggle = document.getElementById('filterToggle');
+        if (filterToggle) {
+          filterToggle.checked = false;
+        }
+        
         window.location.href = policiesIndexRoute;
       });
     }
@@ -607,12 +812,16 @@
         <div class="detail-section-header">ADD ONS</div>
         <div class="detail-section-body">
           <div class="detail-row">
-            <span class="detail-label">TPD</span>
-            <input type="text" class="detail-value" value="${policy.tpd ? formatNumber(policy.tpd) : ''}" readonly>
+            <span class="detail-label">WSC</span>
+            <input type="text" class="detail-value" value="${policy.wsc ? formatNumber(policy.wsc) : '10,000'}" readonly style="text-align:right;">
           </div>
           <div class="detail-row">
-            <span class="detail-label">FIBT</span>
-            <input type="text" class="detail-value" value="${policy.fibt ? formatNumber(policy.fibt) : ''}" readonly>
+            <span class="detail-label">LOU</span>
+            <input type="text" class="detail-value" value="${policy.lou ? formatNumber(policy.lou) : '15,000'}" readonly style="text-align:right;">
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">PA</span>
+            <input type="text" class="detail-value" value="${policy.pa ? formatNumber(policy.pa) : '250,000'}" readonly style="text-align:right;">
           </div>
         </div>
       </div>
@@ -858,10 +1067,20 @@
     // Show form view
     policyFormPageContent.style.display = 'block';
     
+    // Add form-mode class to prevent scrolling
+    policyPageView.classList.add('form-mode');
+    document.body.style.overflow = 'hidden';
+    
     // Ensure form content wrapper is visible
     const formContentWrapper = document.getElementById('policyFormContentWrapper');
     if (formContentWrapper) {
       formContentWrapper.style.display = 'block';
+    }
+    
+    // Hide schedule wrapper since everything is in formContent now
+    const scheduleWrapper = document.getElementById('policyFormScheduleWrapper');
+    if (scheduleWrapper) {
+      scheduleWrapper.style.display = 'none';
     }
   }
   
@@ -1096,15 +1315,19 @@
           
           <!-- ADD ONS -->
           <div>
-            <h5 style="margin:0 0 8px 0; font-size:11px; font-weight:600; color:#555; text-transform:uppercase;">ADD ONS</h5>
+            <h5 style="margin:0 0 8px 0; font-size:11px; font-weight:600; color:#555; text-transform:uppercase; background:#f5f5f5; padding:6px 8px; border-radius:2px;">ADD ONS</h5>
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <div>
-                <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">TPD</label>
-                <input type="number" step="0.01" name="tpd" id="tpd" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <label style="font-size:11px; font-weight:600; color:#555; min-width:40px; margin:0;">WSC</label>
+                <input type="number" step="0.01" name="wsc" id="wsc" class="form-control" value="10000" style="flex:1; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; text-align:right;">
               </div>
-              <div>
-                <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">FIBT</label>
-                <input type="number" step="0.01" name="fibt" id="fibt" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <label style="font-size:11px; font-weight:600; color:#555; min-width:40px; margin:0;">LOU</label>
+                <input type="number" step="0.01" name="lou" id="lou" class="form-control" value="15000" style="flex:1; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; text-align:right;">
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <label style="font-size:11px; font-weight:600; color:#555; min-width:40px; margin:0;">PA</label>
+                <input type="number" step="0.01" name="pa" id="pa" class="form-control" value="250000" style="flex:1; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; text-align:right;">
               </div>
             </div>
           </div>
@@ -1309,196 +1532,191 @@
       return html;
     }
     
-    // Policy Details Section - 5 columns layout
-    const policyDetails = `
-      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px; margin-bottom:12px;">
-        <h4 style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#333;">Policy Details</h4>
-        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px 12px;">
-          <!-- Row 1 -->
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Policy Number *</label>
-            <input type="text" name="policy_no" id="policy_no" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Clients Name *</label>
-            <select name="client_id" id="client_id" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.clients || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Insurance Class</label>
-            <select name="policy_class_id" id="policy_class_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.policy_classes || [])}
-            </select>
-            <div style="display:flex; gap:5px; margin-top:4px;">
-              <button type="button" onclick="openVehicleDialog()" style="flex:1; padding:3px 8px; font-size:10px; background:#f3742a; color:#fff; border:none; border-radius:2px; cursor:pointer; font-weight:500;">Add Vehicle</button>
-              <button type="button" onclick="openNomineeDialog()" style="flex:1; padding:3px 8px; font-size:10px; background:#f3742a; color:#fff; border:none; border-radius:2px; cursor:pointer; font-weight:500;">Add Nominee</button>
+    // Combined single card with all sections - compact design
+    const currentYear = new Date().getFullYear();
+    const combinedForm = `
+      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:8px; margin-bottom:8px;">
+        <!-- Policy Details Section -->
+        <div style="border-bottom:1px solid #eee; padding-bottom:6px; margin-bottom:6px;">
+          <h4 style="margin:0 0 6px 0; font-size:11px; font-weight:600; color:#333; text-transform:uppercase;">Policy Details</h4>
+          <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px 6px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Policy No *</label>
+              <input type="text" name="policy_no" id="policy_no" class="form-control" required style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Client *</label>
+              <select name="client_id" id="client_id" class="form-control" required style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.clients || [])}
+              </select>
+            </div>
+            <div style="position:relative;">
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Class</label>
+              <select name="policy_class_id" id="policy_class_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.policy_classes || [])}
+              </select>
+              <div style="position:absolute; bottom:0; left:0; right:0; display:flex; gap:2px; height:2px; pointer-events:none;">
+                <button type="button" onclick="openVehicleDialog()" style="flex:1; padding:0; margin:0; background:#f3742a; border:none; border-radius:0 0 2px 0; cursor:pointer; height:2px; min-height:2px; max-height:2px; pointer-events:auto;" title="Vehicle"></button>
+                <button type="button" onclick="openNomineeDialog()" style="flex:1; padding:0; margin:0; background:#f3742a; border:none; border-radius:0 0 0 2px; cursor:pointer; height:2px; min-height:2px; max-height:2px; pointer-events:auto;" title="Nominee"></button>
+              </div>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Insurer</label>
+              <select name="insurer_id" id="insurer_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.insurers || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Asset/Destination</label>
+              <input type="text" name="insured_item" id="insured_item" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">App Date *</label>
+              <input type="date" name="date_registered" id="date_registered" class="form-control" required style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Business Type</label>
+              <select name="business_type_id" id="business_type_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.business_types || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Agency</label>
+              <select name="agency_id" id="agency_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.agencies || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Agent</label>
+              <input type="text" name="agent" id="agent" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Source</label>
+              <input type="text" name="source" id="source" class="form-control" readonly style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Source Name</label>
+              <input type="text" name="source_name" id="source_name" class="form-control" readonly style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; height:24px;">
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; padding-top:18px;">
+              <input type="checkbox" name="renewable" id="renewable" value="1" style="margin:0; width:14px; height:14px;">
+              <label style="font-size:10px; color:#555; margin:0;">Renewal Required?</label>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Channel</label>
+              <select name="channel_id" id="channel_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.channels || [])}
+              </select>
+            </div>
+            <div style="grid-column:span 2;">
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Notes</label>
+              <textarea name="notes" id="notes" class="form-control" rows="1" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; resize:vertical; min-height:24px;"></textarea>
             </div>
           </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Insurer</label>
-            <select name="insurer_id" id="insurer_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.insurers || [])}
-            </select>
+        </div>
+        
+        <!-- Schedule Details Section -->
+        <div style="border-bottom:1px solid #eee; padding-bottom:6px; margin-bottom:6px;">
+          <h4 style="margin:0 0 6px 0; font-size:11px; font-weight:600; color:#333; text-transform:uppercase;">Schedule Details</h4>
+          <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px 6px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Year</label>
+              <input type="text" value="${currentYear}" class="form-control" readonly style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Plan</label>
+              <select name="policy_plan_id" id="policy_plan_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.policy_plans || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Sum Insured</label>
+              <input type="number" step="0.01" name="sum_insured" id="sum_insured" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Term</label>
+              <input type="number" name="term" id="term" class="form-control" value="1" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Period</label>
+              <select name="term_unit" id="term_unit" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.term_units || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Start Date *</label>
+              <input type="date" name="start_date" id="start_date" class="form-control" required style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">WSC</label>
+              <input type="number" step="0.01" name="wsc" id="wsc" class="form-control" value="10000" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">LOU</label>
+              <input type="number" step="0.01" name="lou" id="lou" class="form-control" value="15000" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">PA</label>
+              <input type="number" step="0.01" name="pa" id="pa" class="form-control" value="250000" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Base Premium</label>
+              <input type="number" step="0.01" name="base_premium" id="base_premium" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Total Premium</label>
+              <input type="number" step="0.01" name="premium" id="premium" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">End Date *</label>
+              <input type="date" name="end_date" id="end_date" class="form-control" required style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
           </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Insured Asset / Destination</label>
-            <input type="text" name="insured_item" id="insured_item" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          
-          <!-- Row 2 -->
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Application Date *</label>
-            <input type="date" name="date_registered" id="date_registered" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Business Type</label>
-            <select name="business_type_id" id="business_type_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.business_types || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Agency</label>
-            <select name="agency_id" id="agency_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.agencies || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Agent</label>
-            <input type="text" name="agent" id="agent" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Source</label>
-            <input type="text" name="source" id="source" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
-          </div>
-          
-          <!-- Row 3 -->
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Source Name</label>
-            <input type="text" name="source_name" id="source_name" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; padding-top:20px;">
-            <input type="checkbox" name="renewable" id="renewable" value="1" style="margin:0; width:16px; height:16px;">
-            <label style="font-size:11px; color:#555; margin:0;">Renewal Notices Required?</label>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Delivery Channel</label>
-            <select name="channel_id" id="channel_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.channels || [])}
-            </select>
-          </div>
-          <div style="grid-column:span 2;">
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Notes</label>
-            <textarea name="notes" id="notes" class="form-control" rows="2" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; resize:vertical;"></textarea>
+        </div>
+        
+        <!-- Payment Plan Section -->
+        <div>
+          <h4 style="margin:0 0 6px 0; font-size:11px; font-weight:600; color:#333; text-transform:uppercase;">Payment Plan</h4>
+          <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:4px 6px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Option</label>
+              <select name="pay_plan_lookup_id" id="pay_plan_lookup_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.pay_plans || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Instalments</label>
+              <input type="number" name="no_of_instalments" id="no_of_instalments" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Interval</label>
+              <select name="frequency_id" id="frequency_id" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+                ${createSelectOptions(lookupData.frequencies || [])}
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">Start Date</label>
+              <input type="date" name="payment_start_date" id="payment_start_date" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:600; margin-bottom:2px; color:#555;">End Date</label>
+              <input type="date" name="payment_end_date" id="payment_end_date" class="form-control" style="width:100%; padding:3px 4px; font-size:11px; border:1px solid #ddd; border-radius:2px; height:24px;">
+            </div>
           </div>
         </div>
       </div>
     `;
     
-    // Schedule Details Section
-    const currentYear = new Date().getFullYear();
-    const scheduleDetails = `
-      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px; margin-bottom:12px;">
-        <h4 style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#333;">Schedule Details</h4>
-        <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px 12px;">
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Year</label>
-            <input type="text" value="${currentYear}" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Plan</label>
-            <select name="policy_plan_id" id="policy_plan_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.policy_plans || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Sum Insured</label>
-            <input type="number" step="0.01" name="sum_insured" id="sum_insured" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Term</label>
-            <input type="number" name="term" id="term" class="form-control" value="1" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Period</label>
-            <select name="term_unit" id="term_unit" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.term_units || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Start Date *</label>
-            <input type="date" name="start_date" id="start_date" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">WSC</label>
-            <input type="number" step="0.01" name="wsc" id="wsc" class="form-control" value="10000" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">LOU</label>
-            <input type="number" step="0.01" name="lou" id="lou" class="form-control" value="15000" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">PA</label>
-            <input type="number" step="0.01" name="pa" id="pa" class="form-control" value="250000" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Base Premium</label>
-            <input type="number" step="0.01" name="base_premium" id="base_premium" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Total Premium</label>
-            <input type="number" step="0.01" name="premium" id="premium" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">End Date *</label>
-            <input type="date" name="end_date" id="end_date" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Payment Plan Section
-    const paymentPlan = `
-      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px; margin-bottom:12px;">
-        <h4 style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#333;">Payment Plan</h4>
-        <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px 12px;">
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Option</label>
-            <select name="pay_plan_lookup_id" id="pay_plan_lookup_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.pay_plans || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">No Of Instalments</label>
-            <input type="number" name="no_of_instalments" id="no_of_instalments" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Interval</label>
-            <select name="frequency_id" id="frequency_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.frequencies || [])}
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">Start Date</label>
-            <input type="date" name="payment_start_date" id="payment_start_date" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:#555;">End Date</label>
-            <input type="date" name="payment_end_date" id="payment_end_date" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Set content
+    // Set content - all in one card
     if (formContent) {
-      formContent.innerHTML = policyDetails;
+      formContent.innerHTML = combinedForm;
       formContent.style.display = 'block';
     }
     
+    // Hide schedule content wrapper since everything is in formContent now
     if (formScheduleContent) {
-      formScheduleContent.innerHTML = scheduleDetails + paymentPlan;
-      formScheduleContent.style.display = 'block';
+      formScheduleContent.innerHTML = '';
+      formScheduleContent.style.display = 'none';
     }
     
     // Pre-fill form with life proposal data if available
@@ -2063,7 +2281,9 @@
   function closePolicyPageView(){
     const policyPageView = document.getElementById('policyPageView');
     policyPageView.classList.remove('show');
+    policyPageView.classList.remove('form-mode');
     policyPageView.style.display = 'none';
+    document.body.style.overflow = '';
     document.getElementById('clientsTableView').classList.remove('hidden');
     document.getElementById('policyDetailsPageContent').style.display = 'none';
     document.getElementById('policyDetailsContentWrapper').style.display = 'none';

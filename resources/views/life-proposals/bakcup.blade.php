@@ -17,24 +17,15 @@
 <div class="dashboard">
   <!-- Main Life Proposals Table View -->
   <div class="clients-table-view" id="clientsTableView">
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="margin:0; font-size:18px; font-weight:600;">
-            Life Proposals
-          </h3>
-       
-      </div>
-    </div>
   <div class="container-table">
     <!-- Life Proposals Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-       <div class="records-found" style="font-size:14px; font-weight:600; color:#333; white-space:nowrap;">
-    Records Found - {{ $proposals->total() }}
-  </div>
       <div class="page-title-section">
-         <div style="display:flex; align-items:center; gap:15px; flex:1; justify-content:center;">
-         <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+        <h3>Life Proposals</h3>
+        <div class="records-found">Records Found - {{ $proposals->total() }}</div>
+        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+          <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
             <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
               <span style="font-size:13px;">Filter</span>
               @php
@@ -48,10 +39,10 @@
           </div>
         </div>
       </div>
-     <div class="action-buttons" style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
-    <button class="btn btn-add" id="addProposalBtn">Add</button>
-    <button class="btn btn-close" onclick="window.history.back()">Close</button>
-  </div>
+      <div class="action-buttons">
+        <button class="btn btn-add" id="addProposalBtn">Add</button>
+        <button class="btn btn-close" onclick="window.history.back()">Close</button>
+      </div>
     </div>
 
     @if(session('success'))
@@ -213,12 +204,9 @@
          <!-- Proposal Details View -->
          <div id="proposalDetailsPageContent" style="display:none;">
            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; ">
+             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-bottom:1px solid #ddd;">
                <div class="proposal-nav-tabs" id="proposalNavTabs" style="display:none;">
-                 <!-- <button class="proposal-nav-tab active" data-tab="details">Nominees</button> -->
-                  <button  class="proposal-nav-tab active" data-tab="details" onclick="window.location.href = '{{ route('nominees.index') }}'">
-  Nominees
-</button>
+                 <button class="proposal-nav-tab active" data-tab="details">Nominees</button>
                  <button class="proposal-nav-tab" data-tab="followups">Follow Ups</button>
                </div>
                <div class="client-page-actions">
@@ -283,8 +271,8 @@
           <!-- Proposer's Details Section -->
           <div class="form-section">
             <div class="form-section-title">Proposer's Details</div>
-            <div class="form-row proposer-fields-row">
-              <div class="form-group grow">
+            <div class="form-row">
+              <div class="form-group">
                 <label for="proposers_name">Proposer's Name *</label>
                 <input type="text" id="proposers_name" name="proposers_name" class="form-control" required>
               </div>
@@ -306,7 +294,9 @@
                   @foreach($lookupData['insurers'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-                 <div class="form-group grow">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label for="policy_plan">Policy Plan *</label>
                 <select id="policy_plan" name="policy_plan" class="form-control" required>
                   <option value="">Select</option>
@@ -317,85 +307,85 @@
                 <label for="term">Term *</label>
                 <input id="term" name="term" type="number" min="1" class="form-control" required>
               </div>
-                 <div class="form-group grow">
+              <div class="form-group">
                 <label for="sum_assured">Sum Assured</label>
                 <input id="sum_assured" name="sum_assured" type="number" step="0.01" class="form-control" oninput="formatNumberInput(this)">
               </div>
-              <div class="form-group small-grow">
+              <div class="form-group">
                 <label for="age">Age</label>
                 <input id="age" name="age" type="number" min="1" max="120" class="form-control readonly-field" readonly>
               </div>
-                 <div class="form-group small-grow">
-                 <label for="sex">Sex</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sex">Sex</label>
                 <select id="sex" name="sex" class="form-control">
                   <option value="">Select</option>
                   @foreach($lookupData['sex_options'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group small-grow">
+              <div class="form-group">
                 <label for="anb">ANB</label>
                 <input id="anb" name="anb" type="number" class="form-control readonly-field" readonly>
               </div>
             </div>
+          </div>
 
           <!-- Additional Riders Section -->
-         <div class="form-section">
-           
+          <div class="form-section">
+            <div class="form-section-title">Additional Riders</div>
             <div class="rider-grid">
-                 <div class="flex-1 ">
-               <div class="form-section-title">Additional Riders</div>
-                <div class="form-section-title "style="margin-top:18px">Rider Premiums</div></div>
               @foreach($lookupData['riders'] as $rider)
                 <div class="rider-item">
-                  <div class="rider-lable-checkbox">
-                     <label for="rider_{{ $rider }}" style="margin:0; font-weight:normal;">{{ $rider }}</label>
                   <input type="checkbox" class="rider-checkbox" id="rider_{{ $rider }}" name="riders[]" value="{{ $rider }}" data-rider="{{ $rider }}">
-                 </div>
-                  <input type="number" step="0.01" class="form-control rider-premium" id="rider_premium_{{ $rider }}" name="rider_premiums[{{ $rider }}]" style="width:80px; padding:4px; background: transparent !important; margin-top: 8px;" placeholder="0.00" disabled>
+                  <label for="rider_{{ $rider }}" style="margin:0; font-weight:normal;">{{ $rider }}</label>
+                  <input type="number" step="0.01" class="form-control rider-premium" id="rider_premium_{{ $rider }}" name="rider_premiums[{{ $rider }}]" style="width:80px; padding:4px;" placeholder="0.00" disabled>
                 </div>
               @endforeach
             </div>
-            <div class="form-row" style="margin-top:6px; ">
+            <div class="form-row" style="margin-top:6px;">
               <div class="form-group">
                 <label for="annual_premium">Annual Premium</label>
-                <input id="annual_premium" name="annual_premium" type="number" step="0.01" class="form-control" oninput="calculateTotalPremium()" style="background: transparent !important;">
+                <input id="annual_premium" name="annual_premium" type="number" step="0.01" class="form-control" oninput="calculateTotalPremium()">
               </div>
               <div class="form-group">
                 <label for="total_rider_premium">Total</label>
-                <input id="total_rider_premium" type="number" step="0.01" class="form-control readonly-field" readonly style="background: transparent !important;">
+                <input id="total_rider_premium" type="number" step="0.01" class="form-control readonly-field" readonly>
               </div>
             </div>
           </div>
 
           <!-- Proposal & Payment Details -->
           <div class="form-section">
-            <div class="form-row proposer-fields-row">
-              <div class="form-group grow">
+            <div class="form-row">
+              <div class="form-group">
                 <label for="offer_date">Offer Date *</label>
                 <input id="offer_date" name="offer_date" type="date" class="form-control" required>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="stage">Proposal Stage *</label>
                 <select id="stage" name="stage" class="form-control" required>
                   <option value="">Select</option>
                   @foreach($lookupData['stages'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="agency">Agency</label>
                 <select id="agency" name="agency" class="form-control">
                   <option value="">Select</option>
                   @foreach($lookupData['agencies'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="source">Source</label>
                 <select id="source" name="source" class="form-control">
                   <option value="">Select</option>
                   @foreach($lookupData['sources'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-                <div class="form-group grow">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label for="client_id">Source Name</label>
                 <select id="client_id" class="form-control field-required">
                   <option value="">Select Client</option>
@@ -406,69 +396,44 @@
                 <input type="hidden" id="source_name" name="source_name">
               </div>
             </div>
-           
-            <div class="form-section-title " style="margin-top:6px;">Payment Plan</div>
-            <div class="form-row proposer-fields-row">
-              <div class="form-group grow">
+            <div class="form-section-title" style="margin-top:6px;">Payment Plan</div>
+            <div class="form-row">
+              <div class="form-group">
                 <label for="frequency">Frequency Of Payment *</label>
                 <select id="frequency" name="frequency" class="form-control" required>
                   <option value="">Select</option>
                   @foreach($lookupData['frequencies'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="method_of_payment">Method Of Payment</label>
                 <select id="method_of_payment" name="method_of_payment" class="form-control">
                   <option value="">Select</option>
                   @foreach($lookupData['method_of_payment_options'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="source_of_payment">Source Of Payment *</label>
                 <select id="source_of_payment" name="source_of_payment" class="form-control" required>
                   <option value="">Select</option>
                   @foreach($lookupData['sources_of_payment'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-                <div class="form-group grow ">
-                 <div style="display: flex; gap: 15px; align-items: end;">
-    <div style="flex: 1;">
-      <label for="base_premium" style="font-size: 11px; font-weight: bold; color: #2d2d2d; margin-bottom: 4px; display: block;">
-        Base Premium
-      </label>
-      <input 
-        id="base_premium" 
-        name="base_premium" 
-        type="number" 
-        step="0.01" 
-        class="form-control" 
-        oninput="calculateTotalPremium()"
-        style="width: 100%; background: transparent !important;"
-      >
-    </div>
-
-    <div style="flex: 1;">
-      <label for="admin_fee" style="font-size: 11px; font-weight: bold; color: #2d2d2d; margin-bottom: 4px; display: block;">
-        Admin Fee
-      </label>
-      <input 
-        id="admin_fee" 
-        name="admin_fee" 
-        type="number" 
-        step="0.01" 
-        class="form-control" 
-        oninput="calculateTotalPremium()"
-        style="width: 100%; background: transparent !important;"
-      >
-    </div>
-  </div>
-                </div>
-                   <div class="form-group grow">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="base_premium">Base Premium</label>
+                <input id="base_premium" name="base_premium" type="number" step="0.01" class="form-control" oninput="calculateTotalPremium()">
+              </div>
+              <div class="form-group">
+                <label for="admin_fee">Admin Fee</label>
+                <input id="admin_fee" name="admin_fee" type="number" step="0.01" class="form-control" oninput="calculateTotalPremium()">
+              </div>
+              <div class="form-group">
                 <label for="total_premium">Total Premium</label>
-                <input id="total_premium" name="total_premium" type="number" step="0.01" class="form-control readonly-field" readonly  style="width: 100%; background: transparent !important;">
+                <input id="total_premium" name="total_premium" type="number" step="0.01" class="form-control readonly-field" readonly>
               </div>
             </div>
-          
           </div>
 
           <!-- Medical Examination Required Section -->
@@ -476,8 +441,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label style="display:flex; align-items:center; gap:8px;">
-                  <input type="checkbox" id="medical_examination_required" name="medical_examination_required" value="1" class="rider-checkbox" onchange="toggleMedicalFields()" 
-                  >
+                  <input type="checkbox" id="medical_examination_required" name="medical_examination_required" value="1" class="rider-checkbox" onchange="toggleMedicalFields()">
                   <span>Medical Examination Required?</span>
                 </label>
               </div>
@@ -499,43 +463,46 @@
                   <label for="date_completed">Date Completed</label>
                   <input id="date_completed" name="date_completed" type="date" class="form-control field-required">
                 </div>
-                 <div class="form-group full-width">
+              </div>
+              <div class="form-row">
+                <div class="form-group full-width">
                   <label for="exam_notes">Exam Notes</label>
                   <textarea id="exam_notes" name="exam_notes" class="form-control field-required" rows="1"></textarea>
                 </div>
               </div>
-       
             </div>
           </div>
 
           <!-- Application Details Section -->
           <div class="form-section">
             <div class="form-section-title">Application Details</div>
-            <div class="form-row proposer-fields-row">
-              <div class="form-group grow">
+            <div class="form-row">
+              <div class="form-group">
                 <label for="date">Date *</label>
                 <input id="date" name="date" type="date" class="form-control" required>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="status">Proposal Status *</label>
                 <select id="status" name="status" class="form-control" required>
                   <option value="">Select</option>
                   @foreach($lookupData['statuses'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
                 </select>
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="policy_no">Policy No</label>
                 <input id="policy_no" name="policy_no" class="form-control">
               </div>
-              <div class="form-group grow">
+              <div class="form-group">
                 <label for="loading_premium">Loading Premium</label>
                 <input id="loading_premium" name="loading_premium" type="number" step="0.01" class="form-control">
               </div>
-                <div class="form-group grow">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
                 <label for="start_date">Start Date</label>
                 <input id="start_date" name="start_date" type="date" class="form-control">
               </div>
-               <div class="form-group grow">
+              <div class="form-group">
                 <label for="maturity_date">Maturity Date</label>
                 <input id="maturity_date" name="maturity_date" type="date" class="form-control">
               </div>

@@ -164,8 +164,8 @@
     #proposalPageView .client-page-header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #ddd; box-shadow: none; display: flex; justify-content: space-between; align-items: center; }
     #proposalPageView .client-page-title { font-size: 20px; font-weight: bold; flex-shrink: 0; }
     #proposalPageView .client-page-actions { display: flex; gap: 10px; flex-shrink: 0; }
-    .proposal-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; padding: 0; background: #fff; border: 1px solid #ddd; }
-    .detail-section { background: #fff; margin: 0; border-right: 1px solid #ddd; }
+    .proposal-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; padding: 0; background: #fff;margin:0px 20px; }
+    .detail-section { background: #fff; margin: 0; border-right: 1px solid #ddd; margin-right:20px;}
     .detail-section:last-child { border-right: none; }
     .detail-section-header { background: #a0a0a0; color: #fff; padding: 8px 10px; font-weight: bold; font-size: 11px; text-transform: uppercase; }
     .detail-section-body { padding: 10px; }
@@ -229,3 +229,89 @@
     .btn-view-doc { background: none; border: none; color: #007bff; text-decoration: none; font-size: 12px; cursor: pointer; padding: 0; }
     .btn-view-doc:hover { text-decoration: underline; }
     .btn-delete-doc { background: #dc3545; color: #fff; border: none; padding: 4px 12px; border-radius: 2px; cursor: pointer; font-size: 11px; }
+
+
+    /* Proposer's Details */
+.proposer-fields-row {
+  display: flex;
+  flex-wrap: nowrap;          
+  gap: 10px;                   
+  align-items: flex-end; 
+  padding: 10px 0;
+  overflow-x: auto; 
+  padding-bottom: 5px;
+}
+
+.proposer-fields-row .form-group {
+  flex: 1 1 60px;           
+  min-width: auto !important;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;   
+}
+.proposer-fields-row .form-group.grow {
+  flex: 1 1 120px;               
+  min-width: 150px;          
+}
+.proposer-fields-row .form-group.small-grow {
+  flex: 1 1 40px;     
+}
+
+.proposer-fields-row .form-group label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #2d2d2d;
+  margin-bottom: 4px;
+}
+
+.proposer-fields-row .form-control {
+  height: 32px;                
+  padding: 6px 10px;
+  font-size: 12px;
+  background-color: #e9e9e9 !important; 
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.proposer-fields-row .readonly-field {
+  background-color: #f5f5f5 !important;
+}
+@media (max-width: 1400px) {
+  .proposer-fields-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .proposer-fields-row {
+    flex-direction: column;
+  }
+  .proposer-fields-row .form-group {
+    flex: 1 1 100%;
+  }
+}
+
+.rider-grid {
+  display: flex;
+  gap: 20px;              
+  flex-wrap: nowrap;
+  overflow-x: auto; 
+  padding: 8px 0;
+}
+
+.rider-lable-checkbox{
+  display: flex;
+  flex-direction: row;  
+  justify-content: space-between;
+  align-items: center;
+    gap: 10px; 
+}
+.rider-item {
+  display: flex;
+  flex-direction: column;       
+  align-items: center;  
+  min-width: 90px;
+  text-align: center;
+}
+

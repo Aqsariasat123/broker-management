@@ -14,6 +14,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\ClaimController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\BeneficialOwnerController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\StatementController;
 use App\Http\Controllers\UserController;
@@ -230,6 +231,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/incomes', [IncomeController::class, 'store'])->name('incomes.store');
     Route::put('/incomes/{income}', [IncomeController::class, 'update'])->name('incomes.update');
     Route::delete('/incomes/{income}', [IncomeController::class, 'destroy'])->name('incomes.destroy');
+
+    // Beneficial Owners Routes
+    Route::get('/beneficial-owners/export', [BeneficialOwnerController::class, 'export'])->name('beneficial-owners.export');
+    Route::post('/beneficial-owners/save-column-settings', [BeneficialOwnerController::class, 'saveColumnSettings'])->name('beneficial-owners.save-column-settings');
+    Route::get('/beneficial-owners/{beneficialOwner}/edit', [BeneficialOwnerController::class, 'edit'])->name('beneficial-owners.edit');
+    Route::get('/beneficial-owners/{beneficialOwner}', [BeneficialOwnerController::class, 'show'])->name('beneficial-owners.show');
+    Route::get('/beneficial-owners', [BeneficialOwnerController::class, 'index'])->name('beneficial-owners.index');
+    Route::post('/beneficial-owners', [BeneficialOwnerController::class, 'store'])->name('beneficial-owners.store');
+    Route::put('/beneficial-owners/{beneficialOwner}', [BeneficialOwnerController::class, 'update'])->name('beneficial-owners.update');
+    Route::delete('/beneficial-owners/{beneficialOwner}', [BeneficialOwnerController::class, 'destroy'])->name('beneficial-owners.destroy');
 
     // Commissions Routes
     Route::get('/commissions/export', [CommissionController::class, 'export'])->name('commissions.export');

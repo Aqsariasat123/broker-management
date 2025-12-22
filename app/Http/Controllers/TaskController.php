@@ -25,7 +25,12 @@ class TaskController extends Controller
             $query->where('due_date', '<', now()->format('Y-m-d'))
                   ->where('task_status', '!=', 'Completed');
         }
-
+        if ($request->has('filter')) {
+            if ($request->filter == 'today') {
+                $query->whereDate('due_date', today());
+            }
+        }
+    
         // paginate 10 per page
         $tasks = $query->orderBy('due_date', 'desc')->paginate(10);
 

@@ -287,10 +287,48 @@
     });
   }
 
-  function filterByInsurer(insurer) {
-    window.location.href = `${commissionsIndexRoute}?insurer=${insurer}`;
+  // function filterByInsurer(insurer) {
+  //   window.location.href = `${commissionsIndexRoute}?insurer=${insurer}`;
+  // }
+ function filterByInsurer(insurer = null) {
+  const url = new URL(window.location);
+  
+  if (insurer) {
+    url.searchParams.set('insurer', insurer);
+  } else {
+    url.searchParams.delete('insurer');
   }
+  
+  window.location.href = url.toString();
+}
 
+// Update UI on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('insurerFilterToggle');
+  if (!toggle) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const currentInsurer = params.get('insurer');
+  const hasFilter = !!currentInsurer;
+
+  // Sync toggle
+  toggle.checked = hasFilter;
+
+  // Update button states
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active-all', 'active-insurer');
+
+    const btnText = btn.textContent.trim();
+
+    if (btnText === 'Show All') {
+      if (!hasFilter) {
+        btn.classList.add('active-all');
+      }
+    } else if (btnText === currentInsurer) {
+      btn.classList.add('active-insurer');
+    }
+  });
+});
   // Column modal functions
   function openColumnModal() {
     document.getElementById('tableResponsive').classList.add('no-scroll');
