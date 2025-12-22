@@ -40,6 +40,18 @@
     element.style.removeProperty('display');
   }
 
+  // Show/hide BOs button based on client_type
+  function updateBOsButtonVisibility(client) {
+    const bosButton = document.querySelector('#clientPageView .nav-tab[data-tab="bos"]');
+    if (bosButton && client) {
+      if (client.client_type === 'Individual') {
+        bosButton.style.setProperty('display', 'none', 'important');
+      } else {
+        bosButton.style.setProperty('display', 'inline-block', 'important');
+      }
+    }
+  }
+
   // Helper: Hide element with !important
   function hideElement(element) {
     if (!element) return;
@@ -539,6 +551,62 @@
   }
 
   // ============================================================================
+  // NOTIFICATION SYSTEM
+  // ============================================================================
+
+  function showNotification(message, type = 'success') {
+    const banner = document.getElementById('notificationBanner');
+    const messageEl = document.getElementById('notificationMessage');
+    const closeBtn = banner?.querySelector('button');
+    if (!banner || !messageEl) return;
+    
+    // Set message
+    messageEl.textContent = message;
+    
+    // Set color based on type
+    if (type === 'success') {
+      banner.style.background = '#28a745';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    } else if (type === 'error') {
+      banner.style.background = '#dc3545';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    } else if (type === 'warning') {
+      banner.style.background = '#ffc107';
+      banner.style.color = '#000';
+      if (closeBtn) closeBtn.style.color = '#000';
+    } else {
+      banner.style.background = '#17a2b8';
+      banner.style.color = '#fff';
+      if (closeBtn) closeBtn.style.color = '#fff';
+    }
+    
+    // Show banner
+    banner.style.display = 'flex';
+    banner.style.alignItems = 'center';
+    banner.style.justifyContent = 'center';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      closeNotification();
+    }, 5000);
+  }
+
+  // Make showNotification globally accessible
+  window.showNotification = showNotification;
+
+  function closeNotification() {
+    const banner = document.getElementById('notificationBanner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
+  }
+
+  // Make closeNotification globally accessible
+  window.closeNotification = closeNotification;
+
+  // ============================================================================
   // INITIALIZATION
   // ============================================================================
 
@@ -562,6 +630,17 @@
         });
       }
     });
+    
+    // Navigate to follow_up view when toggle is checked, or list all when unchecked
+    // Preserve existing URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (filtersVisible) {
+      urlParams.set('follow_up', 'true');
+    } else {
+      urlParams.delete('follow_up');
+    }
+    const queryString = urlParams.toString();
+    window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
   }
 
   document.getElementById('filterToggle')?.addEventListener('change', handleFilterToggle);
@@ -646,13 +725,21 @@
 
   if (followUpBtn) {
     followUpBtn.addEventListener('click', () => {
-      window.location.href = clientsIndexRoute + '?follow_up=true';
+      // Preserve existing URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('follow_up', 'true');
+      const queryString = urlParams.toString();
+      window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
     });
   }
 
   if (listAllBtn) {
     listAllBtn.addEventListener('click', () => {
-      window.location.href = clientsIndexRoute;
+      // Preserve existing URL parameters except follow_up
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.delete('follow_up');
+      const queryString = urlParams.toString();
+      window.location.href = clientsIndexRoute + (queryString ? '?' + queryString : '');
     });
   }
 
@@ -702,11 +789,14 @@
       // Populate edit form with same structure as detail page
       populateClientEditForm(client, formContainer);
 
-      // Set page title
+      // Set page title (only if elements exist)
       const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-      document.getElementById('clientPageTitle').textContent = 'Edit Client';
-      document.getElementById('clientPageName').textContent = clientName;
-      document.getElementById('editClientFromPageBtn').style.display = 'none';
+      const clientPageTitle = document.getElementById('clientPageTitle');
+      const clientPageName = document.getElementById('clientPageName');
+      const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
+      if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
 
       // Set up documents section
       const editFormDocumentsSection = document.getElementById('editFormDocumentsSection');
@@ -735,6 +825,21 @@
       clientPageView.style.display = 'block';
       document.getElementById('clientDetailsPageContent').style.display = 'none';
       document.getElementById('clientFormPageContent').style.display = 'block';
+      
+      // Setup nav tab listeners for page view
+      document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+        newTab.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!currentClientId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?client_id=' + currentClientId;
+        });
+      });
     } catch (e) {
       console.error(e);
       alert('Error loading client data: ' + e.message);
@@ -757,8 +862,10 @@
       currentClientId = clientId;
 
       const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-      document.getElementById('clientPageName').textContent = clientName;
-      document.getElementById('clientPageTitle').textContent = 'Client';
+      const clientPageName = document.getElementById('clientPageName');
+      const clientPageTitle = document.getElementById('clientPageTitle');
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (clientPageTitle) clientPageTitle.textContent = 'Client';
 
       populateClientDetailsModal(client);
 
@@ -769,6 +876,24 @@
       document.getElementById('clientDetailsPageContent').style.display = 'block';
       document.getElementById('clientFormPageContent').style.display = 'none';
       document.getElementById('editClientFromPageBtn').style.display = 'inline-block';
+      
+      // Show/hide BOs button based on client_type
+      updateBOsButtonVisibility(client);
+      
+      // Setup nav tab listeners for page view
+      document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+        newTab.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!currentClientId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?client_id=' + currentClientId;
+        });
+      });
     } catch (e) {
       console.error(e);
       alert('Error loading client details: ' + e.message);
@@ -1127,13 +1252,15 @@
   //   });
   // }
   function populateClientDetailsModal(client) {
+    // Update BOs button visibility
+    updateBOsButtonVisibility(client);
 
     let content = document.getElementById('clientDetailsContent') || document.getElementById('clientDetailsContentModal');
     if (!content) {
       console.error('clientDetailsContent element not found');
       return;
     }
-  
+
     const dob = client.dob_dor ? formatDate(client.dob_dor) : '-';
     const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '-';
     const idExpiry = client.id_expiry_date ? formatDate(client.id_expiry_date) : '-';
@@ -1152,33 +1279,33 @@
     // Column 1: CUSTOMER DETAILS
     const col1 = `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        <div class="detail-section">
-          <div class="detail-section-header">CUSTOMER DETAILS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Client Type</span>
+      <div class="detail-section">
+        <div class="detail-section-header">CUSTOMER DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Client Type</span>
               <div class="detail-value">${isBusinessLike ? 'Business' : 'Individual'}</div>
-            </div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">DOB/DOR</span>
-              <div style="display:flex; gap:5px; align-items:center; flex:1;">
-                <div class="detail-value" style="flex:1;">${dob}</div>
-                <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge}</div>
-              </div>
+            <span class="detail-label">DOB/DOR</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${dob}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge}</div>
             </div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">NIN/BCRN</span>
-              <div class="detail-value">${client.nin_bcrn || '-'}</div>
-            </div>
+            <span class="detail-label">NIN/BCRN</span>
+            <div class="detail-value">${client.nin_bcrn || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">ID Expiry Date</span>
-              <div style="display:flex; gap:5px; align-items:center; flex:1;">
-                <div class="detail-value" style="flex:1;">${idExpiry}</div>
-                <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${idExpiryDays}</div>
-              </div>
+            <span class="detail-label">ID Expiry Date</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${idExpiry}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${idExpiryDays}</div>
             </div>
-            <div class="detail-row">
-              <span class="detail-label">Client Status</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Client Status</span>
               <div class="detail-value">
                 ${client.status ? `<span class="badge-status" style="background:${client.status === 'Active' ? '#28a745' : '#6c757d'};">${client.status}</span>` : '-'}
               </div>
@@ -1187,97 +1314,97 @@
         </div>
       </div>
     `;
-  
+
     // Column 2: CONTACT DETAILS
     const col2 = `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        <div class="detail-section">
-          <div class="detail-section-header">CONTACT DETAILS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">Mobile No</span>
-              <div class="detail-value">${client.mobile_no || '-'}</div>
-            </div>
+      <div class="detail-section">
+        <div class="detail-section-header">CONTACT DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Mobile No</span>
+            <div class="detail-value">${client.mobile_no || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">On Whatsapp</span>
               <div class="detail-value checkbox">
                 <input type="checkbox" ${client.wa ? 'checked' : ''} disabled>
               </div>
             </div>
-            <div class="detail-row">
-              <span class="detail-label">Alternate No</span>
-              <div class="detail-value">${client.alternate_no || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Email Address</span>
-              <div class="detail-value">${client.email_address || '-'}</div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Contact Person</span>
-              <div class="detail-value">${client.contact_person || '-'}</div>
-            </div>
+          <div class="detail-row">
+            <span class="detail-label">Alternate No</span>
+            <div class="detail-value">${client.alternate_no || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email Address</span>
+            <div class="detail-value">${client.email_address || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact Person</span>
+            <div class="detail-value">${client.contact_person || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForIndividual}>
-              <span class="detail-label">Designation</span>
-              <div class="detail-value">${client.designation || '-'}</div>
+            <span class="detail-label">Designation</span>
+            <div class="detail-value">${client.designation || '-'}</div>
             </div>
           </div>
         </div>
       </div>
     `;
-  
+
     // Column 3: ADDRESS DETAILS
     const col3 = `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        <div class="detail-section">
-          <div class="detail-section-header">ADDRESS DETAILS</div>
-          <div class="detail-section-body">
-            <div class="detail-row">
-              <span class="detail-label">District</span>
-              <div class="detail-value">${client.district || '-'}</div>
-            </div>
+      <div class="detail-section">
+        <div class="detail-section-header">ADDRESS DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">District</span>
+            <div class="detail-value">${client.district || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Address</span>
-              <div class="detail-value">${client.location || '-'}</div>
-            </div>
+            <div class="detail-value">${client.location || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Island</span>
-              <div class="detail-value">${client.island || '-'}</div>
-            </div>
+            <div class="detail-value">${client.island || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Country</span>
-              <div class="detail-value">${client.country || '-'}</div>
-            </div>
+            <span class="detail-label">Country</span>
+            <div class="detail-value">${client.country || '-'}</div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">P.O. Box No</span>
-              <div class="detail-value">${client.po_box_no || '-'}</div>
+            <span class="detail-label">P.O. Box No</span>
+            <div class="detail-value">${client.po_box_no || '-'}</div>
             </div>
           </div>
         </div>
       </div>
     `;
-  
+
     // Column 7: OTHER DETAILS
     const col7 = hideForBusiness ? ``: `
       <div style="display:flex; flex-direction:column; gap:10px;">
-        <div class="detail-section">
-          <div class="detail-section-header">OTHER DETAILS</div>
-          <div class="detail-section-body"> 
+      <div class="detail-section">
+        <div class="detail-section-header">OTHER DETAILS</div>
+        <div class="detail-section-body">
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Married</span>
               <div class="detail-value checkbox">
                 <input type="checkbox" ${client.married ? 'checked' : ''} disabled>
-              </div>
-            </div>
+          </div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Spouse's Name</span>
               <div class="detail-value">${client.spouses_name || '-'}</div>
-            </div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">PEP</span>
               <div class="detail-value checkbox">
                 <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
-              </div>
-            </div>
+          </div>
+          </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">PEP Details</span>
               <div class="detail-value" style="min-height:40px; white-space:pre-wrap;">${client.pep_comment || '-'}</div>
@@ -1290,7 +1417,7 @@
         </div>
       </div>
     `;
-  
+
     // The remaining cards only for Individual
     const col4 = isIndividual ? '' : /* Registration Details */ `<div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
@@ -1362,13 +1489,13 @@
   
     // Assemble HTML
     content.innerHTML = col1 + col2 + col3 + col7 + col4 + col5 + col6 + col8;
-  
+
     // Documents
     const documentsList = document.getElementById('clientDocumentsList');
     if (documentsList) {
       documentsList.innerHTML = renderDocumentsList(client.documents || []);
     }
-  
+
     // Add Document button
     const addDocumentBtn = document.getElementById('addDocumentBtn1');
     if (addDocumentBtn && currentClientId) addDocumentBtn.style.display = 'inline-block';
@@ -1376,7 +1503,7 @@
     // Edit button
     const editBtn = document.getElementById('editClientFromPageBtn');
     if (editBtn) editBtn.onclick = () => openEditClient(currentClientId);
-  
+
     // Tab navigation
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', function(e) {
@@ -1786,7 +1913,7 @@
   }
  
   
-  
+
   function closeClientDetailsModal() {
     closeClientPageView();
   }
@@ -1812,7 +1939,7 @@
 
     // Validate file type
     if (!file.type.match('image.*')) {
-      alert('Please select an image file.');
+      showNotification('Please select an image file.', 'error');
       event.target.value = '';
       return;
     }
@@ -1824,7 +1951,38 @@
     reader.onload = function(e) {
       const imageDataUrl = e.target.result;
 
-      // Update photo in INDIVIDUAL DETAILS section
+      // In add mode (no currentClientId), add photo to pending documents
+      if (!currentClientId) {
+        const photoDoc = {
+          file: file,
+          type: 'Photo',
+          name: 'Client Photo',
+          size: file.size,
+          preview: imageDataUrl,
+          isPhoto: true
+        };
+
+        // Check if photo already exists in pending documents
+        const existingPhotoIndex = pendingDocuments.findIndex(doc => doc.isPhoto);
+        if (existingPhotoIndex >= 0) {
+          pendingDocuments[existingPhotoIndex] = photoDoc;
+        } else {
+          pendingDocuments.push(photoDoc);
+        }
+
+        // Update pending documents display
+        updatePendingDocumentsDisplay();
+        
+        // Also show preview in the imagePreviewContainer if it exists
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreviewContainer && imagePreview) {
+          imagePreview.src = imageDataUrl;
+          imagePreviewContainer.style.display = 'block';
+        }
+      }
+
+      // Update photo in INDIVIDUAL DETAILS section (for edit mode or form preview)
       const clientPhotoImg = document.getElementById('clientPhotoImg');
       const clientPhotoPreview = document.getElementById('clientPhotoPreview');
       
@@ -1884,6 +2042,7 @@
   function removeImagePreview() {
     const imageInput = document.getElementById('image');
     const previewImg = document.getElementById('imagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     
     if (imageInput) {
       imageInput.value = '';
@@ -1892,7 +2051,23 @@
     if (previewImg) {
       previewImg.src = '';
     }
+    
+    if (imagePreviewContainer) {
+      imagePreviewContainer.style.display = 'none';
+    }
+    
+    // Also remove from pending documents if in add mode
+    if (!currentClientId) {
+      const photoIndex = pendingDocuments.findIndex(doc => doc.isPhoto);
+      if (photoIndex >= 0) {
+        pendingDocuments.splice(photoIndex, 1);
+        updatePendingDocumentsDisplay();
+      }
+    }
   }
+  
+  // Make removeImagePreview globally accessible
+  window.removeImagePreview = removeImagePreview;
 
   // Photo upload handler
   async function handlePhotoUpload(event) {
@@ -2001,7 +2176,7 @@
                 const clientDetailsPageContent = document.getElementById('clientDetailsPageContent');
                 if (clientDetailsPageContent && clientDetailsPageContent.style.display !== 'none') {
                   // Reload the client data and refresh the view
-                  populateClientDetailsModal(client);
+                populateClientDetailsModal(client);
                 }
                 
                 // Also refresh documents list
@@ -2132,15 +2307,36 @@
 
     let docsHTML = '';
     pendingDocuments.forEach((doc, index) => {
-      const fileExt = doc.name.split('.').pop().toUpperCase();
-      const isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
+      // For photos, use the preview directly; for other files, get extension from name or type
+      let fileExt = 'DOC';
+      let isImage = false;
+      let previewUrl = null;
+      
+      if (doc.isPhoto && doc.preview) {
+        // Photo document
+        isImage = true;
+        previewUrl = doc.preview;
+        fileExt = 'PHOTO';
+      } else if (doc.name) {
+        // Regular document
+        fileExt = doc.name.split('.').pop().toUpperCase();
+        isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
+        previewUrl = doc.preview;
+      } else if (doc.file) {
+        // File object - check type
+        const fileName = doc.file.name || '';
+        fileExt = fileName.split('.').pop().toUpperCase() || 'DOC';
+        isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
+        previewUrl = doc.preview;
+      }
+      
       docsHTML += `
         <div class="document-item" style="position:relative; cursor:default;">
-          ${isImage && doc.preview ? 
-            `<img src="${doc.preview}" alt="${doc.name}" style="width:60px; height:60px; object-fit:cover; border-radius:4px; opacity:0.7;">` : 
+          ${isImage && previewUrl ? 
+            `<img src="${previewUrl}" alt="${doc.name || 'Photo'}" style="width:60px; height:60px; object-fit:cover; border-radius:4px; opacity:0.7;">` : 
             `<div class="document-icon" style="opacity:0.7;">${fileExt}</div>`
           }
-          <div style="font-size:11px; text-align:center;">${doc.name}</div>
+          <div style="font-size:11px; text-align:center;">${doc.name || 'Client Photo'}</div>
           <div style="font-size:9px; text-align:center; color:#999;">(Pending)</div>
           <button onclick="removePendingDocument(${index})" style="position:absolute; top:-5px; right:-5px; background:#dc3545; color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; line-height:1;">×</button>
         </div>
@@ -2174,6 +2370,16 @@
         }
         photoContainer.replaceChild(placeholder, clientPhotoImg);
       }
+      
+      // Also clear image preview container
+      const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+      const imagePreview = document.getElementById('imagePreview');
+      if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+      if (imagePreview) imagePreview.src = '';
+      
+      // Clear the file input
+      const imageInput = document.getElementById('image');
+      if (imageInput) imageInput.value = '';
     }
     pendingDocuments.splice(index, 1);
     updatePendingDocumentsDisplay();
@@ -2421,6 +2627,14 @@
       // Clear documents list
       const editDocumentsList = document.getElementById('editClientDocumentsList');
       if (editDocumentsList) editDocumentsList.innerHTML = '<div style="color:#999; font-size:12px;">No documents uploaded</div>';
+      
+      // Clear image preview container
+      const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+      if (imagePreviewContainer) {
+        imagePreviewContainer.style.display = 'none';
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreview) imagePreview.src = '';
+      }
 
       // Clear pending documents and photo when opening add form
       pendingDocuments = [];
@@ -2437,6 +2651,11 @@
         const btn = document.getElementById(btnId);
         if (btn) btn.style.display = 'none';
       });
+      
+      // Update pending documents display to show any pending photos/documents
+      setTimeout(() => {
+        updatePendingDocumentsDisplay();
+      }, 100);
 
       setupWaToggle();
     } else {
@@ -2765,16 +2984,20 @@
       }
     }
 
-    // Set page title
+    // Set page title (only if elements exist - they may not exist in modal view)
+    const clientPageTitle = document.getElementById('clientPageTitle');
+    const clientPageName = document.getElementById('clientPageName');
+    const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
+    
     if (mode === 'add') {
-      document.getElementById('clientPageTitle').textContent = 'Client - Add New';
-      document.getElementById('clientPageName').textContent = '';
-      document.getElementById('editClientFromPageBtn').style.display = 'none';
+      if (clientPageTitle) clientPageTitle.textContent = 'Client - Add New';
+      if (clientPageName) clientPageName.textContent = '';
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
     } else {
       const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-      document.getElementById('clientPageTitle').textContent = 'Edit Client';
-      document.getElementById('clientPageName').textContent = clientName;
-      document.getElementById('editClientFromPageBtn').style.display = 'none';
+      if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
+      if (clientPageName) clientPageName.textContent = clientName;
+      if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
     }
 
     // Hide table view, show page view
@@ -3137,12 +3360,12 @@
     if (!form || form.hasAttribute('data-handler-attached')) return;
     
     form.addEventListener('submit', async function(e) {
-      e.preventDefault();
+    e.preventDefault();
 
-      const form = this;
+    const form = this;
       const clientType = form.querySelector('#client_type')?.value || form.querySelector('select[name="client_type"]')?.value;
-      const isIndividual = isIndividualType(clientType);
-      const isBusiness = isBusinessType(clientType);
+    const isIndividual = isIndividualType(clientType);
+    const isBusiness = isBusinessType(clientType);
 
       // Helper function to check if element is visible
       function isElementVisible(element) {
@@ -3176,10 +3399,10 @@
       const fieldsWithRequiredRemoved = [];
       form.querySelectorAll('input[required], select[required], textarea[required]').forEach(field => {
         if (!isElementVisible(field)) {
-          field.removeAttribute('required');
-          fieldsWithRequiredRemoved.push(field);
-        }
-      });
+        field.removeAttribute('required');
+        fieldsWithRequiredRemoved.push(field);
+      }
+    });
 
     // Disable hidden duplicate fields to prevent submission conflicts
     if (isBusiness) {
@@ -3297,7 +3520,7 @@
       form.querySelectorAll('input[disabled], select[disabled], textarea[disabled]').forEach(f => f.disabled = false);
       // Restore required attributes for next attempt
       fieldsWithRequiredRemoved.forEach(field => {
-        field.setAttribute('required', '');
+          field.setAttribute('required', '');
       });
       const missingFieldsList = missingFields.length > 0 ? '\nMissing: ' + missingFields.join(', ') : '';
       alert('Please fill required fields' + missingFieldsList);
@@ -3326,15 +3549,39 @@
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
         },
         body: formData
       });
 
+      const contentType = response.headers.get('content-type');
+      console.log('Response status:', response.status, 'Content-Type:', contentType);
+      
       if (response.ok) {
-        const result = await response.json();
+        let result;
+        try {
+          // Check if response is JSON
+          if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+            console.log('Parsed JSON result:', result);
+          } else {
+            // Response is not JSON, might be HTML redirect
+            console.log('Response is not JSON, assuming success');
+            alert(isEdit ? 'Client updated successfully!' : 'Client created successfully!');
+            location.reload();
+            return;
+          }
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError);
+          // If response is not JSON, it might be a redirect or HTML
+          alert(isEdit ? 'Client updated successfully!' : 'Client created successfully!');
+          location.reload();
+          return;
+        }
 
-        if (result.success) {
+        if (result && result.success) {
+          console.log('Success response received:', result);
           if (!isEdit && result.client?.id) {
             currentClientId = result.client.id;
             
@@ -3348,7 +3595,8 @@
                   method: 'POST',
                   headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                   },
                   body: photoFormData
                 });
@@ -3374,7 +3622,8 @@
                     method: 'POST',
                     headers: {
                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || csrfToken,
-                      'X-Requested-With': 'XMLHttpRequest'
+                      'X-Requested-With': 'XMLHttpRequest',
+                      'Accept': 'application/json'
                     },
                     body: docFormData
                   });
@@ -3386,53 +3635,44 @@
               }
             }
             
-            try {
-              const clientRes = await fetch(`/clients/${result.client.id}`, {
-                headers: {
-                  'Accept': 'application/json',
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              });
-              if (clientRes.ok) {
-                const clientData = await clientRes.json();
-                await openClientModal('edit', clientData);
-                alert('Client created successfully!' + (pendingDocsCount > 0 ? ` ${pendingDocsCount} document(s) uploaded.` : ''));
-              } else {
-                alert('Client created successfully!' + (pendingDocsCount > 0 ? ` ${pendingDocsCount} document(s) uploaded.` : ''));
-                closeClientModal();
-                location.reload();
-              }
-            } catch (error) {
-              console.error('Error fetching client:', error);
-              alert('Client created successfully!' + (pendingDocsCount > 0 ? ` ${pendingDocsCount} document(s) uploaded.` : ''));
-              closeClientModal();
-              location.reload();
-            }
-          } else {
-            alert('Client updated successfully!');
+            // Close modal and show clients table
             closeClientModal();
-            location.reload();
+            const successMessage = 'Client created successfully!' + (pendingDocsCount > 0 ? ` ${pendingDocsCount} document(s) uploaded.` : '');
+            showNotification(successMessage, 'success');
+            // Reload after a short delay to show notification
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
+          } else {
+            // Update success
+            console.log('Showing update success message');
+            closeClientModal();
+            showNotification('Client updated successfully!', 'success');
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
           }
         } else {
-          alert('Error: ' + (result.message || 'Unknown error'));
+          console.log('Response success is false:', result);
+          showNotification('Error: ' + (result.message || 'Unknown error'), 'error');
         }
       } else {
         const errorData = await response.json();
         if (errorData.errors) {
-          let errorMsg = 'Validation errors:\n';
+          let errorMsg = 'Validation errors: ';
           Object.keys(errorData.errors).forEach(key => {
-            errorMsg += errorData.errors[key][0] + '\n';
+            errorMsg += errorData.errors[key][0] + ' ';
           });
-          alert(errorMsg);
+          showNotification(errorMsg.trim(), 'error');
         } else {
-          alert('Error saving client: ' + (errorData.message || 'Unknown error'));
+          showNotification('Error saving client: ' + (errorData.message || 'Unknown error'), 'error');
         }
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error saving client: ' + error.message);
+      showNotification('Error saving client: ' + error.message, 'error');
     }
-    });
+  });
   }
 
   // Initialize form handlers

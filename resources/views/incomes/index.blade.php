@@ -15,6 +15,15 @@
 @endphp
 
 <div class="dashboard">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="page-title-section">
+              <h3 style="margin:0; font-size:18px; font-weight:600;">
+                  Incomes
+              </h3>
+           </div>
+      </div>
+  </div>
   <!-- Main Incomes Table View -->
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
@@ -22,7 +31,6 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-    <h3>Income</h3>
         <div class="records-found">Records Found - {{ $incomes->total() }}</div>
       </div>
       <div class="action-buttons">
@@ -70,9 +78,8 @@
                 </div>
               </td>
               <td class="action-cell">
-                <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                class="action-expand" onclick="openIncomeDetails({{ $inc->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-                
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openIncomeDetails({{ $inc->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+               
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'income_id')

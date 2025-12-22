@@ -13,12 +13,23 @@
 <div class="dashboard">
   <!-- Main Documents Table View -->
   <div class="clients-table-view" id="clientsTableView">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+         
+            Documents
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+          </h3>
+       
+      </div>
+  </div> 
   <div class="container-table">
     <!-- Documents Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Documents</h3>
         <div class="records-found">Records Found - {{ $documents->total() }}</div>
       </div>
       <div class="action-buttons">
@@ -60,9 +71,12 @@
                 </div>
               </td>
               <td class="action-cell">
-              <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                class="action-expand" onclick="openDocumentDetails({{ $doc->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-               
+              <a href="{{ asset('storage/'.$doc->file_path) }}" target="_blank" style="color:#007bff; text-decoration:underline;"> 
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand"></a>
+
+              <!-- <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand"
+              onclick="openDocumentDetails({{ $doc->id }})"  width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand"> -->
+
                 <svg class="action-delete" onclick="if(confirm('Delete this document?')) { deleteDocumentFromTable({{ $doc->id }}); }" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                   <!-- Trash icon -->
                   <path d="M3 6H5H21" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

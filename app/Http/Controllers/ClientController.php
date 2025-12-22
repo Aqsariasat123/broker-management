@@ -32,6 +32,26 @@ class ClientController extends Controller
             });
         }
         
+        // Filter for IDs Expired
+        if ($request->has('filter') && $request->filter == 'ids_expired') {
+            $query->whereNotNull('dob_dor')
+                  ->whereDate('dob_dor', '<', now()->subYears(10));
+        }
+        
+        // Filter for Instalments Overdue
+        if ($request->has('filter') && $request->filter == 'overdue') {
+            $query->whereHas('paymentPlans', function($q) {
+                $q->where('due_date', '<', now()->toDateString())
+                  ->where('status', '!=', 'paid');
+            });
+        }
+        
+        // Filter for Birthdays Today
+        if ($request->has('filter') && $request->filter == 'birthday_today') {
+            $query->whereMonth('dob_dor', now()->month)
+                  ->whereDay('dob_dor', now()->day);
+        }
+        
         // Use paginate instead of get
         $clients = $query->with('policies')->orderBy('created_at', 'desc')->paginate(10);
 

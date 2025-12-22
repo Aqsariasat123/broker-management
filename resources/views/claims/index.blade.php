@@ -17,12 +17,25 @@
 <div class="dashboard">
   <!-- Main Claims Table View -->
   <div class="clients-table-view" id="clientsTableView">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+         
+            Claims
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+            <span id="followUpLabel" style="display:{{ request()->get('pending') == 1 ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - Pending </span>
+
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Claims Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Claims</h3>
         <div class="records-found">Records Found - {{ $claims->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
@@ -86,10 +99,9 @@
                 </div>
               </td>
               <td class="action-cell">
-              <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                class="action-expand" onclick="openClaimModal('edit', {{ $clm->id }})"  width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-                      
-               
+              <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openClaimModal('edit', {{ $clm->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+
+              
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'claim_id')

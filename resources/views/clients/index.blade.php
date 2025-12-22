@@ -13,14 +13,31 @@
 @endphp
 
 <div class="dashboard">
+  <!-- Success/Error Notification Banner -->
+  <div id="notificationBanner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:10000; background:#28a745; color:#fff; padding:12px 24px; border-radius:4px; box-shadow:0 4px 6px rgba(0,0,0,0.1); font-size:14px; font-weight:500; max-width:500px; text-align:center; align-items:center; justify-content:center;">
+    <span id="notificationMessage"></span>
+    <button onclick="closeNotification()" style="background:transparent; border:none; color:#fff; font-size:20px; font-weight:bold; cursor:pointer; margin-left:15px; padding:0; line-height:1; width:20px; height:20px; display:flex; align-items:center; justify-content:center;">×</button>
+  </div>
+
   <!-- Main Clients Table View -->
+
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Clients
+            <span id="followUpLabel" style="display:{{ request()->get('follow_up') == 'true' && !request()->get('client_id') ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - To Follow Up</span>
+            <span class="client-name" id="clientPageName" style="color:#f3742a; font-size:16px; font-weight:500;"></span>
+          </h3>
+       
+      </div>
+    </div>
+   
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
     <!-- Clients Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Clients</h3>
         <div class="records-found">Records Found - {{ $clients->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
@@ -230,11 +247,6 @@
 </div>  
   <!-- Client Page View (Full Page) -->
   <div class="client-page-view" id="clientPageView">
-    <div class="client-page-header">
-      <div class="client-page-title">
-        <span id="clientPageTitle">Client</span> - <span class="client-name" id="clientPageName"></span>
-      </div>
-    </div>
     <div class="client-page-body">
       <div class="client-page-content">
         <!-- Client Details View -->
@@ -249,7 +261,7 @@
                 <button class="nav-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
                 <button class="nav-tab" data-tab="claims" data-url="{{ route('claims.index') }}">Claims</button>
                 <button class="nav-tab" data-tab="documents" data-url="{{ route('documents.index') }}">Documents</button>
-                <button class="nav-tab" data-tab="bos" data-url="#">BOs</button>
+                <button class="nav-tab" data-tab="bos" data-url="{{ route('beneficial-owners.index') }}">BOs</button>
               </div>
               <div class="client-page-actions">
                 <button class="btn btn-edit" id="editClientFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
@@ -671,14 +683,11 @@
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Notes</span>
                 <textarea id="notes_business" name="notes" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
-              </div>
             </div>
           </div>
           
-          <!-- Insurables and Source Name Section (Below all columns) -->
-          <div style="margin-top:20px; display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;  align-items:flex-start;">
-            <!-- Insurables Section (Columns 1-2) -->
-            <div id="insurablesSection" style="grid-column:span 2; display:block !important;">
+            <!-- Insurables Section (spans all 5 columns at the bottom) -->
+            <div id="insurablesSection" style="grid-column:span 5; display:block !important; margin-top:10px;">
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <span style="font-weight:bold; font-size:13px; color:#000;">Insurables:</span>
                 <div style="display:flex; gap:12px; flex-wrap:wrap;">

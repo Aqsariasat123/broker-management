@@ -25,8 +25,56 @@
       const documentName = doc.name || doc.doc_id || 'Unknown';
       document.getElementById('documentDetailsModalTitle').textContent = 'Document Details - ' + documentName;
       
-      populateDocumentDetailsModal(doc);
-      
+      const content = document.getElementById('documentDetailsContent');
+  
+      const fileLink = doc.file_path ? `<a href="{{ asset('storage') }}/${doc.file_path}" target="_blank" style="color:#007bff; text-decoration:underline;">View File</a>` : '-';
+  
+      content.innerHTML = `
+        <div style="background:#f5f5f5; padding:12px; border-radius:4px;">
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Document ID:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.doc_id || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Name:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.name || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Tied To:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.tied_to || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Group:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.group || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Type:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.type || '-'}</div>
+          </div>
+        </div>
+        <div style="background:#f5f5f5; padding:12px; border-radius:4px;">
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Format:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.format || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Date Added:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${formatDate(doc.date_added)}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Year:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${doc.year || '-'}</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">File:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px;">${fileLink}</div>
+          </div>
+          <div style="margin-top:15px;">
+            <span style="font-size:12px; color:#666; font-weight:500;">Notes:</span>
+            <div style="font-size:13px; color:#000; margin-top:4px; white-space:pre-wrap;">${doc.notes || '-'}</div>
+          </div>
+        </div>
+      `;    
       // Show edit button
       const editBtn = document.getElementById('editDocumentFromDetailsBtn');
       if (editBtn) editBtn.style.display = 'inline-block';
@@ -48,60 +96,7 @@
     currentDocumentId = null;
   }
 
-  // Populate document details modal
-  function populateDocumentDetailsModal(doc) {
-    const content = document.getElementById('documentDetailsContent');
-    if (!content) return;
-
-    const fileLink = doc.file_path ? `<a href="{{ asset('storage') }}/${doc.file_path}" target="_blank" style="color:#007bff; text-decoration:underline;">View File</a>` : '-';
-
-    content.innerHTML = `
-      <div style="background:#f5f5f5; padding:12px; border-radius:4px;">
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Document ID:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.doc_id || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Name:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.name || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Tied To:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.tied_to || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Group:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.group || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Type:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.type || '-'}</div>
-        </div>
-      </div>
-      <div style="background:#f5f5f5; padding:12px; border-radius:4px;">
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Format:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.format || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Date Added:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${formatDate(doc.date_added)}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Year:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${doc.year || '-'}</div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">File:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px;">${fileLink}</div>
-        </div>
-        <div style="margin-top:15px;">
-          <span style="font-size:12px; color:#666; font-weight:500;">Notes:</span>
-          <div style="font-size:13px; color:#000; margin-top:4px; white-space:pre-wrap;">${doc.notes || '-'}</div>
-        </div>
-      </div>
-    `;
-  }
+ 
 
   // Open document modal (Add or Edit)
   function openDocumentModal(mode, id = null) {

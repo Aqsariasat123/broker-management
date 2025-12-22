@@ -13,12 +13,19 @@
 <div class="dashboard">
   <!-- Main Payment Plans Table View -->
   <div class="clients-table-view" id="clientsTableView">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Payment Plans
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Payment Plans Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Payment Plans</h3>
         <div class="records-found">Records Found - {{ $paymentPlans->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
@@ -69,10 +76,8 @@
           @foreach($paymentPlans as $plan)
             <tr>
               <td class="action-cell">
-                <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                class="action-expand" onclick="openPaymentPlanDetails({{ $plan->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">   
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openPaymentPlanDetails({{ $plan->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
 
-              
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'installment_label')

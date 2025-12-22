@@ -16,6 +16,11 @@ class Statement extends Model
 
     protected $dates = ['date_received'];
 
+    protected $casts = [
+        'date_received' => 'date',
+        'amount_received' => 'decimal:2',
+    ];
+    
     public function insurer()
     {
         return $this->belongsTo(\App\Models\LookupValue::class, 'insurer_id');

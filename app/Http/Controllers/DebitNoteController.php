@@ -185,7 +185,7 @@ class DebitNoteController extends Controller
             foreach ($oldDocuments as $oldDoc) {
                 if ($oldDoc->file_path && Storage::disk('public')->exists($oldDoc->file_path)) {
                     Storage::disk('public')->delete($oldDoc->file_path);
-                    }
+                }
                 $oldDoc->delete();
             }
             

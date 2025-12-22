@@ -15,19 +15,29 @@
 @endphp
 
 <div class="dashboard">
+
   <!-- Main Vehicles Table View -->
   <div class="clients-table-view" id="clientsTableView">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+          @if($policy)
+            {{ $policy->policy_no }} - 
+          @endif
+            Vehicles
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Vehicles Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>
-          @if($policy)
-            {{ $policy->policy_no }} - 
-          @endif
-          <span style="color:#f3742a;">Vehicles</span>
-        </h3>
+    
         <div class="records-found">Records Found - {{ $vehicles->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
@@ -84,9 +94,17 @@
                 </div>
               </td>
               <td class="action-cell"><!-- onclick="openVehicleDetails({{ $vh->id }})" -->
-              <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                class="action-expand" onclick="openVehicleDetails({{ $vh->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-               
+                <svg class="action-expand" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <!-- Maximize icon: four arrows pointing outward from center -->
+                  <!-- Top arrow -->
+                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Right arrow -->
+                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Bottom arrow -->
+                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Left arrow -->
+                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'regn_no')

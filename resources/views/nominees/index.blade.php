@@ -33,7 +33,7 @@
           <div class="records-found">Records Found - {{ $nominees->total() }}</div>
         </div>
         <div class="action-buttons">
-          <button class="btn" onclick="removeSelectedNominees()" style="background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Remove</button>
+          <button class="btn" onclick="removeSelectedNominees()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Remove</button>
           <button class="btn btn-add" onclick="openNomineeDialog()">Add</button>
           <a href="{{ $policy ? route('policies.show', $policy->id) : route('policies.index') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
         </div>
@@ -82,11 +82,17 @@
                   <input type="checkbox" name="selected_nominees[]" value="{{ $nominee->id }}" class="nominee-checkbox">
                 </td>
                 <td class="action-cell">
-                <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              class="action-expand"  onclick="editNominee({{ $nominee->id }})"  width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-               
-                
-                
+                  <svg class="action-expand" onclick="editNominee({{ $nominee->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                    <!-- Maximize icon: four arrows pointing outward from center -->
+                    <!-- Top arrow -->
+                    <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Right arrow -->
+                    <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Bottom arrow -->
+                    <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Left arrow -->
+                    <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
                 </td>
                 @foreach($selectedColumns as $col)
                   @if($col == 'full_name')

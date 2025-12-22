@@ -1,0 +1,104 @@
+/* Beneficial Owners Index Styles */
+
+/* Bell cell styles matching clients page */
+.bell-cell { 
+  text-align:center; 
+  padding:8px 5px; 
+  vertical-align:middle; 
+  min-width:50px; 
+}
+
+.bell-cell.expired { 
+  background-color:#ffebee !important; 
+}
+
+.bell-cell:not(.expired) { 
+  background-color:#fff !important; 
+}
+
+tbody tr.expired-row { 
+  background-color:#ffebee !important; 
+}
+
+tbody tr.expired-row td { 
+  background-color:#ffebee !important; 
+}
+
+.status-indicator.expired {
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background-color:#dc3545;
+  border:2px solid #dc3545;
+}
+
+.status-indicator.normal {
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background-color:transparent;
+  border:2px solid #000;
+}
+
+.footer { 
+  padding:15px 20px; 
+  border-top:1px solid #ddd; 
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  flex-wrap:wrap; 
+  background:#fff; 
+}
+
+.badge-status {
+  font-size:11px;
+  padding:4px 8px;
+  display:inline-block;
+  border-radius:4px;
+  color:#fff;
+}
+
+/* Action cell styles */
+.action-cell {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+}
+
+.action-expand {
+  cursor:pointer;
+}
+
+.action-expand:hover {
+  opacity:0.7;
+}
+
+/* Documents container */
+#documentsContainer {
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+  padding:10px 0;
+}
+
+#documentsContainer > div {
+  min-width:100px;
+  max-width:120px;
+}
+
+/* Radio button styling */
+input[type="radio"] {
+  cursor:pointer;
+  width:16px;
+  height:16px;
+}
+
+/* Table row hover */
+tbody tr:hover {
+  background-color:#f5f5f5;
+}
+
+tbody tr.expired-row:hover {
+  background-color:#ffebee;
+}

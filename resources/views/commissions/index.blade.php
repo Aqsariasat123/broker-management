@@ -11,6 +11,15 @@
 @endphp
 
 <div class="dashboard">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="page-title-section">
+              <h3 style="margin:0; font-size:18px; font-weight:600;">
+                  Commissions
+              </h3>
+           </div>
+      </div>
+  </div>
   <!-- Main Commissions Table View -->
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
@@ -18,16 +27,129 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Commissions</h3>
         <div class="records-found">Records Found - {{ $commissions->total() }}</div>
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+        <!-- <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
             @foreach(['SACOS','Alliance','Hsavy','MUA'] as $insurerBtn)
               <button class="btn btn-column" onclick="filterByInsurer('{{ $insurerBtn }}')" style="margin-left:5px;{{ isset($insurerFilter) && $insurerFilter==$insurerBtn ? 'background:#007bff;color:#fff;' : '' }}">{{ $insurerBtn }}</button>
             @endforeach
             <button class="btn btn-back" onclick="window.location.href='{{ route('commissions.index') }}'">All</button>
           </div>
-        </div>
+        </div> -->
+        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+  <div class="filter-group" style="display:flex; align-items:center; gap:12px;">
+
+    <!-- Custom Toggle Switch -->
+    <label class="switch">
+      <input type="checkbox" id="insurerFilterToggle" {{ request()->has('insurer') ? 'checked' : '' }}>
+      <span class="slider round"></span>
+    </label>
+
+    <span style="font-size:13px; font-weight:normal;">Filter</span>
+
+    <!-- Show All Button (green when no filter) -->
+    @php $hasInsurer = request()->has('insurer'); @endphp
+    <button class="btn filter-btn {{ !$hasInsurer ? 'active-all' : '' }}" 
+            type="button" 
+            onclick="filterByInsurer()">
+      Show All
+    </button>
+
+    <!-- Insurer Buttons -->
+    @foreach(['SACOS', 'Alliance', 'Hsavy', 'MUA'] as $insurerBtn)
+      @php $isActive = request()->get('insurer') === $insurerBtn; @endphp
+      <button class="btn filter-btn {{ $isActive ? 'active-insurer' : '' }}" 
+              type="button"
+              onclick="filterByInsurer('{{ $insurerBtn }}')">
+        {{ $insurerBtn }}
+      </button>
+    @endforeach
+
+
+  </div>
+ <style>
+/* Custom Toggle Switch - Green when ON */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  margin-right: 8px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Filter Buttons Base Style */
+.filter-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: normal;
+  transition: background-color 0.2s ease;
+}
+
+/* Show All Active - Green */
+.filter-btn.active-all {
+  background: #28a745 !important;
+}
+
+/* Selected Insurer - Blue */
+.filter-btn.active-insurer {
+  background: #007bff !important;
+}
+
+/* HOVER STATES - This is the fix! */
+
+/* Hover on inactive buttons (black → dark gray) */
+.filter-btn:hover:not(.active-all):not(.active-insurer) {
+  background: #333;
+}
+
+/* Hover on "Show All" when active (green → darker green) */
+.filter-btn.active-all:hover {
+  background: #218838 !important; /* Darker green */
+}
+
+/* Hover on selected insurer when active (blue → darker blue) */
+.filter-btn.active-insurer:hover {
+  background: #0056b3 !important; /* Darker blue */
+}
+</style>
+</div>
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addCommissionBtn">Add</button>
@@ -57,10 +179,17 @@
           @foreach($commissions as $com)
             <tr>
               <td class="action-cell">
-              <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              class="action-expand"  onclick="openCommissionDetails({{ $com->id }})"  width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-                
-                
+                <svg class="action-expand" onclick="openCommissionDetails({{ $com->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                  <!-- Maximize icon: four arrows pointing outward from center -->
+                  <!-- Top arrow -->
+                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Right arrow -->
+                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Bottom arrow -->
+                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Left arrow -->
+                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'policy_number')

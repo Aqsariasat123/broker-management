@@ -16,6 +16,13 @@ class PaymentController extends Controller
     {
         $query = Payment::with(['debitNote.paymentPlan.schedule.policy.client']);
 
+        // Filter by client_id if provided
+        if ($request->has('client_id') && $request->client_id) {
+            $query->whereHas('debitNote.paymentPlan.schedule.policy', function($q) use ($request) {
+                $q->where('client_id', $request->client_id);
+            });
+        }
+
         // Filter by debit note
         if ($request->has('debit_note_id') && $request->debit_note_id) {
             $query->where('debit_note_id', $request->debit_note_id);
@@ -59,7 +66,13 @@ class PaymentController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('payments');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payments');
 
-        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns'));
+        // Get client information if filtering by client_id
+        $client = null;
+        if ($request->has('client_id') && $request->client_id) {
+            $client = \App\Models\Client::find($request->client_id);
+        }
+
+        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns', 'client'));
     }
 
     public function create(Request $request)
