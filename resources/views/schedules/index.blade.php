@@ -13,8 +13,16 @@
 @endif
 
 <div class="dashboard">
-  <div class="container-table">
-    <h3>Schedules</h3>
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="page-title-section">
+              <h3 style="margin:0; font-size:18px; font-weight:600;">
+                Schedules
+              </h3>
+           </div>
+      </div>
+  </div>
+  <div class="container-table" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px 20px;">
 
     <div class="top-bar">
       <div class="left-group">

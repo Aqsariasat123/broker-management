@@ -13,14 +13,31 @@
 @endphp
 
 <div class="dashboard">
+  <!-- Success/Error Notification Banner -->
+  <div id="notificationBanner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:10000; background:#28a745; color:#fff; padding:12px 24px; border-radius:4px; box-shadow:0 4px 6px rgba(0,0,0,0.1); font-size:14px; font-weight:500; max-width:500px; text-align:center; align-items:center; justify-content:center;">
+    <span id="notificationMessage"></span>
+    <button onclick="closeNotification()" style="background:transparent; border:none; color:#fff; font-size:20px; font-weight:bold; cursor:pointer; margin-left:15px; padding:0; line-height:1; width:20px; height:20px; display:flex; align-items:center; justify-content:center;">×</button>
+  </div>
+
   <!-- Main Clients Table View -->
+
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Clients
+            <span id="followUpLabel" style="display:{{ request()->get('follow_up') == 'true' && !request()->get('client_id') ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - To Follow Up</span>
+            <span class="client-name" id="clientPageName" style="color:#f3742a; font-size:16px; font-weight:500;"></span>
+          </h3>
+       
+      </div>
+    </div>
+   
   <div class="clients-table-view" id="clientsTableView">
   <div class="container-table">
     <!-- Clients Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Clients</h3>
         <div class="records-found">Records Found - {{ $clients->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
@@ -230,11 +247,6 @@
 </div>  
   <!-- Client Page View (Full Page) -->
   <div class="client-page-view" id="clientPageView">
-    <div class="client-page-header">
-      <div class="client-page-title">
-        <span id="clientPageTitle">Client</span> - <span class="client-name" id="clientPageName"></span>
-      </div>
-    </div>
     <div class="client-page-body">
       <div class="client-page-content">
         <!-- Client Details View -->
@@ -249,7 +261,7 @@
                 <button class="nav-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
                 <button class="nav-tab" data-tab="claims" data-url="{{ route('claims.index') }}">Claims</button>
                 <button class="nav-tab" data-tab="documents" data-url="{{ route('documents.index') }}">Documents</button>
-                <button class="nav-tab" data-tab="bos" data-url="#">BOs</button>
+                <button class="nav-tab" data-tab="bos" data-url="{{ route('beneficial-owners.index') }}">BOs</button>
               </div>
               <div class="client-page-actions">
                 <button class="btn btn-edit" id="editClientFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
@@ -257,7 +269,7 @@
               </div>
             </div>
           
-            <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
+            <div id="clientDetailsContent">
               <!-- Content will be loaded via JavaScript -->
             </div>
           </div>
@@ -271,7 +283,7 @@
             <div style="display:flex; gap:10px; justify-content:flex-end;">
               <input type="file" id="photoUploadInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
               <button class="btn" onclick="document.getElementById('photoUploadInput').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
-              <button id="addDocumentBtn1" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; display:none;">Add Document</button>
+              <button id="addDocumentBtn1" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Add Document</button>
             </div>
           </div>
         </div>
@@ -288,7 +300,7 @@
               </div>
             </div>
             
-            <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
+            <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" novalidate>
               @csrf
               <div id="clientFormMethod" style="display:none;"></div>
               <div style="padding:12px;">
@@ -339,6 +351,38 @@
                     <option value="Business">Business</option>
                     <option value="Company">Company</option>
                     <option value="Organization">Organization</option>
+                  @endif
+                </select>
+              </div>
+              <div class="detail-row" data-field-type="individual" style="display:none;">
+                <span class="detail-label">Status</span>
+                <select id="status" name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @if(isset($lookupData['client_statuses']))
+                    @foreach($lookupData['client_statuses'] as $status)
+                      <option value="{{ $status }}" {{ $status === 'Active' ? 'selected' : '' }}>{{ $status }}</option>
+                    @endforeach
+                  @else
+                    <option value="Active" selected>Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Pending">Pending</option>
+                  @endif
+                </select>
+              </div>
+              <div class="detail-row" data-field-type="business" style="display:none;">
+                <span class="detail-label">Status</span>
+                <select id="status_business" name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @if(isset($lookupData['client_statuses']))
+                    @foreach($lookupData['client_statuses'] as $status)
+                      <option value="{{ $status }}" {{ $status === 'Active' ? 'selected' : '' }}>{{ $status }}</option>
+                    @endforeach
+                  @else
+                    <option value="Active" selected>Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Pending">Pending</option>
                   @endif
                 </select>
               </div>
@@ -402,7 +446,7 @@
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Name</span>
-                <input id="business_name" name="business_name" type="text" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input id="business_name" name="business_name" type="text" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label" id="nin_bcrn_label">NIN</span>
@@ -639,14 +683,11 @@
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Notes</span>
                 <textarea id="notes_business" name="notes" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;"></textarea>
-              </div>
             </div>
           </div>
           
-          <!-- Insurables and Source Name Section (Below all columns) -->
-          <div style="margin-top:15px; display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; align-items:flex-start;">
-            <!-- Insurables Section (Columns 1-2) -->
-            <div id="insurablesSection" style="grid-column:span 2; display:block !important;">
+            <!-- Insurables Section (spans all 5 columns at the bottom) -->
+            <div id="insurablesSection" style="grid-column:span 5; display:block !important; margin-top:10px;">
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <span style="font-weight:bold; font-size:13px; color:#000;">Insurables:</span>
                 <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -686,8 +727,16 @@
               <!-- Documents will be loaded here -->
             </div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
+              <input type="file" id="image" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
               <button type="button" class="btn" onclick="document.getElementById('image').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
-              <button id="addDocumentBtn2" type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; display:none;">Add Document</button>
+              <button id="addDocumentBtn2" type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; display:inline-block;">Add Document</button>
+            </div>
+            <div id="imagePreviewContainer" style="display:none; margin-top:10px; padding:10px; border:1px solid #ddd; border-radius:4px; background:#f9f9f9;">
+              <div style="font-weight:600; margin-bottom:8px; font-size:12px;">Photo Preview:</div>
+              <img id="imagePreview" src="" alt="Preview" style="max-width:200px; max-height:250px; border:1px solid #ddd; border-radius:4px;">
+              <div style="margin-top:8px;">
+                <button type="button" class="btn" onclick="removeImagePreview()" style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Remove</button>
+              </div>
             </div>
           </div>
         </div>
@@ -713,7 +762,7 @@
         </div>
       </div>
       <div class="modal-body" style="background:#f5f5f5; padding:12px;">
-        <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; align-items:start;">
+        <div id="clientDetailsContentModal" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; align-items:start;">
           <!-- Content will be loaded via JavaScript -->
         </div>
         <div id="clientDocumentsSection" style="margin-top:15px; padding-top:12px; border-top:2px solid #ddd; background:#f5f5f5;">
@@ -768,6 +817,22 @@
       <div class="modal-footer">
         <button type="button" class="btn-cancel" onclick="closeDocumentUploadModal()">Cancel</button>
         <button type="button" class="btn-save" onclick="handleDocumentUpload()">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Preview Modal -->
+  <div class="modal" id="photoPreviewModal">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="modal-header">
+        <h4>Client Photo</h4>
+        <button type="button" class="modal-close" onclick="closeClientPhotoPreviewModal()">×</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:20px;">
+        <img id="photoPreviewImg" src="" alt="Client Photo" style="max-width:100%; max-height:70vh; border:1px solid #ddd; border-radius:4px;">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-back" onclick="closeClientPhotoPreviewModal()">Close</button>
       </div>
     </div>
   </div>

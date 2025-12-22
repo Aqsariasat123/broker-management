@@ -8,12 +8,27 @@ use Illuminate\Http\Request;
 
 class ClaimController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $query = Claim::query();
         
+        // Filter by client_id if provided - use whereIn with subquery to get policy numbers
+        if ($request->has('client_id') && $request->client_id) {
+            $policyNumbers = Policy::where('client_id', $request->client_id)
+                ->pluck('policy_no')
+                ->filter()
+                ->toArray();
+            
+            if (!empty($policyNumbers)) {
+                $query->whereIn('policy_no', $policyNumbers);
+            } else {
+                // If no policies found for this client, return empty result
+                $query->whereRaw('1 = 0');
+            }
+        }
+        
         // Filter for pending claims (status is 'Processing' or empty)
-        if (request()->has('pending') && (request()->pending == 'true' || request()->pending == '1')) {
+        if ($request->has('pending') && ($request->pending == 'true' || $request->pending == '1')) {
             $query->where(function($q) {
                 $q->where('status', 'Processing')
                   ->orWhereNull('status')
@@ -21,7 +36,9 @@ class ClaimController extends Controller
             });
         }
         
-        $claims = $query->with(['policy', 'client'])->orderBy('created_at', 'desc')->paginate(10);
+        $claims = $query->with(['policy' => function($q) {
+            $q->with('client');
+        }])->orderBy('created_at', 'desc')->paginate(10);
         
         // Use TableConfigHelper for selected columns
         $config = \App\Helpers\TableConfigHelper::getConfig('claims');
@@ -40,7 +57,13 @@ class ClaimController extends Controller
         // Get policies for dropdown
         $policies = Policy::orderBy('policy_no')->get(['id', 'policy_no','policy_code']);
         
-        return view('claims.index', compact('claims', 'selectedColumns', 'lookupData', 'policies'));
+        // Get client information if filtering by client_id
+        $client = null;
+        if ($request->has('client_id') && $request->client_id) {
+            $client = \App\Models\Client::find($request->client_id);
+        }
+        
+        return view('claims.index', compact('claims', 'selectedColumns', 'lookupData', 'policies', 'client'));
     }
 
     public function store(Request $request)

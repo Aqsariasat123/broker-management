@@ -415,6 +415,31 @@ class TableConfigHelper
                     'mode_of_payment' => 'Mode Of Payment',
                 ],
             ],
+            'beneficial_owners' => [
+                'module' => 'beneficial_owners',
+                'route_prefix' => 'beneficial-owners',
+                'session_key' => 'beneficial_owner_columns',
+                'default_columns' => [
+                    'full_name','dob','age','nin_passport_no','country','expiry_date','status',
+                    'position','shares','pep','pep_details','date_added','removed'
+                ],
+                'mandatory_columns' => ['full_name'],
+                'column_definitions' => [
+                    'full_name' => 'Full Name',
+                    'dob' => 'DOB',
+                    'age' => 'Age',
+                    'nin_passport_no' => 'NIN/Passport No',
+                    'country' => 'Country',
+                    'expiry_date' => 'Expiry Date',
+                    'status' => 'Status',
+                    'position' => 'Position',
+                    'shares' => 'Shares',
+                    'pep' => 'PEP',
+                    'pep_details' => 'PEP Details',
+                    'date_added' => 'Date Added',
+                    'removed' => 'Removed',
+                ],
+            ],
         ];
 
         return $configs[$module] ?? null;

@@ -39,14 +39,31 @@
   
   <!-- Main Policies Table View -->
   <div class="clients-table-view" id="clientsTableView">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Policies
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Policies Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Policies</h3>
         <div class="records-found">Records Found - {{ $policies->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+        <div class="filter-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="filterToggle" {{ (request()->get('dfr') == 'true') || request()->has('search_term') || request()->has('client_name') || request()->has('policy_number') || request()->has('insurer_id') || request()->has('policy_class_id') || request()->has('agency_id') || request()->has('agent') || request()->has('policy_status_id') || request()->has('start_date_from') || request()->has('end_date_from') || request()->has('premium_unpaid') || request()->has('comm_unpaid') ? 'checked' : '' }}>
+              <span class="toggle-slider"></span>
+            </label>
+            <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
+          </div>
         <div class="filter-group">
             @if(request()->get('dfr') == 'true')
               <button class="btn btn-list-all" id="listAllBtn">List ALL</button>
@@ -116,17 +133,9 @@
                 </div>
               </td>
               <td class="action-cell">
-                <svg class="action-expand" onclick="openPolicyDetails({{ $policy->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <!-- Maximize icon: four arrows pointing outward from center -->
-                  <!-- Top arrow -->
-                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Right arrow -->
-                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Bottom arrow -->
-                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Left arrow -->
-                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openPolicyDetails({{ $policy->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand"> 
+              
+               
                 <svg class="action-clock" onclick="window.location.href='{{ route('policies.index') }}?dfr=true'" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                   <circle cx="12" cy="12" r="9" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                   <path d="M12 7V12L15 15" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
@@ -795,6 +804,103 @@
         <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
           <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload ID</button>
           <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Add Another</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div class="modal" id="policyFilterModal" style="display:none;" onclick="if(event.target === this) closePolicyFilterModal();">
+    <div class="modal-content" style="max-width:600px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #ddd;">
+        <h4 style="margin:0; font-size:16px; font-weight:600;">Filters</h4>
+        <div style="display:flex; gap:8px;">
+          <button type="button" onclick="applyPolicyFilters()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Apply</button>
+          <button type="button" onclick="closePolicyFilterModal()" style="background:#999; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="policyFilterForm" onsubmit="event.preventDefault(); applyPolicyFilters();">
+        <div class="modal-body" style="padding:20px;">
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Set Record Lines</label>
+            <input type="number" id="filterRecordLines" name="record_lines" value="{{ request()->get('record_lines', 15) }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Search Term</label>
+            <input type="text" id="filterSearchTerm" name="search_term" value="{{ request()->get('search_term') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Client Name</label>
+            <input type="text" id="filterClientName" name="client_name" value="{{ request()->get('client_name') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Policy Number</label>
+            <input type="text" id="filterPolicyNumber" name="policy_number" value="{{ request()->get('policy_number') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Insurer</label>
+            <select id="filterInsurer" name="insurer_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['insurers'] ?? [] as $insurer)
+                <option value="{{ $insurer['id'] }}" {{ request()->get('insurer_id') == $insurer['id'] ? 'selected' : '' }}>{{ $insurer['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Insurance Class</label>
+            <select id="filterInsuranceClass" name="policy_class_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['policy_classes'] ?? [] as $class)
+                <option value="{{ $class['id'] }}" {{ request()->get('policy_class_id') == $class['id'] || (request()->get('policy_class_id') == '' && $class['name'] == 'Motor') ? 'selected' : '' }}>{{ $class['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Agency</label>
+            <select id="filterAgency" name="agency_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['agencies'] ?? [] as $agency)
+                <option value="{{ $agency['id'] }}" {{ request()->get('agency_id') == $agency['id'] ? 'selected' : '' }}>{{ $agency['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Agent</label>
+            <input type="text" id="filterAgent" name="agent" value="{{ request()->get('agent', 'Simon') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Status</label>
+            <select id="filterStatus" name="policy_status_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['policy_statuses'] ?? [] as $status)
+                <option value="{{ $status['id'] }}" {{ request()->get('policy_status_id') == $status['id'] ? 'selected' : '' }}>{{ $status['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">From Start Date</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="date" id="filterStartDateFrom" name="start_date_from" value="{{ request()->get('start_date_from') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+              <span style="font-size:12px;">To</span>
+              <input type="date" id="filterStartDateTo" name="start_date_to" value="{{ request()->get('start_date_to') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">From End Date</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="date" id="filterEndDateFrom" name="end_date_from" value="{{ request()->get('end_date_from') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+              <span style="font-size:12px;">To</span>
+              <input type="date" id="filterEndDateTo" name="end_date_to" value="{{ request()->get('end_date_to') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Premium Unpaid</label>
+            <input type="number" step="0.01" id="filterPremiumUnpaid" name="premium_unpaid" value="{{ request()->get('premium_unpaid') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Comm Unpaid</label>
+            <input type="number" step="0.01" id="filterCommUnpaid" name="comm_unpaid" value="{{ request()->get('comm_unpaid') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
         </div>
       </form>
     </div>

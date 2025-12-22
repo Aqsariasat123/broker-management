@@ -28,6 +28,17 @@ class PaymentPlanController extends Controller
         if ($request->has('due_soon') && $request->due_soon == 'true') {
             $query->whereBetween('due_date', [now(), now()->addDays(30)]);
         }
+        
+        // Filter for Overdue instalments
+        if ($request->has('filter') && $request->filter == 'overdue') {
+            $query->where('due_date', '<', now()->toDateString())
+                  ->where('status', '!=', 'paid');
+        }
+        
+        // Filter for Outstanding payments
+        if ($request->has('filter') && $request->filter == 'outstanding') {
+            $query->where('status', '!=', 'paid');
+        }
 
         // Search
         if ($request->has('search') && $request->search) {

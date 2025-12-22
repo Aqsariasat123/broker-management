@@ -335,11 +335,14 @@
     const filterToggle = document.getElementById('filterToggle');
     const followUpBtn = document.getElementById('followUpBtn');
     const submittedBtn = document.getElementById('submittedBtn');
-    
+
     function updateButtonColors() {
-      const isFilterActive = filterToggle && filterToggle.checked;
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasFollowUp = urlParams.get('follow_up') === 'true' || urlParams.get('follow_up') === '1';
+      const hasSubmitted = urlParams.get('submitted') === 'true' || urlParams.get('submitted') === '1';
+
       if (followUpBtn) {
-        if (isFilterActive) {
+        if (hasFollowUp) {
           followUpBtn.classList.add('filter-active');
           followUpBtn.classList.remove('inactive');
         } else {
@@ -347,7 +350,7 @@
         }
       }
       if (submittedBtn) {
-        if (isFilterActive) {
+        if (hasSubmitted) {
           submittedBtn.classList.add('filter-active');
         } else {
           submittedBtn.classList.remove('filter-active');

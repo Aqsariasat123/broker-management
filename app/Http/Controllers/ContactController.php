@@ -18,6 +18,11 @@ class ContactController extends Controller
             $query->where('status', 'Archived');
         }
         
+        // Filter for Open leads
+        if ($request->has('status') && $request->status == 'open') {
+            $query->where('status', '!=', 'Archived');
+        }
+        
         // Filter for "To Follow Up" - contacts with next_follow_up in the past or within next 7 days
         if ($request->has('follow_up') && ($request->follow_up == 'true' || $request->follow_up == '1')) {
             $query->whereNotNull('next_follow_up')
