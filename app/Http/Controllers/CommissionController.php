@@ -10,37 +10,62 @@ class CommissionController extends Controller
 {
     public function index(Request $request)
     {
-        // Lookup values for selects
-        $insurers = LookupValue::whereHas('lookupCategory', function($q){
-            $q->where('name', 'Insurers');
-        })->where('active', 1)->orderBy('seq')->get();
-
-        $paymentStatuses = LookupValue::whereHas('lookupCategory', function($q){
-            $q->where('name', 'Payment Status');
-        })->where('active', 1)->orderBy('seq')->get();
-
-        $modesOfPayment = LookupValue::whereHas('lookupCategory', function($q){
-            $q->where('name', 'Mode Of Payment (Life)');
-        })->where('active', 1)->orderBy('seq')->get();
-
-        // Filter by insurer if requested
+        // Lookup values
+        $insurers = LookupValue::whereHas('lookupCategory', fn ($q) =>
+            $q->where('name', 'Insurers')
+        )->where('active', 1)->orderBy('seq')->get();
+    
+        $paymentStatuses = LookupValue::whereHas('lookupCategory', fn ($q) =>
+            $q->where('name', 'Payment Status')
+        )->where('active', 1)->orderBy('seq')->get();
+    
+        $modesOfPayment = LookupValue::whereHas('lookupCategory', fn ($q) =>
+            $q->where('name', 'Mode Of Payment (Life)')
+        )->where('active', 1)->orderBy('seq')->get();
+    
+        // ✅ BASE QUERY (THIS WAS MISSING)
+        $query = Commission::with([
+            'insurer',
+            'paymentStatus',
+            'modeOfPayment',
+            'commissionNote.schedule.policy'
+        ]);
+    
+        // ✅ POLICY FILTER (CORRECT RELATIONSHIP PATH)
+        if ($request->filled('policy_id')) {
+            $query->whereHas('commissionNote.schedule.policy', function ($q) use ($request) {
+                $q->where('id', $request->policy_id);
+            });
+        }
+    
+        // ✅ INSURER FILTER
         $insurerFilter = $request->get('insurer');
-        $commissions = Commission::with(['insurer', 'paymentStatus', 'modeOfPayment'])
-            ->when($insurerFilter, function($q) use ($insurerFilter, $insurers) {
-                $insurer = $insurers->firstWhere('name', $insurerFilter);
-                if ($insurer) {
-                    $q->where('insurer_id', $insurer->id);
-                }
-            })
-            ->orderBy('created_at', 'desc')
+        if ($insurerFilter) {
+            $insurer = $insurers->firstWhere('name', $insurerFilter);
+            if ($insurer) {
+                $query->where('insurer_id', $insurer->id);
+            }
+        }
+    
+        $commissions = $query
+            ->orderByDesc('created_at')
             ->paginate(10);
-
-        // Use TableConfigHelper for selected columns
-        $config = \App\Helpers\TableConfigHelper::getConfig('commissions');
+    
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('commissions');
-
-        return view('commissions.index', compact('commissions', 'insurers', 'paymentStatuses', 'modesOfPayment', 'insurerFilter', 'selectedColumns'));
+    
+        return view(
+            'commissions.index',
+            compact(
+                'commissions',
+                'insurers',
+                'paymentStatuses',
+                'modesOfPayment',
+                'insurerFilter',
+                'selectedColumns'
+            )
+        );
     }
+    
 
     public function store(Request $request)
     {
