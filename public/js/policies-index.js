@@ -44,7 +44,7 @@
       
       // Set policy name in header
       const policyPageTitleEl = document.getElementById('policyPageTitle');
-      const policyName = policy.policy_no || 'Unknown';
+      const policyName = policy.policy_code || 'Unknown';
       if (policyPageTitleEl) policyPageTitleEl.textContent = 'Policy No';
       if (policyPageName) policyPageName.textContent = policyName;
       
@@ -693,16 +693,10 @@
       <div class="detail-section-card">
         <div class="detail-section-header">OTHER DETAILS</div>
         <div class="detail-section-body">
-          <div class="detail-row">
-            <span class="detail-label">Loading Applied</span>
-            <div style="display:flex; gap:8px;">
-              <button type="button" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:3px; font-size:11px; cursor:default;">Yes</button>
-              <button type="button" style="background:#fff; color:#000; border:1px solid #ddd; padding:4px 12px; border-radius:3px; font-size:11px; cursor:default;">No</button>
-            </div>
-          </div>
+         
           <div class="detail-row">
             <span class="detail-label">Reason</span>
-            <input type="text" class="detail-value" value="${policy.loading_reason || ''}" readonly>
+            <textarea class="detail-value" readonly rows="4">${policy.loading_reason || ''}</textarea>
           </div>
         </div>
       </div>
@@ -821,6 +815,9 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">PA</span>
+            <input type="text" class="detail-value" value="${policy.pa ? formatNumber(policy.pa) : '250,000'}" readonly style="text-align:right;">
+          </div>
+            <div class="detail-row">
             <input type="text" class="detail-value" value="${policy.pa ? formatNumber(policy.pa) : '250,000'}" readonly style="text-align:right;">
           </div>
         </div>

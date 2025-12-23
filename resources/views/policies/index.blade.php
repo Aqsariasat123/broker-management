@@ -246,7 +246,7 @@
   <!-- Policy Page View (Full Page) -->
   <div class="client-page-view" id="policyPageView" style="display:none;">
     <!-- Header Card with Policy Number -->
-    <div class="client-page-header" style="display:none;">
+    <div class="client-page-header">
       <div class="client-page-title">
         <span id="policyPageTitle">Policy No</span> - <span class="client-name" id="policyPageName">-</span>
       </div>
