@@ -15,7 +15,10 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
             <div class="page-title-section">
               <h3 style="margin:0; font-size:18px; font-weight:600;">
-                  Commissions
+              @if($policy)
+                {{ $policy->policy_code }} - 
+              @endif
+          Commissions
               </h3>
            </div>
       </div>
@@ -151,9 +154,13 @@ input:checked + .slider:before {
 </style>
 </div>
       </div>
-      <div class="action-buttons">
-        <button class="btn btn-add" id="addCommissionBtn">Add</button>
-      </div>
+      
+      @if($policy)
+          <div class="action-buttons">
+            <button class="btn btn-add" id="addCommissionBtn">Add</button>
+          </div>
+      @endif
+   
     </div>
 
     @if(session('success'))
@@ -324,45 +331,45 @@ input:checked + .slider:before {
         <div id="commissionFormMethod" style="display:none;"></div>
         <div class="modal-body">
           <div class="form-row">
-            <div class="form-group">
-              <label for="policy_number">Policy Number</label>
-              <input type="text" class="form-control" name="policy_number" id="policy_number">
+          <div class="form-group">
+              <label for="client_name">Com Note no</label>
+              <input type="text" class="form-control" name="com_note_no" id="com_note_no" readonly>
             </div>
             <div class="form-group">
-              <label for="client_name">Client's Name</label>
-              <input type="text" class="form-control" name="client_name" id="client_name">
-            </div>
-            <div class="form-group">
-              <label for="insurer_id">Insurer</label>
-              <select class="form-control" name="insurer_id" id="insurer_id">
+
+              <label for="policy_id">Policy Number</label>
+              <select class="form-control" name="policy_id" id="policy_id">
                 <option value="">Select</option>
-                @foreach($insurers as $ins)
-                  <option value="{{ $ins->id }}">{{ $ins->name }}</option>
+                @foreach($policies as $policy)
+                  <option value="{{ $policy->id }}">{{ $policy->policy_code }}</option>
                 @endforeach
               </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="grouping">Grouping</label>
-              <input type="text" class="form-control" name="grouping" id="grouping">
             </div>
             <div class="form-group">
               <label for="basic_premium">Basic Premium</label>
               <input type="number" step="0.01" class="form-control" name="basic_premium" id="basic_premium">
             </div>
-            <div class="form-group">
+       
+          </div>
+          
+          <div class="form-row">
+          <div class="form-group">
               <label for="rate">Rate</label>
               <input type="number" step="0.01" class="form-control" name="rate" id="rate">
             </div>
-          </div>
-          <div class="form-row">
             <div class="form-group">
               <label for="amount_due">Amount Due</label>
               <input type="number" step="0.01" class="form-control" name="amount_due" id="amount_due">
             </div>
             <div class="form-group">
-              <label for="payment_status_id">Payment Status</label>
+              <label for="date_due">Date Due</label>
+              <input type="date" class="form-control" name="date_due" id="date_due">
+            </div>
+        
+          </div>
+          <div class="form-row">
+          <div class="form-group">
+              <label for="payment_status_id"> Status</label>
               <select class="form-control" name="payment_status_id" id="payment_status_id">
                 <option value="">Select</option>
                 @foreach($paymentStatuses as $ps)
@@ -370,22 +377,17 @@ input:checked + .slider:before {
                 @endforeach
               </select>
             </div>
-            <div class="form-group">
+          
+          <div class="form-group">
               <label for="amount_rcvd">Amount Rcvd</label>
               <input type="number" step="0.01" class="form-control" name="amount_rcvd" id="amount_rcvd">
             </div>
-          </div>
-          <div class="form-row">
             <div class="form-group">
               <label for="date_rcvd">Date Rcvd</label>
               <input type="date" class="form-control" name="date_rcvd" id="date_rcvd">
             </div>
             <div class="form-group">
-              <label for="state_no">State No</label>
-              <input type="text" class="form-control" name="state_no" id="state_no">
-            </div>
-            <div class="form-group">
-              <label for="mode_of_payment_id">Mode Of Payment (Life)</label>
+              <label for="mode_of_payment_id">Mode</label>
               <select class="form-control" name="mode_of_payment_id" id="mode_of_payment_id">
                 <option value="">Select</option>
                 @foreach($modesOfPayment as $mode)
@@ -393,19 +395,16 @@ input:checked + .slider:before {
                 @endforeach
               </select>
             </div>
+            <div class="form-group">
+              <label for="state_no">Statement No</label>
+              <input type="text" class="form-control" name="state_no" id="state_no">
+            </div>
+         
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="variance">Variance</label>
-              <input type="number" step="0.01" class="form-control" name="variance" id="variance">
-            </div>
-            <div class="form-group">
-              <label for="reason">Reason</label>
-              <input type="text" class="form-control" name="reason" id="reason">
-            </div>
-            <div class="form-group">
-              <label for="date_due">Date Due</label>
-              <input type="date" class="form-control" name="date_due" id="date_due">
+          <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+            <div class="form-group" style="flex:1 1 100%;">
+              <label for="comission_notes" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Comission  Notes</label>
+              <textarea class="form-control" name="comission_notes" id="comission_notes" rows="4" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px; resize:vertical;"></textarea>
             </div>
           </div>
         </div>

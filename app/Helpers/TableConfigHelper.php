@@ -285,6 +285,28 @@ class TableConfigHelper
                     'income_notes' => 'Income Notes',
                 ],
             ],
+<<<<<<< HEAD
+=======
+            'endorsements' => [
+                'module' => 'endorsements',
+                'route_prefix' => 'endorsements',
+                'session_key' => 'endorsements_columns',
+                'default_columns' => [
+                    'endorsement_id','income_source',
+                ],
+                'mandatory_columns' => ['endorsement_id', 'endorsement_no', 'policy_no','effective_date'],
+                'column_definitions' => [
+                    'endorsement_id' => 'EndorsementID',
+                    'endorsement_no'=> 'Endorsement No',
+                    'policy_no'=> 'Policy No',
+                    'effective_date'=> 'Effective Date',
+                    'type'=> 'Type',
+                    'description'=> 'Description',
+                    'endorsement_notes'=> 'Endorsement notes'
+
+                ],
+            ],
+>>>>>>> 6231512... endorsement done
             'commissions' => [
                 'module' => 'commissions',
                 'route_prefix' => 'commissions',
