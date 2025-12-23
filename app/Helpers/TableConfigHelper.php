@@ -292,15 +292,15 @@ class TableConfigHelper
                 'default_columns' => [
                     'endorsement_id','income_source',
                 ],
-                'mandatory_columns' => ['endorsement_id', 'endorsement_no', 'policy_no','date','type','description', 'notes'],
+                'mandatory_columns' => ['endorsement_id', 'endorsement_no', 'policy_no','effective_date'],
                 'column_definitions' => [
                     'endorsement_id' => 'EndorsementID',
                     'endorsement_no'=> 'Endorsement No',
                     'policy_no'=> 'Policy No',
-                    'date'=> 'Date',
+                    'effective_date'=> 'Effective Date',
                     'type'=> 'Type',
                     'description'=> 'Description',
-                    'notes'=> 'Notes'
+                    'endorsement_notes'=> 'Endorsement notes'
 
                 ],
             ],

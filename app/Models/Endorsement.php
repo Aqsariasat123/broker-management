@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Database\Eloquent\Relations\HasMany; // ✅ Correct
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,7 @@ class Endorsement extends Model
         'effective_date',
         'status',
         'description',
-        'document_path',
+        'endorsement_notes'
     ];
 
     protected $casts = [
@@ -30,5 +31,9 @@ class Endorsement extends Model
     public function policy(): BelongsTo
     {
         return $this->belongsTo(Policy::class);
+    }
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'tied_to', 'id');
     }
 }

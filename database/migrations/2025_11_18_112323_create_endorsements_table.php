@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('effective_date')->nullable();
             $table->string('status')->default('draft');
             $table->text('description')->nullable();
-            $table->string('document_path')->nullable();
+            $table->string('endorsement_notes')->nullable();
             $table->timestamps();
         });
     }

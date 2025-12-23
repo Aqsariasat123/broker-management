@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Policy;
 
 use App\Models\Commission;
 use App\Models\LookupValue;
@@ -10,6 +11,9 @@ class CommissionController extends Controller
 {
     public function index(Request $request)
     {
+        $policy = null;
+        $policyId = $request->get('policy_id');
+
         // Lookup values
         $insurers = LookupValue::whereHas('lookupCategory', fn ($q) =>
             $q->where('name', 'Insurers')
@@ -30,9 +34,12 @@ class CommissionController extends Controller
             'modeOfPayment',
             'commissionNote.schedule.policy'
         ]);
-    
+        $policies = Policy::with('client')->get(); // all policies
+
         // ✅ POLICY FILTER (CORRECT RELATIONSHIP PATH)
         if ($request->filled('policy_id')) {
+            $policy = Policy::with('client')->findOrFail($policyId);
+
             $query->whereHas('commissionNote.schedule.policy', function ($q) use ($request) {
                 $q->where('id', $request->policy_id);
             });
@@ -58,6 +65,8 @@ class CommissionController extends Controller
             compact(
                 'commissions',
                 'insurers',
+                'policy',
+                'policies',
                 'paymentStatuses',
                 'modesOfPayment',
                 'insurerFilter',
