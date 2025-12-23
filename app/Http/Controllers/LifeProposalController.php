@@ -99,7 +99,6 @@ class LifeProposalController extends Controller
             'maturity_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'agency' => 'nullable|string|max:255',
-            'class' => 'nullable|string|max:255',
             'is_submitted' => 'sometimes|boolean',
         ]);
 

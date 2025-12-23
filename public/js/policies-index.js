@@ -833,12 +833,21 @@
           <div class="detail-row">
             <span class="detail-label">WSC</span>
             <input type="text" class="detail-value" value="${policy.wsc ? formatNumber(policy.wsc) : '10,000'}" readonly style="text-align:right;">
+<<<<<<< HEAD
           </div>
           <div class="detail-row">
             <span class="detail-label">LOU</span>
             <input type="text" class="detail-value" value="${policy.lou ? formatNumber(policy.lou) : '15,000'}" readonly style="text-align:right;">
           </div>
           <div class="detail-row">
+=======
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">LOU</span>
+            <input type="text" class="detail-value" value="${policy.lou ? formatNumber(policy.lou) : '15,000'}" readonly style="text-align:right;">
+          </div>
+          <div class="detail-row">
+>>>>>>> abdullah_web
             <span class="detail-label">PA</span>
             <input type="text" class="detail-value" value="${policy.pa ? formatNumber(policy.pa) : '250,000'}" readonly style="text-align:right;">
           </div>

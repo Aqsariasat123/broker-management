@@ -314,7 +314,7 @@
         <!-- Policy Add Form -->
         <div id="policyFormPageContent" style="display:none;">
           <!-- Header for Add/Edit Policy -->
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px 15px;">
+          <!-- <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px 15px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <h4 id="policyFormTitle" style="margin:0; font-size:16px; font-weight:600; color:#333;">Policy - Add New</h4>
                <div class="client-page-actions" id="policyFormHeaderActions">

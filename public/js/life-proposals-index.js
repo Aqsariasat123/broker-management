@@ -619,39 +619,138 @@
       if (closeFormBtn) closeFormBtn.style.display = 'inline-block';
       pageForm.reset();
     } else {
+      // EDIT MODE
       const proposalName = proposal.proposers_name || proposal.prid || 'Unknown';
       document.getElementById('proposalPageTitle').textContent = 'Edit Life Proposal';
       document.getElementById('proposalPageName').textContent = proposalName;
       pageForm.action = `/life-proposals/${currentProposalId}`;
+
       const methodInput = document.createElement('input');
       methodInput.type = 'hidden';
       methodInput.name = '_method';
       methodInput.value = 'PUT';
       formMethod.innerHTML = '';
       formMethod.appendChild(methodInput);
+
       deleteBtn.style.display = 'inline-block';
       if (editBtn) editBtn.style.display = 'none';
       if (closeBtn) closeBtn.style.display = 'none';
       if (closeFormBtn) closeFormBtn.style.display = 'inline-block';
 
-      const fields = ['proposers_name','insurer','policy_plan','sum_assured','term','add_ons','offer_date','premium','frequency','stage','date','age','status','source_of_payment','mcr','doctor','date_sent','date_completed','notes','agency','class','prid'];
-      fields.forEach(k => {
-        const el = formContentDiv ? formContentDiv.querySelector(`#${k}`) : null;
+      // === 1. Populate simple input/text/date/number fields ===
+      const simpleFields = [
+        'proposers_name', 'sum_assured', 'term', 'add_ons', 'offer_date',
+        'date', 'age', 'source_of_payment', 'mcr', 'doctor', 'date_sent',
+        'date_completed', 'notes', 'agency', 'class', 'prid', 'policy_no',
+        'loading_premium', 'start_date', 'maturity_date', 'base_premium',
+        'admin_fee', 'annual_premium', 'exam_notes', 'date_referred'
+      ];
+
+      simpleFields.forEach(key => {
+        const el = formContentDiv.querySelector(`#${key}`);
         if (!el) return;
+
         if (el.type === 'checkbox') {
-          el.checked = !!proposal[k];
+          el.checked = !!proposal[key];
         } else if (el.type === 'date') {
-          el.value = proposal[k] ? (typeof proposal[k] === 'string' ? proposal[k].substring(0,10) : proposal[k]) : '';
+          el.value = proposal[key] ? proposal[key].substring(0, 10) : '';
         } else {
-          el.value = proposal[k] ?? '';
+          el.value = proposal[key] ?? '';
         }
       });
-      const isSubmittedCheckbox = formContentDiv ? formContentDiv.querySelector('#is_submitted') : null;
+
+      // === 2. Rebuild and populate ALL <select> dropdowns using lookupData ===
+      const selectMappings = {
+        salutation: 'salutations',
+        insurer: 'insurers',
+        policy_plan: 'policy_plans',
+        stage: 'stages',
+        frequency: 'frequencies',
+        status: 'statuses',
+        source_of_payment: 'sources_of_payment',
+        source: 'sources',
+        agency: 'agencies',
+        sex: 'sex_options',
+        clinic: 'clinics',
+        method_of_payment: 'method_of_payment_options'
+      };
+
+      Object.keys(selectMappings).forEach(fieldId => {
+        const selectEl = formContentDiv.querySelector(`#${fieldId}`);
+        if (!selectEl) return;
+
+        const optionsArray = lookupData[selectMappings[fieldId]] || [];
+        const savedValue = proposal[fieldId] || '';
+
+        // Clear and rebuild options
+        selectEl.innerHTML = '<option value="">Select</option>';
+        optionsArray.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          if (opt === savedValue) option.selected = true;
+          selectEl.appendChild(option);
+        });
+
+        // Fallback: force value if exact match not found
+        if (savedValue && selectEl.value !== savedValue) {
+          selectEl.value = savedValue;
+        }
+      });
+
+      // === 3. Special: Client select (uses ID, shows name) ===
+      const clientSelect = formContentDiv.querySelector('#client_id');
+      const sourceNameInput = formContentDiv.querySelector('#source_name');
+      if (clientSelect && lookupData.clients) {
+        clientSelect.innerHTML = '<option value="">Select Client</option>';
+        lookupData.clients.forEach(client => {
+          const option = document.createElement('option');
+          option.value = client.id;
+          option.textContent = client.client_name;
+          if (String(client.id) === String(proposal.client_id)) {
+            option.selected = true;
+          }
+          clientSelect.appendChild(option);
+        });
+      }
+      if (sourceNameInput && proposal.source_name) {
+        sourceNameInput.value = proposal.source_name;
+      }
+
+      // === 4. Riders: checkboxes + premium inputs ===
+      if (proposal.riders && Array.isArray(proposal.riders)) {
+        proposal.riders.forEach(rider => {
+          const checkbox = formContentDiv.querySelector(`#rider_${rider}`);
+          const premiumInput = formContentDiv.querySelector(`#rider_premium_${rider}`);
+          if (checkbox) {
+            checkbox.checked = true;
+            if (premiumInput) {
+              premiumInput.disabled = false;
+              premiumInput.value = proposal.rider_premiums?.[rider] || '';
+            }
+          }
+        });
+      }
+
+      // === 5. Medical Examination Required ===
+      const medicalCheckbox = formContentDiv.querySelector('#medical_examination_required');
+      if (medicalCheckbox) {
+        medicalCheckbox.checked = !!proposal.medical_examination_required;
+        toggleMedicalFields(); // This will show/hide and set required correctly
+      }
+
+      // === 6. Is Submitted checkbox ===
+      const isSubmittedCheckbox = formContentDiv.querySelector('#is_submitted');
       if (isSubmittedCheckbox) {
         isSubmittedCheckbox.checked = !!proposal.is_submitted;
+        isSubmittedCheckbox.value = proposal.is_submitted ? '1' : '0';
       }
-    }
 
+      // === 7. Trigger calculations ===
+      calculateTotalRiderPremium();
+      calculateTotalPremium();
+      calculateMaturityDate();
+    }
     // Hide table view, show page view
     document.getElementById('clientsTableView').classList.add('hidden');
     const proposalPageView = document.getElementById('proposalPageView');
