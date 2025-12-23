@@ -246,11 +246,11 @@
   <!-- Policy Page View (Full Page) -->
   <div class="client-page-view" id="policyPageView" style="display:none;">
     <!-- Header Card with Policy Number -->
-    <div class="client-page-header">
+    <div class="client-page-header" style="display:none;">
       <div class="client-page-title">
         <span id="policyPageTitle">Policy No</span> - <span class="client-name" id="policyPageName">-</span>
       </div>
-      </div>
+    </div>
     
     <div class="client-page-body">
       <div class="client-page-content">
@@ -260,9 +260,11 @@
         <!-- Policy Details Content Card - Separate -->
         <div id="policyDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
         <div id="policyDetailsPageContent" style="display:none;">
+          
           <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
               <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
                 <div class="client-page-nav">
+<<<<<<< HEAD
                   <a href="{{ route('schedules.index') }}" class="policy-tab active">Schedules</a>
                   <a href="{{ route('payments.index') }}" class="policy-tab">Payments</a>
                   <a href="{{ route('vehicles.index') }}" class="policy-tab">Vehicles</a>
@@ -271,6 +273,18 @@
                   <a href="#" class="policy-tab" onclick="alert('Endorsements page coming soon'); return false;">Endorsements</a>
                   <a href="{{ route('commissions.index') }}" class="policy-tab">Commission</a>
                   <a href="{{ route('nominees.index') }}" class="policy-tab">Nominees</a>
+=======
+           
+                <button class="policy-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Schedules</button>
+                <button class="policy-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Payments</button>
+                <button class="policy-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
+                <button class="policy-tab" data-tab="claims" data-url="{{ route('claims.index') }}">Claims</button>
+                <button class="policy-tab" data-tab="documents" data-url="{{ route('documents.index') }}">Documents</button>
+                <button class="policy-tab" data-tab="endorsements" data-url="{{ route('endorsements.index') }}">Endorsements</button>
+                <button class="policy-tab" data-tab="commissions" data-url="{{ route('commissions.index') }}">Commission</button>
+                <button class="policy-tab" data-tab="nominees" data-url="{{ route('nominees.index') }}">Nominees</button>
+
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
                 </div>
                 <div class="client-page-actions" id="policyHeaderActions">
                   <button class="btn btn-edit" id="editPolicyFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="if(currentPolicyId) openEditPolicy(currentPolicyId)">Edit</button>
@@ -318,10 +332,17 @@
                 <button type="submit" form="policyForm" class="btn-save" id="policySaveBtnHeader" style="display:inline-block; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">Save</button>
                 <button type="button" class="btn" id="backPolicyFormBtnHeader" style="display:none; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;" onclick="window.history.back()">Back</button>
                 <button type="button" class="btn" id="closePolicyFormBtnHeader" style="display:inline-block; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;" onclick="closePolicyPageView()">Close</button>
+<<<<<<< HEAD
               </div> -->
             <!-- </div>
           </div> 
            -->
+=======
+              </div> 
+             </div>
+          </div>
+           
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
           <!-- Navigation Tabs (only for Edit mode or Life Proposal generated) -->
           <div id="policyFormTabs" style="background:#fff; border:1px solid #584545ff; border-radius:4px; margin-bottom:15px; overflow:hidden; display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">

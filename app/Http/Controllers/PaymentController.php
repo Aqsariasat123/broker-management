@@ -23,6 +23,12 @@ class PaymentController extends Controller
             });
         }
 
+<<<<<<< HEAD
+=======
+  
+
+
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
         // Filter by debit note
         if ($request->has('debit_note_id') && $request->debit_note_id) {
             $query->where('debit_note_id', $request->debit_note_id);
@@ -43,7 +49,12 @@ class PaymentController extends Controller
                   });
             });
         }
-
+        if ($request->filled('policy_id')) {
+            $query->whereHas('debitNote.paymentPlan.schedule.policy', function ($subQ) use ($request) {
+                $subQ->where('id', $request->policy_id);
+            });
+        }
+        
         // Date range filter
         if ($request->has('date_from') && $request->date_from) {
             $query->whereDate('paid_on', '>=', $request->date_from);

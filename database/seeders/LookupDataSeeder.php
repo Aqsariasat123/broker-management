@@ -19,6 +19,7 @@ class LookupDataSeeder extends Seeder
             ['name' => 'Term Units', 'active' => 1],
             ['name' => 'Frequencies', 'active' => 1],
             ['name' => 'Pay Plans', 'active' => 1],
+            ['name' => 'Endorsements', 'active' => 1], // <-- New category
         ];
 
         foreach ($categories as $category) {
@@ -50,10 +51,34 @@ class LookupDataSeeder extends Seeder
                 case 'Pay Plans':
                     $this->insertPayPlans($categoryId);
                     break;
+                 case 'Endorsements':
+                    $this->insertEndorsements($categoryId); // <-- New method
+                    break;
             }
         }
 
         $this->command->info('Lookup data seeded successfully.');
+    }
+
+    private function insertEndorsements($categoryId)
+    {
+        $endorsements = [
+            ['seq' => 1, 'name' => 'Change of Insured', 'active' => 1],
+            ['seq' => 2, 'name' => 'Increase in Sum Insured', 'active' => 1],
+            ['seq' => 3, 'name' => 'Decrease in Sum Insured', 'active' => 1],
+            ['seq' => 4, 'name' => 'Change of Vehicle', 'active' => 1],
+            ['seq' => 5, 'name' => 'Addition of Driver', 'active' => 1],
+            ['seq' => 6, 'name' => 'Policy Extension', 'active' => 1],
+        ];
+
+        foreach ($endorsements as $endorsement) {
+            DB::table('lookup_values')->insert([
+                'lookup_category_id' => $categoryId,
+                'seq' => $endorsement['seq'],
+                'name' => $endorsement['name'],
+                'active' => $endorsement['active'],
+            ]);
+        }
     }
 
     private function insertInsurers($categoryId)
@@ -75,6 +100,7 @@ class LookupDataSeeder extends Seeder
             ]);
         }
     }
+
 
     private function insertPolicyClasses($categoryId)
     {

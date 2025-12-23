@@ -222,6 +222,16 @@ Route::middleware('auth')->group(function () {
     Route::put('/claims/{claim}', [ClaimController::class, 'update'])->name('claims.update');
     Route::delete('/claims/{claim}', [ClaimController::class, 'destroy'])->name('claims.destroy');
 
+    // Endorsement Routes
+    Route::get('/endorsements/export', [App\Http\Controllers\EndorsementController::class, 'export'])->name('endorsements.export');
+    Route::post('/endorsements/save-column-settings', [App\Http\Controllers\EndorsementController::class, 'saveColumnSettings'])->name('endorsements.save-column-settings');
+    Route::get('/endorsements/{endorsement}/edit', [App\Http\Controllers\EndorsementController::class, 'edit'])->name('endorsements.edit');
+    Route::get('/endorsements/{endorsement}', [App\Http\Controllers\EndorsementController::class, 'show'])->name('endorsements.show');
+    Route::get('/endorsements', [App\Http\Controllers\EndorsementController::class, 'index'])->name('endorsements.index');
+    Route::post('/endorsements', [App\Http\Controllers\EndorsementController::class, 'store'])->name('endorsements.store');
+    Route::put('/endorsements/{endorsement}', [App\Http\Controllers\EndorsementController::class, 'update'])->name('endorsements.update');
+    Route::delete('/endorsements/{endorsement}', [App\Http\Controllers\EndorsementController::class, 'destroy'])->name('endorsements.destroy');
+
     // Income Routes
     Route::get('/incomes/export', [IncomeController::class, 'export'])->name('incomes.export');
     Route::post('/incomes/save-column-settings', [IncomeController::class, 'saveColumnSettings'])->name('incomes.save-column-settings');

@@ -16,9 +16,14 @@ class DocumentController extends Controller
                 ->get();
             return response()->json($documents);
         }
-        
+         
         $query = Document::query();
         
+<<<<<<< HEAD
+        $query = Document::query();
+        
+=======
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
         // Filter by client_id if provided
         // Documents are tied to clients via the 'tied_to' field which stores the client's 'clid'
         if ($request->has('client_id') && $request->client_id) {
@@ -27,7 +32,16 @@ class DocumentController extends Controller
                 $query->where('tied_to', $client->clid);
             }
         }
+<<<<<<< HEAD
         
+=======
+        if ($request->filled('policy_id')) {
+            $policy = \App\Models\Policy::find($request->policy_id);
+            if ($policy) {
+                $query->where('tied_to', $policy->policy_no); 
+            }
+       }
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
         $documents = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Use TableConfigHelper for selected columns

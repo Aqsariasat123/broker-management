@@ -49,6 +49,7 @@
       if (policyPageName) policyPageName.textContent = policyName;
       
       // Update navigation tabs to match image (Nominees, Payments, Commission)
+<<<<<<< HEAD
       const policyDetailsNav = document.querySelector('#policyDetailsContentWrapper .client-page-nav');
       if (policyDetailsNav) {
         policyDetailsNav.innerHTML = `
@@ -110,6 +111,70 @@
 
  `;
       }
+=======
+//       const policyDetailsNav = document.querySelector('#policyDetailsContentWrapper .client-page-nav');
+//       if (policyDetailsNav) {
+//         policyDetailsNav.innerHTML = `
+//   <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.schedules">
+//   Schedules
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.nominees">
+//   Nominees
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.payments">
+//   Payments
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.vehicles">
+//   Vehicles
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.claims">
+//   Claims
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:8px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+  
+//   onclick="window.location.href = window.routes.documents">
+//   Documents
+// </button>
+
+// <button type="button"
+//   style="background:#000;color:#fff;border:1px solid #000;padding:6px 16px;border-radius:3px;cursor:pointer;font-size:12px;"
+//   onmouseover="this.style.background='#fff';this.style.color='#000';"
+//   onmouseout="this.style.background='#000';this.style.color='#fff';"
+//   onclick="window.location.href = window.routes.commissions">
+//   Commission
+// </button>
+
+//  `;
+//       }
+>>>>>>> 253dfd7a547dccfa68ed2a3220e6ad4eaaf25dde
       
       populatePolicyDetails(policy);
       
@@ -132,6 +197,24 @@
       if (editPolicyFromPageBtn) editPolicyFromPageBtn.style.display = 'inline-block';
       if (renewPolicyBtn) renewPolicyBtn.style.display = 'none'; // Hide renew button to match image
       if (closePolicyPageBtn) closePolicyPageBtn.style.display = 'inline-block';
+      document.querySelectorAll('#policyPageView .policy-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+
+        newTab.addEventListener('click', function(e) {
+
+          console.log(currentPolicyId);
+          e.preventDefault();
+          if (!currentPolicyId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?policy_id=' + currentPolicyId;
+        });
+      });
+
+   
     } catch (e) {
       console.error(e);
       alert('Error loading policy details: ' + e.message);
@@ -965,7 +1048,7 @@
       const policyPageNameEl = document.getElementById('policyPageName');
       if (policyPageTitleEl) policyPageTitleEl.textContent = 'Policy No';
       if (policyPageNameEl) policyPageNameEl.textContent = 'Add New';
-      if (policyFormTitle) policyFormTitle.textContent = 'Policy No : Add New';
+      if (policyFormTitle) policyFormTitle.innerHTML  = 'Policy No : <span style="color: orange;">Add New</span>';
       
       // Set form action
       pageForm.action = policiesStoreRoute;
