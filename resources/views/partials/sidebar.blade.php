@@ -106,7 +106,7 @@
                 </a>
             </li>
             @endif
-<!--             
+            
             @if(auth()->check() && (auth()->user()->hasPermission('schedules.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}" data-tooltip="Schedules">
                 <a href="{{ route('schedules.index') }}">
@@ -120,7 +120,7 @@
                 </a>
             </li>
             @endif
-             -->
+            
             @if(auth()->check() && (auth()->user()->hasPermission('commissions.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->is('commissions*') ? 'active' : '' }}" data-tooltip="Commission">
                 <a href="/commissions">
@@ -182,7 +182,7 @@
             </li>
             @endif
             
-            <!-- @if(auth()->check() && (auth()->user()->hasPermission('payment-plans.view') || auth()->user()->isAdmin()))
+            @if(auth()->check() && (auth()->user()->hasPermission('payment-plans.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('payment-plans.*') ? 'active' : '' }}" data-tooltip="Payment Plans">
                 <a href="{{ route('payment-plans.index') }}">
                     <span class="ks-sidebar-icon">
@@ -198,9 +198,9 @@
                     <span class="ks-sidebar-label">Payment Plans</span>
                 </a>
             </li>
-            @endif -->
+            @endif
             
-            <!-- @if(auth()->check() && (auth()->user()->hasPermission('debit-notes.view') || auth()->user()->isAdmin()))
+            @if(auth()->check() && (auth()->user()->hasPermission('debit-notes.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('debit-notes.*') ? 'active' : '' }}" data-tooltip="Debit Notes">
                 <a href="{{ route('debit-notes.index') }}">
                     <span class="ks-sidebar-icon">
@@ -216,8 +216,8 @@
                 </a>
             </li>
             @endif
-             -->
-            <!-- @if(auth()->check() && (auth()->user()->hasPermission('payments.view') || auth()->user()->isAdmin()))
+            
+            @if(auth()->check() && (auth()->user()->hasPermission('payments.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('payments.*') ? 'active' : '' }}" data-tooltip="Payments">
                 <a href="{{ route('payments.index') }}">
                     <span class="ks-sidebar-icon">
@@ -232,7 +232,7 @@
                     <span class="ks-sidebar-label">Payments</span>
                 </a>
             </li>
-            @endif -->
+            @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('claims.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->is('claims*') ? 'active' : '' }}" data-tooltip="Claims">
@@ -299,7 +299,7 @@
                 <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); font-weight: 600;">Web Settings</span>
             </li>
             
-            <!-- <li class="{{ request()->routeIs('lookup-categories.*') ? 'active' : '' }}" data-tooltip="Lookup Categories">
+            <li class="{{ request()->routeIs('lookup-categories.*') ? 'active' : '' }}" data-tooltip="Lookup Categories">
                 <a href="{{ route('lookup-categories.index') }}">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -312,7 +312,7 @@
                     </span>
                     <span class="ks-sidebar-label">Lookup Categories</span>
                 </a>
-            </li> -->
+            </li>
             
             <li class="{{ request()->routeIs('lookup-values.*') ? 'active' : '' }}" data-tooltip="Lookup Values">
                 <a href="{{ route('lookup-values.index') }}">
