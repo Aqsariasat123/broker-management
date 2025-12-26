@@ -179,4 +179,71 @@
       font-weight:bold;
       line-height:1;
     }
+
+  .contact-bottom-page-nav { 
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+   /* Contact Details Page Styles */
+  .contact-tab {
+    padding: 6px 12px;
+    background: #333;
+    border: none;
+    border-right: 1px solid #444;
+    cursor: pointer;
+    font-size: 11px;
+    color: #fff;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
   
+  .contact-tab:last-child {
+    border-right: none;
+  }
+  
+  .contact-tab:hover {
+    background: #555;
+    text-decoration: none;
+    color: #fff;
+  }
+  
+  .contact-tab.active {
+    background: #333;
+    color: #fff;
+    font-weight: 600;
+  }
+
+   /* Contact Details Bottom Tabs Styles */
+
+
+    .contact-bottom-tab {
+    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    border: 1px solid #444;
+    cursor: pointer;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .contact-bottom-tab:last-child {
+    border-right: none;
+  }
+
+  .contact-bottom-tab:hover {
+    background: #555;
+    text-decoration: none;
+    color: #fff;
+  }
+
+  .contact-bottom-tab.active {
+    background: #333;
+    color: #fff;
+    font-weight: 600;
+  }

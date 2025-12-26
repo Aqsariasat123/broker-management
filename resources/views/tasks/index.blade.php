@@ -193,6 +193,7 @@
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #ddd;">
         <h4 id="modalTitle" style="margin: 0; font-size: 18px; font-weight: bold;">Add Task</h4>
         <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-delete" id="deleteBtn" style="display: none;" onclick="deleteTask()">Delete</button>
           <button type="submit" form="taskForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 6px 16px; border-radius: 2px; cursor: pointer;">Save</button>
           <button type="button" class="btn-cancel" onclick="closeModal()" style="background: #000; color: #fff; border: none; padding: 6px 16px; border-radius: 2px; cursor: pointer;">Close</button>
         </div>
@@ -306,7 +307,14 @@
                 <label for="repeat" style="margin: 0; cursor: pointer;">Repeat</label>
               </div>
               <div class="form-group">
-                <input type="text" class="form-control" id="frequency" name="frequency" placeholder="Frequency" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <label for="frequency" style="display: block; margin-bottom: 5px; font-weight: 500;">Frequency</label>
+                <select class="form-control" id="frequency" name="frequency" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                  <option value="">Select Frequency</option>
+                  @foreach($frequencyCategories->values as $frequencyCategory)
+                    <option value="{{ $frequencyCategory->id }}">{{ $frequencyCategory->name }}</option>
+                  @endforeach
+                </select>
+           
               </div>
             </div>
             
@@ -323,9 +331,7 @@
           </div>
         </div>
         
-        <div class="modal-footer" style="display: none;">
-          <button type="button" class="btn-delete" id="deleteBtn" style="display: none;" onclick="deleteTask()">Delete</button>
-        </div>
+       
       </form>
     </div>
   </div>

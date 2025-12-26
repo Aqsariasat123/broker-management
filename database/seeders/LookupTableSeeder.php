@@ -354,6 +354,14 @@ class LookupTableSeeder extends Seeder
                 ['seq' => 3, 'name' => 'Claim Document', 'active' => true],
                 ['seq' => 4, 'name' => 'Other Document', 'active' => true],
             ],
+
+            'Task Category' => [
+                ['seq' => 1, 'name' => 'Payment', 'active' => true],
+                ['seq' => 2, 'name' => 'Report', 'active' => true],
+                ['seq' => 3, 'name' => 'Follow-up', 'active' => true],
+                ['seq' => 4, 'name' => 'Meeting', 'active' => true],
+                ['seq' => 5, 'name' => 'Call', 'active' => true],
+            ],
         ];
 
         foreach ($lookupData as $categoryName => $values) {

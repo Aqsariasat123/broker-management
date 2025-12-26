@@ -204,8 +204,8 @@
               <label for="income_source_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Income Source</label>
               <select class="form-control" name="income_source_id" id="income_source_id" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
                 <option value="">Select</option>
-                @foreach($incomeSources as $src)
-                  <option value="{{ $src->id }}">{{ $src->name }}</option>
+                @foreach($statementlist as $statement)
+                  <option value="{{ $statement->id }}">{{ $statement->insurer->name }}</option>
                 @endforeach
               </select>
             </div>
