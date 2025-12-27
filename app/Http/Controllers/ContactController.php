@@ -248,13 +248,68 @@ class ContactController extends Controller
         $rankCategory = LookupCategory::where('name', 'Rank')->first();
         
         return [
-            'contact_types' => $contactTypeCategory ? $contactTypeCategory->values()->where('active', true)->pluck('name')->toArray() : [],
-            'sources' => $sourceCategory ? $sourceCategory->values()->where('active', true)->pluck('name')->toArray() : [],
-            'agents' => $agentCategory ? $agentCategory->values()->where('active', true)->pluck('name')->toArray() : [],
-            'contact_statuses' => $statusCategory ? $statusCategory->values()->where('active', true)->pluck('name')->toArray() : ['Not Contacted', 'In Discussion', 'Proposal Made', 'Keep In View', 'Archived', 'RNR', 'Differed'],
-            'ranks' => $rankCategory ? $rankCategory->values()->where('active', true)->pluck('name')->toArray() : ['VIP', 'High', 'Medium', 'Low', 'Warm'],
-            'agencies' => $agencyCategory ? $agencyCategory->values()->where('active', true)->pluck('name')->toArray() : [],
-            'salutations' => $salutationCategory ? $salutationCategory->values()->where('active', true)->pluck('name')->toArray() : [],
-        ];
+        'contact_types' => $contactTypeCategory
+            ? $contactTypeCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [],
+
+        'sources' => $sourceCategory
+            ? $sourceCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [],
+
+        'agents' => $agentCategory
+            ? $agentCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [],
+
+        'contact_statuses' => $statusCategory
+            ? $statusCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [
+                ['id' => 1, 'name' => 'Not Contacted'],
+                ['id' => 2, 'name' => 'In Discussion'],
+                ['id' => 3, 'name' => 'Proposal Made'],
+                ['id' => 4, 'name' => 'Keep In View'],
+                ['id' => 5, 'name' => 'Archived'],
+                ['id' => 6, 'name' => 'RNR'],
+                ['id' => 7, 'name' => 'Differed'],
+            ],
+
+        'ranks' => $rankCategory
+            ? $rankCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [
+                ['id' => 1, 'name' => 'VIP'],
+                ['id' => 2, 'name' => 'High'],
+                ['id' => 3, 'name' => 'Medium'],
+                ['id' => 4, 'name' => 'Low'],
+                ['id' => 5, 'name' => 'Warm'],
+            ],
+
+        'agencies' => $agencyCategory
+            ? $agencyCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [],
+
+        'salutations' => $salutationCategory
+            ? $salutationCategory->values()
+                ->where('active', true)
+                ->get(['id', 'name'])
+                ->toArray()
+            : [],
+    ];
     }
 }

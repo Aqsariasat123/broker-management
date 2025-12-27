@@ -314,6 +314,7 @@
 <script>
   // Initialize data from Blade
   let currentNomineeId = null;
+
   const policyId = @json($policyId ?? null);
 </script>
 <script src="{{ asset('js/nominees-index.js') }}"></script>

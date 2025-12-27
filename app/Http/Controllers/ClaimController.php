@@ -26,6 +26,9 @@ class ClaimController extends Controller
                 $query->whereRaw('1 = 0');
             }
         }
+        if ($request->filled('policy_id')) {
+             $query->where('policy_id', $request->policy_id);
+        }
         
         // Filter for pending claims (status is 'Processing' or empty)
         if ($request->has('pending') && ($request->pending == 'true' || $request->pending == '1')) {
