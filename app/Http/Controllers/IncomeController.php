@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Income;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
-use App\Models\Statement;
+use App\Models\CommissionStatement;
+use Illuminate\Support\Facades\Log; // <-- Add this
 
 class IncomeController extends Controller
 {
@@ -18,9 +19,9 @@ class IncomeController extends Controller
 
         $incomes = Income::with(['incomeSource', 'modeOfPayment', 'incomeCategory'])->orderBy('created_at', 'desc')->paginate(10);
       
-        $statementlist = Statement::with(['insurer', 'modeOfPayment'])
-            ->orderBy('created_at', 'desc');
-
+        $comisionlist = CommissionStatement::with(['commissions.commissionNote.schedule'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         // Lookup values for selects - use Insurers instead of Income Source
         $incomeSources = LookupValue::whereHas('lookupCategory', function($q){
             $q->where('name', 'Insurers');
@@ -38,7 +39,7 @@ class IncomeController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('incomes');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('incomes');
 
-        return view('incomes.index', compact('incomes', 'incomeSources', 'statementlist','modesOfPayment', 'incomeCategories', 'selectedColumns'));
+        return view('incomes.index', compact('incomes', 'incomeSources', 'comisionlist','modesOfPayment', 'incomeCategories', 'selectedColumns'));
     }
 
     public function store(Request $request)

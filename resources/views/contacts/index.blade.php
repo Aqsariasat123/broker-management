@@ -257,7 +257,7 @@
                   class="btn"
                   id="deleteContactFromPageBtn"
                   style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                  onclick="deleteContactFromPage()">
+                  onclick="deleteContact()">
                   Delete
                 </button>
                 </div>

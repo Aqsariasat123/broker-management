@@ -647,62 +647,7 @@ function populateContactDetails(contact, type = 'view') {
     deleteBtn.style.display = 'none';
   }
 
-  // // Bottom Section: Documents - Dynamic based on policy documents
-  // let documentsHTML = '';
-  // // Check if documents exist and is an array
-  // const documents = policy.documents || [];
-  // if (Array.isArray(documents) && documents.length > 0) {
-  //   // If policy has documents array, display them
-  //   documents.forEach(doc => {
-  //     const docName = doc.name || doc.file_name || (doc.type || 'Document');
-  //     const isPDF = docName.toLowerCase().endsWith('.pdf') || (doc.type && doc.type.toLowerCase().includes('pdf')) || (doc.format && doc.format.toLowerCase().includes('pdf'));
-  //     const iconColor = isPDF ? '#dc3545' : '#000';
-  //     const fileIcon = isPDF ? 
-  //       '<path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' :
-  //       '<path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-  //     documentsHTML += `
-  //       <div class="document-icon">
-  //         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  //           ${fileIcon}
-  //         </svg>
-  //         <span>${docName}</span>
-  //       </div>
-  //     `;
-  //   });
-  // } else {
-  //   // Default document icons if no documents available
-  //   documentsHTML = `
-  //   <div class="document-icon">
-  //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  //       <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  //       <path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  //     </svg>
-  //     <span>Proposal</span>
-  //   </div>
-  //   <div class="document-icon">
-  //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  //       <rect x="3" y="3" width="18" height="18" rx="2" stroke="#333" stroke-width="2"/>
-  //       <path d="M9 9H15M9 15H15M9 12H15" stroke="#333" stroke-width="2" stroke-linecap="round"/>
-  //     </svg>
-  //     <span>Debit Note</span>
-  //   </div>
-  //   <div class="document-icon">
-  //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  //       <rect x="3" y="3" width="18" height="18" rx="2" stroke="#333" stroke-width="2"/>
-  //       <path d="M9 9H15M9 15H15M9 12H15" stroke="#333" stroke-width="2" stroke-linecap="round"/>
-  //     </svg>
-  //     <span>Receipt</span>
-  //   </div>
-  //   <div class="document-icon">
-  //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  //       <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  //       <path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  //     </svg>
-  //     <span>Schedule</span>
-  //   </div>
-  //   `;
-  // }
-  // documentsContent.innerHTML = documentsHTML;
+
 }
 
 // Save contact details
@@ -768,38 +713,7 @@ async function saveContactFromPage() {
   }
 }
 
-// Delete contact
-async function deleteContactFromPage() {
-  if (!currentContactId) {
-    alert('No contact selected');
-    return;
-  }
 
-  if (!confirm('Are you sure you want to delete this contact? This action cannot be undone.')) return;
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-  try {
-    const res = await fetch(`/contacts/${currentContactId}`, {
-      method: 'DELETE', // Assuming RESTful delete
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken
-
-      }
-    });
-
-    if (!res.ok) throw new Error('Failed to delete contact');
-
-    alert('Contact deleted successfully!');
-    // Optionally, close the contact view and refresh the table
-    closecontactPageView();
-    // You may want to reload contacts table here
-  } catch (e) {
-    console.error(e);
-    alert('Error deleting contact. Please try again.');
-  }
-}
 
 function deleteContact() {
   if (!currentContactId) return;
