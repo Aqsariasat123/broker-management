@@ -211,16 +211,15 @@
   }
   
   .detail-section-header {
-    background: #a0a0a0;
-    color: #fff;
+     background: #a0a0a04a;
+    color: #201c1c;
     padding: 4px 8px;
-    font-weight: bold;
-    font-size: 11px;
+    font-weight: 500;
+    font-size: 10px;
     border-bottom: 1px solid #ddd;
     text-transform: uppercase;
     line-height: 1.3;
-    margin-bottom: 0;
-  }
+    margin-bottom: 0;}
   
   .detail-row {
     display: flex !important;
@@ -236,8 +235,8 @@
   
   .detail-label {
     font-size: 10px;
-    color: #555;
-    font-weight: 600;
+   color: #555555;
+    font-weight: 400;
     line-height: 1.2;
     display: block;
     min-width: 90px;
@@ -260,7 +259,7 @@
   }
   
   .detail-section-body {
-    padding: 6px 8px;
+   padding: 15px 0px;;
   }
   
   .detail-value input[type="text"],
@@ -384,141 +383,6 @@
     width: 100%;
   }
   
-  /* Compact layout for policy add form - prevent scroll and make compact */
-  #policyPageView.form-mode {
-    overflow: hidden !important;
-    height: 100vh !important;
-  }
-  
-  #policyPageView.form-mode .client-page-body {
-    overflow: hidden !important;
-    height: calc(100vh - 60px) !important;
-  }
-  
-  #policyPageView.form-mode .client-page-content {
-    overflow: hidden !important;
-    height: 100% !important;
-  }
-  
-  #policyPageView #policyFormPageContent {
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  #policyPageView #policyFormPageContent > div:first-child {
-    flex-shrink: 0;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-  }
-  
-  #policyPageView #policyFormPageContent form {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-  }
-  
-  #policyPageView #policyFormContentWrapper {
-    margin-bottom: 8px;
-    flex-shrink: 0;
-  }
-  
-  #policyPageView #policyFormScheduleWrapper {
-    display: none !important;
-  }
-  
-  #policyPageView #policyFormPageContent > form > div[style*="background:#fff"]:not(#policyFormContentWrapper) {
-    margin-bottom: 8px;
-    flex-shrink: 0;
-  }
-  
-  #policyPageView #policyFormContent {
-    padding: 0 !important;
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  #policyPageView #policyFormContentWrapper {
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  #policyPageView #policyFormScheduleContent {
-    display: none !important;
-  }
-  
-  #policyPageView #policyFormPageContent .form-row {
-    margin-bottom: 4px !important;
-    gap: 4px !important;
-  }
-  
-  #policyPageView #policyFormPageContent .form-group {
-    margin-bottom: 4px !important;
-  }
-  
-  #policyPageView #policyFormPageContent .form-group label {
-    font-size: 10px !important;
-    margin-bottom: 2px !important;
-  }
-  
-  #policyPageView #policyFormPageContent .form-control {
-    padding: 3px 4px !important;
-    font-size: 11px !important;
-    height: 24px !important;
-    min-height: 24px !important;
-  }
-  
-  #policyPageView #policyFormPageContent textarea.form-control {
-    min-height: 24px !important;
-    padding: 3px 4px !important;
-    font-size: 11px !important;
-  }
-  
-  #policyPageView #policyFormPageContent h4 {
-    font-size: 11px !important;
-    margin: 0 0 6px 0 !important;
-    padding: 0 !important;
-  }
-  
-  #policyPageView #policyFormPageContent > div:first-child h4 {
-    font-size: 13px !important;
-  }
-  
-  #policyPageView #policyFormDocumentsContent {
-    padding: 6px !important;
-    min-height: 50px !important;
-    max-height: 100px;
-    overflow-y: auto;
-  }
-  
-  #policyPageView #policyFormPageContent button {
-    padding: 2px 6px !important;
-    font-size: 9px !important;
-    height: 24px !important;
-  }
-  
-  /* Ensure grid layouts are compact */
-  #policyPageView #policyFormContent div[style*="grid-template-columns"] {
-    gap: 4px 6px !important;
-  }
-  
-  /* Compact card styling */
-  #policyPageView #policyFormContent > div {
-    padding: 8px !important;
-    margin-bottom: 8px !important;
-  }
-  
-  /* Section dividers */
-  #policyPageView #policyFormContent div[style*="border-bottom"] {
-    padding-bottom: 6px !important;
-    margin-bottom: 6px !important;
-  }
-  
   @media (max-width: 1400px) {
     #policyDetailsContent,
     #policyScheduleContent,
@@ -540,3 +404,8 @@
       margin-bottom: 10px;
     }
   }
+
+
+.grey-input input ,.grey-input select ,.grey-input textarea {
+  background:#ddd !important;
+}

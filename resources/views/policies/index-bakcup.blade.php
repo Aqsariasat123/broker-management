@@ -3,6 +3,10 @@
 
 @include('partials.table-styles')
 <link rel="stylesheet" href="{{ asset('css/policies-index.css') }}">
+
+
+
+
 @php
   $config = \App\Helpers\TableConfigHelper::getConfig('policies');
   $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('policies');
@@ -35,14 +39,31 @@
   
   <!-- Main Policies Table View -->
   <div class="clients-table-view" id="clientsTableView">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Policies
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Policies Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Policies</h3>
         <div class="records-found">Records Found - {{ $policies->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+        <div class="filter-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="filterToggle" {{ (request()->get('dfr') == 'true') || request()->has('search_term') || request()->has('client_name') || request()->has('policy_number') || request()->has('insurer_id') || request()->has('policy_class_id') || request()->has('agency_id') || request()->has('agent') || request()->has('policy_status_id') || request()->has('start_date_from') || request()->has('end_date_from') || request()->has('premium_unpaid') || request()->has('comm_unpaid') ? 'checked' : '' }}>
+              <span class="toggle-slider"></span>
+            </label>
+            <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
+          </div>
         <div class="filter-group">
             @if(request()->get('dfr') == 'true')
               <button class="btn btn-list-all" id="listAllBtn">List ALL</button>
@@ -113,6 +134,8 @@
               </td>
               <td class="action-cell">
                 <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openPolicyDetails({{ $policy->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand"> 
+              
+               
                 <svg class="action-clock" onclick="window.location.href='{{ route('policies.index') }}?dfr=true'" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
                   <circle cx="12" cy="12" r="9" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                   <path d="M12 7V12L15 15" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
@@ -121,7 +144,7 @@
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'policy_no')
-                  <td data-column="policy_no">{{ $policy->policy_no }} </td>
+                  <td data-column="policy_no">{{ $policy->policy_no }}</td>
                 @elseif($col == 'client_name')
                   <td data-column="client_name">
                     @php $clientName = $policy->client_name; @endphp
@@ -227,7 +250,7 @@
       <div class="client-page-title">
         <span id="policyPageTitle">Policy No</span> - <span class="client-name" id="policyPageName">-</span>
       </div>
-      </div>
+    </div>
     
     <div class="client-page-body">
       <div class="client-page-content">
@@ -237,11 +260,11 @@
         <!-- Policy Details Content Card - Separate -->
         <div id="policyDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
         <div id="policyDetailsPageContent" style="display:none;">
+          
           <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
               <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
                 <div class="client-page-nav">
-                       
-                
+           
                 <button class="policy-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Schedules</button>
                 <button class="policy-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Payments</button>
                 <button class="policy-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
@@ -255,22 +278,24 @@
                 <div class="client-page-actions" id="policyHeaderActions">
                   <button class="btn btn-edit" id="editPolicyFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="if(currentPolicyId) openEditPolicy(currentPolicyId)">Edit</button>
                   <button class="btn" id="renewPolicyBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="openRenewalModal()">Renew</button>
-                  <button class="btn" id="closePolicyPageBtn" onclick="closePolicyPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Close</button>
+                  <button class="btn" id="closePolicyPageBtn" onclick=
+                  
+                  "closePolicyPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Close</button>
                 </div>
               </div>
             </div>
           </div> 
-        <div id="policyDetailsContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; padding:0;">
+        <div id="policyDetailsContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; padding:0;">
               <!-- Content will be loaded via JavaScript -->
             </div>
         </div>
         
         <!-- Policy Schedule Card - Separate -->
-        <div id="policyScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;">
+        <div id="policyScheduleContentWrapper" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;">
           <div style="padding:10px 10px 8px 10px; border-bottom:1px solid #ddd;">
             <h4 style="margin:0; font-size:12px; font-weight:600; color:#333;">Policy Schedule</h4>
           </div>
-          <div id="policyScheduleContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; padding:0;">
+          <div id="policyScheduleContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; padding:0;">
             <!-- Content will be loaded via JavaScript -->
           </div>
         </div>
@@ -292,62 +317,56 @@
           <!-- <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px 15px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <h4 id="policyFormTitle" style="margin:0; font-size:16px; font-weight:600; color:#333;">Policy - Add New</h4>
-                <div class="client-page-actions" id="policyFormHeaderActions">
-                <button type="submit" form="policyForm" class="btn-save" id="policySaveBtnHeader" style="display:inline-block; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">Save</button>
-                <button type="button" class="btn" id="closePolicyFormBtnHeader" style="display:inline-block; background:#fff; color:#333; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;" onclick="closePolicyPageView()">Cancel</button>
-              </div>  -->
-           
-         
-    
-       
-          
-        
-          <form id="policyForm" method="POST" action="{{ route('policies.store') }}" enctype="multipart/form-data">
-              @csrf
-         <div class="edit-parent" style="background-color:white; padding:10px ;">
-          <div id="policyFormTabs" style="background:#fff; border:1px solid #ddd; border-radius:4px;  overflow:hidden; display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:#fff;">
-              <div class="client-page-nav">
-     
-                <button class="policy-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Schedules</button>
-                <button class="policy-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Payments</button>
-                <button class="policy-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
-                <button class="policy-tab" data-tab="claims" data-url="{{ route('claims.index') }}">Claims</button>
-                <button class="policy-tab" data-tab="documents" data-url="{{ route('documents.index') }}">Documents</button>
-                <button class="policy-tab" data-tab="endorsements" data-url="{{ route('endorsements.index') }}">Endorsements</button>
-                <button class="policy-tab" data-tab="commissions" data-url="{{ route('commissions.index') }}">Commission</button>
-                <button class="policy-tab" data-tab="nominees" data-url="{{ route('nominees.index') }}">Nominees</button>
-
-              </div>
                <div class="client-page-actions" id="policyFormHeaderActions">
                 <button type="submit" form="policyForm" class="btn-save" id="policySaveBtnHeader" style="display:inline-block; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">Save</button>
-                <button type="button" class="btn" id="closePolicyFormBtnHeader" style="display:inline-block; background:#fff; color:#333; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;" onclick="closePolicyPageView()">Cancel</button>
+                <button type="button" class="btn" id="backPolicyFormBtnHeader" style="display:none; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;" onclick="window.history.back()">Back</button>
+                <button type="button" class="btn" id="closePolicyFormBtnHeader" style="display:inline-block; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;" onclick="closePolicyPageView()">Close</button>
+              </div> 
+             </div>
+          </div>
+           
+          <div id="policyFormTabs" style="background:#fff; border:1px solid #584545ff; border-radius:4px; margin-bottom:15px; overflow:hidden; display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+              <div class="client-page-nav" id="policyFormTabsNav">
+                <a href="{{ route('schedules.index') }}" class="policy-tab active">Schedules</a>
+                <a href="{{ route('payments.index') }}" class="policy-tab">Payments</a>
+                <a href="{{ route('vehicles.index') }}" class="policy-tab">Vehicles</a>
+                <a href="{{ route('claims.index') }}" class="policy-tab">Claims</a>
+                <a href="{{ route('documents.index') }}" class="policy-tab">Documents</a>
+                <a href="#" class="policy-tab" onclick="alert('Endorsements page coming soon'); return false;">Endorsements</a>
+                <a href="{{ route('commissions.index') }}" class="policy-tab">Commission</a>
+                <a href="{{ route('nominees.index') }}" class="policy-tab">Nominees</a>
+              </div>
+                <div class="client-page-actions" id="policyFormHeaderActions">
+                <button type="submit" form="policyForm" class="btn-save" id="policySaveBtnHeader" style="display:inline-block; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">Save</button>
+                <button type="button" class="btn" id="backPolicyFormBtnHeader" style="display:none; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;" onclick="window.history.back()">Back</button>
+                <button type="button" class="btn" id="closePolicyFormBtnHeader" style="display:inline-block; background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;" onclick="closePolicyPageView()">Close</button>
               </div>
             </div>
           </div>
+          
+          <!-- Policy Form - Single form wrapping all fields -->
+          <form id="policyForm" method="POST" action="{{ route('policies.store') }}" enctype="multipart/form-data">
+              @csrf
               <div id="policyFormMethod" style="display:none;"></div>
             
             <!-- Policy Form Content Card -->
-            <div id="policyFormContentWrapper" style="background:#fff;  #ddd; border-radius:4px; padding:0; overflow:hidden;gap:10px;">
+            <div id="policyFormContentWrapper" style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:0; overflow:hidden;">
               <!-- Content will be loaded via JavaScript -->
               <div id="policyFormContent" style="padding:0;">
                 <!-- Content will be loaded via JavaScript -->
               </div>
           </div>
-             </div>
-
-       
             
             <!-- Policy Schedule Card -->
-            <div id="policyFormScheduleWrapper">
-            
-            <div id="policyFormScheduleContent" style="padding:0;">
+            <div id="policyFormScheduleWrapper" style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:0; overflow:hidden;">
+              <div id="policyFormScheduleContent" style="padding:0;">
                 <!-- Content will be loaded via JavaScript -->
               </div>
             </div>
             
             <!-- Documents Card -->
-            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:20px; overflow:hidden;">
+            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
               <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #ddd;">
                 <h4 style="margin:0; font-size:13px; font-weight:600; color:#333;">Documents</h4>
                 <div>
@@ -360,7 +379,6 @@
             </div>
           </form>
         </div>
- 
       </div>
     </div>
   </div>
@@ -479,7 +497,12 @@
           <div class="form-row">
             <div class="form-group">
               <label for="term_unit">Term Unit</label>
-              <input id="term_unit" name="term_unit" class="form-control">
+              <select id="term_unit" name="term_unit" class="form-control">
+                <option value="">Select</option>
+                @foreach($lookupData['term_units'] ?? [] as $termUnit)
+                  <option value="{{ $termUnit['name'] }}">{{ $termUnit['name'] }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group">
               <label for="base_premium">Base Premium</label>
@@ -561,10 +584,9 @@
             <label for="policyDocumentType" style="display:block; margin-bottom:5px; font-weight:600;">Document Type</label>
             <select id="policyDocumentType" name="document_type" class="form-control" required>
               <option value="">Select Document Type</option>
-              <option value="policy_document">Policy Document</option>
-              <option value="certificate">Certificate</option>
-              <option value="claim_document">Claim Document</option>
-              <option value="other">Other Document</option>
+              @foreach($lookupData['document_types'] ?? [] as $docType)
+                <option value="{{ strtolower(str_replace(' ', '_', $docType['name'])) }}">{{ $docType['name'] }}</option>
+              @endforeach
             </select>
           </div>
           <div class="form-group" style="margin-bottom:15px;">
@@ -584,7 +606,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-cancel" onclick="closePolicyDocumentUploadModal()">Cancel</button>
+        <button type="button" class="btn-cancel" onclick="closePolicyDocumentUploadModal()">Close</button>
         <button type="button" class="btn-save" onclick="handlePolicyDocumentUpload()">Upload</button>
       </div>
     </div>
@@ -595,7 +617,6 @@
     <div class="modal-content" style="max-width:800px;" onclick="event.stopPropagation();">
       <div class="modal-header">
         <h4>Renewal Schedule Details</h4>
-        <button type="button" class="modal-close" onclick="closeRenewalModal()">×</button>
       </div>
       <form id="renewalScheduleForm">
         <div class="modal-body" style="padding:20px;">
@@ -671,8 +692,224 @@
 
         </div>
         <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
-          <button type="button" class="btn-cancel" onclick="closeRenewalModal()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeRenewalModal()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Close</button>
           <button type="submit" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vehicle Details Modal -->
+  <div class="modal" id="vehicleModal" style="display:none;" onclick="if(event.target === this) closeVehicleDialog();">
+    <div class="modal-content" style="max-width:600px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;">Add Vehicle Details</h4>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="saveVehicle()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
+          <button type="button" onclick="closeVehicleDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="vehicleForm">
+        <div class="modal-body" style="padding:20px;">
+          <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Registration No.</label>
+              <input type="text" name="regn_no" id="vehicle_regn_no" class="form-control" required style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Make</label>
+              <input type="text" name="make" id="vehicle_make" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Model</label>
+              <input type="text" name="model" id="vehicle_model" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Model Year</label>
+              <input type="text" name="year" id="vehicle_year" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Type</label>
+              <input type="text" name="type" id="vehicle_type" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine Type</label>
+              <input type="text" name="engine_type" id="vehicle_engine_type" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine CC</label>
+              <input type="text" name="cc" id="vehicle_cc" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine No.</label>
+              <input type="text" name="engine_no" id="vehicle_engine_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Chassis No.</label>
+              <input type="text" name="chassis_no" id="vehicle_chassis_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Value</label>
+              <input type="number" step="0.01" name="value" id="vehicle_value" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Usage</label>
+              <input type="text" name="useage" id="vehicle_useage" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Comment</label>
+            <textarea name="notes" id="vehicle_notes" class="form-control" rows="3" style="padding:6px; font-size:12px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
+          <button type="button" class="btn-save" onclick="saveVehicleAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload VRC</button>
+          <button type="button" class="btn-save" onclick="saveVehicleAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Add Another Vehicle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Nominee Details Modal -->
+  <div class="modal" id="nomineeModal" style="display:none;" onclick="if(event.target === this) closeNomineeDialog();">
+    <div class="modal-content" style="max-width:500px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;">Add Nominee</h4>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="saveNominee()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
+          <button type="button" onclick="closeNomineeDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="nomineeForm">
+        <input type="hidden" name="policy_id" id="nominee_policy_id">
+        <div class="modal-body" style="padding:20px;">
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Full Name</label>
+            <input type="text" name="full_name" id="nominee_full_name" class="form-control" required style="padding:6px; font-size:12px;">
+          </div>
+          <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Date Of Birth</label>
+              <input type="date" name="date_of_birth" id="nominee_date_of_birth" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">NIN/Passport No</label>
+              <input type="text" name="nin_passport_no" id="nominee_nin_passport_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Relationship</label>
+              <input type="text" name="relationship" id="nominee_relationship" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Share</label>
+              <input type="number" step="0.01" name="share_percentage" id="nominee_share_percentage" class="form-control" style="padding:6px; font-size:12px;" placeholder="%">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Notes</label>
+            <textarea name="notes" id="nominee_notes" class="form-control" rows="3" style="padding:6px; font-size:12px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
+          <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload ID</button>
+          <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Add Another</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div class="modal" id="policyFilterModal" style="display:none;" onclick="if(event.target === this) closePolicyFilterModal();">
+    <div class="modal-content" style="max-width:600px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #ddd;">
+        <h4 style="margin:0; font-size:16px; font-weight:600;">Filters</h4>
+        <div style="display:flex; gap:8px;">
+          <button type="button" onclick="applyPolicyFilters()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Apply</button>
+          <button type="button" onclick="closePolicyFilterModal()" style="background:#999; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="policyFilterForm" onsubmit="event.preventDefault(); applyPolicyFilters();">
+        <div class="modal-body" style="padding:20px;">
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Set Record Lines</label>
+            <input type="number" id="filterRecordLines" name="record_lines" value="{{ request()->get('record_lines', 15) }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Search Term</label>
+            <input type="text" id="filterSearchTerm" name="search_term" value="{{ request()->get('search_term') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Client Name</label>
+            <input type="text" id="filterClientName" name="client_name" value="{{ request()->get('client_name') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Policy Number</label>
+            <input type="text" id="filterPolicyNumber" name="policy_number" value="{{ request()->get('policy_number') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Insurer</label>
+            <select id="filterInsurer" name="insurer_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['insurers'] ?? [] as $insurer)
+                <option value="{{ $insurer['id'] }}" {{ request()->get('insurer_id') == $insurer['id'] ? 'selected' : '' }}>{{ $insurer['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Insurance Class</label>
+            <select id="filterInsuranceClass" name="policy_class_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['policy_classes'] ?? [] as $class)
+                <option value="{{ $class['id'] }}" {{ request()->get('policy_class_id') == $class['id'] || (request()->get('policy_class_id') == '' && $class['name'] == 'Motor') ? 'selected' : '' }}>{{ $class['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Agency</label>
+            <select id="filterAgency" name="agency_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['agencies'] ?? [] as $agency)
+                <option value="{{ $agency['id'] }}" {{ request()->get('agency_id') == $agency['id'] ? 'selected' : '' }}>{{ $agency['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Agent</label>
+            <input type="text" id="filterAgent" name="agent" value="{{ request()->get('agent', 'Simon') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Status</label>
+            <select id="filterStatus" name="policy_status_id" class="form-control" style="padding:6px; font-size:12px;">
+              <option value="">Select</option>
+              @foreach($lookupData['policy_statuses'] ?? [] as $status)
+                <option value="{{ $status['id'] }}" {{ request()->get('policy_status_id') == $status['id'] ? 'selected' : '' }}>{{ $status['name'] }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">From Start Date</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="date" id="filterStartDateFrom" name="start_date_from" value="{{ request()->get('start_date_from') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+              <span style="font-size:12px;">To</span>
+              <input type="date" id="filterStartDateTo" name="start_date_to" value="{{ request()->get('start_date_to') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">From End Date</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="date" id="filterEndDateFrom" name="end_date_from" value="{{ request()->get('end_date_from') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+              <span style="font-size:12px;">To</span>
+              <input type="date" id="filterEndDateTo" name="end_date_to" value="{{ request()->get('end_date_to') }}" class="form-control" style="padding:6px; font-size:12px; flex:1;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Premium Unpaid</label>
+            <input type="number" step="0.01" id="filterPremiumUnpaid" name="premium_unpaid" value="{{ request()->get('premium_unpaid') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:15px; margin-bottom:15px; align-items:center;">
+            <label style="font-size:13px; font-weight:500;">Comm Unpaid</label>
+            <input type="number" step="0.01" id="filterCommUnpaid" name="comm_unpaid" value="{{ request()->get('comm_unpaid') }}" class="form-control" style="padding:6px; font-size:12px;">
+          </div>
         </div>
       </form>
     </div>
@@ -691,25 +928,33 @@
   'mandatoryColumns' => $mandatoryColumns,
 ])
 
-
 <script>
-// Inject PHP data into window object (safe and minimal inline JS)
-window.appConfig = {
-    lookupData: @json($lookupData ?? []),
-    selectedColumns: @json($selectedColumns ?? []),
-    mandatoryColumns: @json($mandatoryColumns ?? []),
-    // Add any other data you need
-    currentPolicyId: null,
-    currentPolicyData: null
-};
+  // Initialize data from Blade
+  let currentPolicyId = null;
+  let currentPolicyData = null;
+  const lookupData = @json($lookupData ?? []);
+  const selectedColumns = @json($selectedColumns ?? []);
+  const lifeProposalData = @json($lifeProposal ?? null);
+  const policiesIndexRoute = '{{ route("policies.index") }}';
+  const policiesStoreRoute = '{{ route("policies.store") }}';
+  const vehiclesStoreRoute = '{{ route("vehicles.store") }}';
+  const nomineesStoreRoute = '{{ route("nominees.store") }}';
+  const csrfToken = '{{ csrf_token() }}';
 </script>
 
 <script>
-  window.routes = {
-    policiesStore: "{{ route('policies.store') }}"
-  };
-</script>
+    window.routes = {
+        nominees: '{{ route('nominees.index') }}',
+        payments: '{{ route('payments.index') }}',
+        commissions: '{{ route('commissions.index') }}',
+        vehicles: '{{ route('vehicles.index') }}',
+        claims: '{{ route('claims.index') }}',
+        documents: '{{ route('documents.index') }}',
+        schedules: '{{ route('schedules.index') }}',
+        
 
-<!-- OR if using asset() -->
- <script src="{{ asset('js/policies-index.js') }}"></script> 
+
+    };
+</script>
+<script src="{{ asset('js/policies-index.js') }}"></script>
 @endsection

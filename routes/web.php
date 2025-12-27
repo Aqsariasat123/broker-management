@@ -108,7 +108,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{task}/get', [TaskController::class, 'getTask'])->name('tasks.get');
         Route::get('/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
         Route::get('/{task}', [TaskController::class, 'show'])->name('tasks.show');
-        Route::put('/{task}', [TaskController::class, 'update'])->name('tasks.update');
+        Route::post('/{task}', [TaskController::class, 'update'])->name('tasks.update');
         Route::delete('/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     });
 

@@ -1,6 +1,6 @@
-  // Data initialized in Blade template
 
-  function openNomineeDialog() {
+
+  async function openNomineeDialog() {
     currentNomineeId = null;
     document.getElementById('nomineeModalTitle').textContent = 'Add Nominee';
     document.getElementById('nomineeForm').reset();
@@ -585,9 +585,7 @@
     form.submit();
   }
 
-  let draggedElement = null;
-  let dragOverElement = null;
-  let dragInitialized = false;
+ 
 
   function initDragAndDrop() {
     const columnSelection = document.getElementById('columnSelection');

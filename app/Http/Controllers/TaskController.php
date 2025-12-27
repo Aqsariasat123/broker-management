@@ -41,7 +41,8 @@ class TaskController extends Controller
         // Fetch dropdown data for form
         $taskCategory = LookupCategory::where('name', 'Task Category')->first();
         $categories = $taskCategory ? $taskCategory->values()->where('active', true)->orderBy('seq')->get() : collect();
-        
+        $frequencyCategories = LookupCategory::where('name', 'Frequency')->first();
+
         // Get contacts and clients for Name/Contact dropdown
         $contacts = Contact::select('id', 'contact_name as name', 'contact_no')->orderBy('contact_name')->get();
         $clients = Client::select('id', 'client_name as name', 'mobile_no as contact_no')->orderBy('client_name')->get();
@@ -49,7 +50,7 @@ class TaskController extends Controller
         // Get users for assignee dropdown
         $users = User::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
 
-        return view('tasks.index', compact('tasks', 'selectedColumns', 'categories', 'contacts', 'clients', 'users'));
+        return view('tasks.index', compact('tasks', 'selectedColumns', 'categories', 'frequencyCategories', 'contacts', 'clients', 'users'));
     }
 
     public function store(Request $request): RedirectResponse

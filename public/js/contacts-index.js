@@ -1,12 +1,6 @@
   // Data initialized in Blade template
 
   // Format date helper function
-  function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${date.getDate()}-${months[date.getMonth()]}-${String(date.getFullYear()).slice(-2)}`;
-  }
 
   // Format number helper function
   function formatNumber(num) {
@@ -206,7 +200,7 @@
   }
 
   // show edit: fetch /contacts/{id}/edit which returns JSON in controller
-  async function openEditContact(id){
+  async function openContactDetails(id){
     try {
       const res = await fetch(`/contacts/${id}/edit`, {
         headers: {
@@ -217,13 +211,432 @@
       if (!res.ok) throw new Error('Network error');
       const contact = await res.json();
       currentContactId = id;
-      openModalWithContact('edit', contact);
+      console.log(contact);
+       const contactPageName = document.getElementById('contactPageName');
+      const clientsTableView = document.getElementById('clientsTableView');
+      const contactPageView = document.getElementById('contactPageView');
+      const contactDetailsPageContent = document.getElementById('contactDetailsPageContent');
+      const contactFormPageContent = document.getElementById('contactFormPageContent');
+      const contactContactPageBtn = document.getElementById('contactContactPageBtn');
+      
+      if (!contactPageName || !clientsTableView || !contactPageView || 
+          !contactDetailsPageContent || !contactFormPageContent) {
+        console.error('Required elements not found');
+        console.error('contactPageName:', contactPageName);
+        console.error('clientsTableView:', clientsTableView);
+        console.error('contactPageView:', contactPageView);
+        console.error('contactDetailsPageContent:', contactDetailsPageContent);
+        console.error('contactFormPageContent:', contactFormPageContent);
+        alert('Error: Page elements not found');
+        return;
+      }
+
+      // Set contact name in header
+      const contactPageTitleEl = document.getElementById('contactPageTitle');
+      const contactName = contact.contact_name || 'Unknown';
+      if (contactPageTitleEl) contactPageTitleEl.textContent = 'Contact';
+      if (contactPageName) contactPageName.textContent = contactName;
+      populateContactDetails(contact);
+      // Update documents display
+      // if (policy.documents) {
+      //   updatePolicyDocumentsList(policy);
+      // }
+      
+      // Hide table view, show page view
+      clientsTableView.classList.add('hidden');
+      contactPageView.style.display = 'block';
+      contactPageView.classList.add('show');
+      contactDetailsPageContent.style.display = 'block';
+      document.getElementById('contactDetailsContentWrapper').style.display = 'block';
+      document.getElementById('contactScheduleContentWrapper').style.display = 'block';
+      document.getElementById('followupsContentWrapper').style.display = 'block';
+      contactFormPageContent.style.display = 'none';
+      const editContactFromPageBtn = document.getElementById('editContactFromPageBtn');
+      const renewContactBtn = document.getElementById('renewContactBtn');
+      if (editContactFromPageBtn) editContactFromPageBtn.style.display = 'inline-block';
+      if (renewContactBtn) renewContactBtn.style.display = 'inline-block';
+      if (contactContactPageBtn) contactContactPageBtn.style.display = 'inline-block';
+          document.querySelectorAll('#contactPageView .contact-tab').forEach(tab => {
+        // Remove existing listeners by cloning
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        // Add click listener
+
+        newTab.addEventListener('click', function(e) {
+
+          console.log(currentContactId);
+          e.preventDefault();
+          if (!currentContactId) return;
+          const baseUrl = this.getAttribute('data-url');
+          if (!baseUrl || baseUrl === '#') return;
+          window.location.href = baseUrl + '?contact_id=' + currentContactId;
+        });
+      });
+      // openModalWithContact('edit', contact);
     } catch (e) {
       console.error(e);
       alert('Error loading contact data');
     }
   }
+    async function openEditContract(id){
+    try {
+      const res = await fetch(`/contacts/${id}/edit`, { 
+        headers: { 
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        } 
+      });
+      if (!res.ok) throw new Error('Network error');
+      const contact = await res.json();
+      currentContactId = id;
+      console.log(contact);
+      // openContactForm('edit', contact);
+    } catch (e) {
+      console.error(e);
+      alert('Error loading policy data');
+    }
+  }
 
+
+  function formatNumber(num) {
+      if (!num && num !== 0) return '';
+      const numVal = parseFloat(num);
+      // If it's a whole number, don't show decimals
+      if (numVal % 1 === 0) {
+        return numVal.toLocaleString('en-US');
+      }
+      return numVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function calculateAge(dob) {
+    if (!dob) return '';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    if (isNaN(d)) return ''; // invalid date check
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+} 
+
+  function populateContactDetails(contact) {
+    const content = document.getElementById('contactDetailsContent');
+    const scheduleContent = document.getElementById('contactScheduleContent');
+    const documentsContent = document.getElementById('documentsContent');
+    if (!content || !scheduleContent || !documentsContent) return;
+
+
+    // Get contact data
+
+    const selectedTypeId = contact?.type ?? null;
+
+    const contactTypeOptions = lookupData.contact_types
+      .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedTypeId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+      .join('');
+        
+
+
+    const selectedoccupation = contact?.occupation ?? null;
+     const occupationOptions = allOccupations
+      .map(ct => `
+        <option value="${ct}" ${ct == selectedoccupation ? 'selected' : ''}>
+          ${ct}
+        </option>
+      `)
+      .join('');
+
+      
+    const selectedstatusId = contact?.status ?? null;
+
+    const contactStatusOptions = lookupData.contact_statuses
+      .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedstatusId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+      .join('');
+
+    const selectedranksId = contact?.rank ?? null;
+
+    const contactranksOptions = lookupData.ranks
+      .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedranksId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+      .join('');
+
+
+    const selectedEmployerOption = contact?.employer ?? null;
+     const EmployerOptions = allEmployers
+      .map(ct => `
+        <option value="${ct}" ${ct == selectedEmployerOption ? 'selected' : ''}>
+          ${ct}
+        </option>
+      `)
+      .join('');
+        
+
+    const selectedSourceId = contact?.source ?? null;
+
+    const sourceOptions = lookupData.sources
+      .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedSourceId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+      .join('');  
+
+
+    const selectedAgencyId = contact?.agency ?? null;
+
+    const agencyOptions = lookupData.agencies
+      .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedAgencyId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+      .join('');  
+
+
+    const dob = contact.dob ? formatDateForInput(contact.dob) : '-';
+    const date_acquired = contact.acquired ? formatDateForInput(contact.acquired) : '-';
+    const first_contact = contact.acquired ? formatDateForInput(contact.first_contact) : '-';
+    const next_follow_up = contact.acquired ? formatDateForInput(contact.next_follow_up) : '-';
+
+    const dobAge = contact.dob ? calculateAge(contact.dob) : '-';
+     console.log('DOB:', dob);
+    // Top Section: 4 columns
+    const col1 = `
+      <div class="detail-section-card">
+        <div class="detail-section-header">CONTACT DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Contact Type</span>
+             <select id="type" name="type" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled>
+                <option value="">Select</option>
+                 ${contactTypeOptions}
+              </select>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Mobile No</span>
+            <input  class="detail-value" value="${contact.contact_no || ''}" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact No</span>
+            <input type="text" class="detail-value" value="${contact.contact_no || ''}" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email Address</span>
+            <input type="text" class="detail-value" value="${contact.email_address || ''}" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Address</span>
+            <input type="text" class="detail-value" value="${contact.address || ''}" readonly>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const col2 = `
+      <div class="detail-section-card">
+        <div class="detail-section-header">OTHER DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Date Of Birth</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+             <input id="dob" name="dob" type="date" value ="${dob}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" readonly>
+              <input id="age_display" type="text" value ="${dobAge}"  placeholder="Age" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+             
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Occupation</span>
+             <select id="occupation" name="occupation" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled>
+                <option value="">Select or Type</option>
+                ${occupationOptions}
+              </select>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Employer</span>
+             <select id="employer" name="employer" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled>
+                <option value="">Select or Type</option>
+                ${EmployerOptions}
+              </select>   
+         </div>
+          <div class="detail-row">
+            <span class="detail-label">Source</span>
+              <select id="source" name="source" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled> 
+                <option value="">Select</option>
+                  ${sourceOptions}
+              </select>
+              
+            </div>
+          <div class="detail-row">
+            <span class="detail-label">Source Name</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="text" class="detail-value" value="${contact.source_name || ''}" readonly style="flex:1;">
+            </div>
+          </div>
+       
+        </div>
+      </div>
+    `;
+
+    const col3 = `
+      <div class="detail-section-card">
+        <div class="detail-section-header">PROSPECT DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Savings Budget</span>
+            <input id="savings_budget" name="savings_budget" type="number" step="0.01" class="detail-value" value="${contact.savings_budget || (policy.agency ? policy.agency.name : '') || ''}" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Children</span>
+            <input id="children" name="children" type="number" min="0" class="detail-value" value="${contact.children || ''}" readonly>
+          </div>
+          <div class="detail-row">
+           <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Vehicle</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_vehicle" value="1" ${contact.has_vehicle ? 'checked' : ''} disabled>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Home</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_house" value="1" ${contact.has_house ? 'checked' : ''} disabled>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Business</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_business" value="1" ${contact.has_business ? 'checked' : ''} disabled>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Boat</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_boat" value="1" ${contact.has_boat ? 'checked' : ''} disabled>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Other</span>
+            <input type="text" class="detail-value" value="${contact.other || ''}" readonly>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const col4 = `
+     <div class="detail-section-card">
+        <div class="detail-section-header">LEAD STATUS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Date Acquired</span>
+             <input id="date_acquired" name="date_acquired" type="date" value ="${date_acquired}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact Status</span>
+               <select id="status" name="status" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled>
+                <option value="">Select</option>
+                 ${contactStatusOptions}
+              </select>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Rank</span>
+               <select id="rank" name="rank" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" disabled>
+                <option value="">Select</option>
+                 ${contactranksOptions}
+              </select>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">1st Contcat</span>
+             <input id="first_contact" name="first_contact" type="date" value ="${first_contact}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" readonly>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Next Follow Up</span>
+             <input id="next_follow_up" name="next_follow_up" type="date" value ="${next_follow_up}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" readonly>
+             </div>
+        </div>
+      </div>
+     `;
+        content.innerHTML = col1 + col2 + col3 + col4;
+
+    
+    // // Bottom Section: Documents - Dynamic based on policy documents
+    // let documentsHTML = '';
+    // // Check if documents exist and is an array
+    // const documents = policy.documents || [];
+    // if (Array.isArray(documents) && documents.length > 0) {
+    //   // If policy has documents array, display them
+    //   documents.forEach(doc => {
+    //     const docName = doc.name || doc.file_name || (doc.type || 'Document');
+    //     const isPDF = docName.toLowerCase().endsWith('.pdf') || (doc.type && doc.type.toLowerCase().includes('pdf')) || (doc.format && doc.format.toLowerCase().includes('pdf'));
+    //     const iconColor = isPDF ? '#dc3545' : '#000';
+    //     const fileIcon = isPDF ? 
+    //       '<path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' :
+    //       '<path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    //     documentsHTML += `
+    //       <div class="document-icon">
+    //         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //           ${fileIcon}
+    //         </svg>
+    //         <span>${docName}</span>
+    //       </div>
+    //     `;
+    //   });
+    // } else {
+    //   // Default document icons if no documents available
+    //   documentsHTML = `
+    //   <div class="document-icon">
+    //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    //       <path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    //     </svg>
+    //     <span>Proposal</span>
+    //   </div>
+    //   <div class="document-icon">
+    //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <rect x="3" y="3" width="18" height="18" rx="2" stroke="#333" stroke-width="2"/>
+    //       <path d="M9 9H15M9 15H15M9 12H15" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+    //     </svg>
+    //     <span>Debit Note</span>
+    //   </div>
+    //   <div class="document-icon">
+    //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <rect x="3" y="3" width="18" height="18" rx="2" stroke="#333" stroke-width="2"/>
+    //       <path d="M9 9H15M9 15H15M9 12H15" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+    //     </svg>
+    //     <span>Receipt</span>
+    //   </div>
+    //   <div class="document-icon">
+    //     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //       <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    //       <path d="M14 2V8H20" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    //     </svg>
+    //     <span>Schedule</span>
+    //   </div>
+    //   `;
+    // }
+    // documentsContent.innerHTML = documentsHTML;
+  }
   function deleteContact(){
     if (!currentContactId) return;
     if (!confirm('Delete this contact?')) return;
