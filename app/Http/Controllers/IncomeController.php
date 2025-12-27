@@ -6,6 +6,7 @@ use App\Models\Income;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
 
+
 class IncomeController extends Controller
 {
     public function index()
@@ -17,8 +18,8 @@ class IncomeController extends Controller
 
         $incomes = Income::with(['incomeSource', 'modeOfPayment', 'incomeCategory'])->orderBy('created_at', 'desc')->paginate(10);
       
-        $statementlist = Statement::with(['insurer', 'modeOfPayment'])
-            ->orderBy('created_at', 'desc');
+        // $statementlist = Statement::with(['insurer', 'modeOfPayment'])
+        //     ->orderBy('created_at', 'desc');
 
         // Lookup values for selects - use Insurers instead of Income Source
         $incomeSources = LookupValue::whereHas('lookupCategory', function($q){
@@ -37,7 +38,7 @@ class IncomeController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('incomes');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('incomes');
 
-        return view('incomes.index', compact('incomes', 'incomeSources', 'statementlist','modesOfPayment', 'incomeCategories', 'selectedColumns'));
+        return view('incomes.index', compact('incomes', 'incomeSources','modesOfPayment', 'incomeCategories', 'selectedColumns'));
     }
 
     public function store(Request $request)

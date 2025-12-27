@@ -29,4 +29,9 @@ class Statement extends Model
     {
         return $this->belongsTo(\App\Models\LookupValue::class, 'mode_of_payment_id');
     }
+
+    public function commissionLines()
+{
+    return $this->hasMany(CommissionLine::class); // or whatever your model name is
+}
 }
