@@ -138,21 +138,24 @@
 
   <!-- Statement Page View (Full Page) -->
   <div class="client-page-view" id="statementPageView" style="display:none;">
+     <div style="background:white;">
     <div class="client-page-header">
       <div class="client-page-title">
         <span id="statementPageTitle">Statement</span> - <span class="client-name" id="statementPageName"></span>
       </div>
+      
+     
       <div class="client-page-actions">
         <button class="btn btn-edit" id="editStatementFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
         <button class="btn" id="closeStatementPageBtn" onclick="closeStatementPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
       </div>
     </div>
-    <div class="client-page-body">
+    <div class="client-page-body" style="padding-top:0px !important;">
       <div class="client-page-content">
         <!-- Statement Details View -->
         <div id="statementDetailsPageContent" style="display:none;">
           <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div id="statementDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; align-items:start; padding:12px;">
+            <div id="statementDetailsContent" style="display:grid; grid-template-columns:repeat(1, 1fr); gap:0; align-items:start; padding:12px;">
               <!-- Content will be loaded via JavaScript -->
             </div>
           </div>
@@ -179,6 +182,7 @@
         </div>
       </div>
     </div>
+      </div>
   </div>
 
   <!-- Add/Edit Statement Modal (hidden, used for form structure) -->
@@ -297,7 +301,113 @@
   </div>
 
 </div>
+<style>
+  .statement-container {
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+  }
 
+  .statement-header {
+    color: #000;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .header-buttons button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 8px;
+  }
+
+  .btn-edit { background: #ff6200; color: white; }
+  .btn-close { background: #e0e0e0; color: #333; }
+
+  .summary-title {
+    background: #000;
+    color: white;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .summary-bar {
+    color: #000;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    font-size: 14px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .summary-label {
+    font-weight: normal;
+  }
+
+  .summary-input {
+    background: white;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 120px;
+  }
+
+  .summary-value {
+      color: #333;
+    padding: 6px 0;
+    font-size: 14px;
+    min-width: 100px;
+  }
+
+  .details-title {
+    background: white;
+    color: #000;
+    padding: 15px 20px 10px;
+    font-weight: bold;
+    font-size: 18px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .details-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+
+  .details-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .details-table tr:nth-child(even) {
+    background: #f9f9f9;
+  }
+
+  .variance-reason-cell {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: bold;
+    border: 2px solid #4caf50;
+  }
+</style>
 
 
 <script>

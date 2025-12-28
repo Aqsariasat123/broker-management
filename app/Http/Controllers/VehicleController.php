@@ -83,10 +83,10 @@ class VehicleController extends Controller
             ]);
         }
 
-        if (isset($validated['policy_id']) && $validated['policy_id']) {
-            return redirect()->route('vehicles.index', ['policy_id' => $validated['policy_id']])
-                ->with('success', 'Vehicle created successfully.');
-        }
+        // if (isset($validated['policy_id']) && $validated['policy_id']) {
+        //     return redirect()->route('vehicles.index', ['policy_id' => $validated['policy_id']])
+        //         ->with('success', 'Vehicle created successfully.');
+        // }
 
         // Redirect to vehicles index without policy_id to show unlinked vehicles
         return redirect()->route('vehicles.index')

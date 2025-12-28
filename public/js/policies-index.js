@@ -899,12 +899,24 @@
               ${createSelectOptions(lookupData.clients || [])}
             </select>
           </div>
-           <div class="grey-input">
-            <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurance Class</label>
-            <select name="policy_class_id" id="policy_class_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.policy_classes || [])}
-            </select>
-          </div>
+       <div class="grey-input">
+  <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurance Class</label>
+  
+  <select name="policy_class_id" id="policy_class_id" class="form-control" 
+          style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+    ${createSelectOptions(lookupData.policy_classes || [])}
+  </select>
+  <div style="display:flex; gap:8px;">
+    <button type="button" id="addPolicyClassBtn" 
+            style="flex:1; padding:6px 10px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      + Add New
+    </button>
+    <button type="button" id="editPolicyClassBtn" 
+            style="flex:1; padding:6px 10px; font-size:12px; background:#666; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      Nominees
+    </button>
+  </div>
+</div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurer</label>
             <select name="insurer_id" id="insurer_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">

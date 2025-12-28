@@ -52,7 +52,7 @@
         </div>
       </div>
       <div class="action-buttons">
-        <!-- <button class="btn btn-add" id="addVehicleBtn">Add</button> -->
+        <button class="btn btn-add" id="addVehicleBtn">Add</button>
         <a href="{{ $policy ? route('policies.show', $policy->id) : route('policies.index') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
       </div>
     </div>
@@ -93,19 +93,24 @@
                   <div class="status-indicator {{ $hasNoPolicy ? 'no-policy' : 'normal' }}" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $hasNoPolicy ? '#555' : '#f3742a' }}; background-color:{{ $hasNoPolicy ? '#555' : 'transparent' }};"></div>
                 </div>
               </td>
-              <td class="action-cell"><!-- onclick="openVehicleDetails({{ $vh->id }})" -->
-                <svg class="action-expand" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <!-- Maximize icon: four arrows pointing outward from center -->
-                  <!-- Top arrow -->
-                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Right arrow -->
-                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Bottom arrow -->
-                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Left arrow -->
-                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </td>
+      <td class="action-cell">
+  <svg 
+    class="action-expand" 
+    width="22" height="22" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg" 
+    style="cursor:pointer; vertical-align:middle;"
+    onclick="openEditVehicleModal({{ $vh->id }})"
+    title="Edit Vehicle"
+  >
+    <!-- Your SVG paths -->
+    <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</td>
               @foreach($selectedColumns as $col)
                 @if($col == 'regn_no')
                   <td data-column="regn_no">
@@ -241,7 +246,7 @@
         <div class="modal-body">
           <div class="form-row">
             <div class="form-group">
-              <label for="regn_no">Regn No *</label>
+              <label for="regn_no">Regn No00 *</label>
               <input type="text" class="form-control" name="regn_no" id="regn_no" required>
             </div>
             <div class="form-group">
@@ -377,18 +382,30 @@
 
 </div>
 
-
 <script>
-  // Initialize data from Blade - must be before partials-table-scripts
-  // Note: mandatoryColumns is already declared in partials-table-scripts
-  let currentVehicleId = null;
-  const selectedColumns = @json($selectedColumns);
-  const vehiclesStoreRoute = '{{ route("vehicles.store") }}';
-  const csrfToken = '{{ csrf_token() }}';
+// Pass Laravel data safely to external JavaScript
+window.vehiclesApp = {
+    currentVehicleId: null,
+    selectedColumns: @json($selectedColumns),
+    routes: {
+        store: '{{ route('vehicles.store') }}'
+    },
+    csrfToken: '{{ csrf_token() }}'
+};
 </script>
 
 @include('partials.table-scripts', [
   'mandatoryColumns' => $mandatoryColumns,
 ])
 <script src="{{ asset('js/vehicles-index.js') }}"></script>
+
+
+<!-- <script>
+
+document.getElementById('addVehicleBtn')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  const modal = document.getElementById('vehicleModal');
+  modal.classList.add('show');
+});
+</script> -->
 @endsection

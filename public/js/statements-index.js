@@ -74,34 +74,101 @@ async function openStatementDetails(id) {
 /* ============================================================
    DETAILS HTML
 ============================================================ */
-function populateStatementDetails(s) {
+function populateStatementDetails() {
   const el = document.getElementById('statementDetailsContent');
 
   el.innerHTML = `
-    <div class="detail-section">
-      <div class="detail-section-header">STATEMENT DETAILS</div>
-      <div class="detail-section-body">
-        <div class="detail-row"><span class="detail-label">Statement No</span><div>${s.statement_no || '-'}</div></div>
-        <div class="detail-row"><span class="detail-label">Year</span><div>${s.year || '-'}</div></div>
-        <div class="detail-row"><span class="detail-label">Insurer</span><div>${s.insurer?.name || '-'}</div></div>
-        <div class="detail-row"><span class="detail-label">Business Category</span><div>${s.business_category || '-'}</div></div>
-      </div>
-    </div>
+    <div class="statement-container">
+      <!-- Summary Title -->
+      <div class="summary-title">Commission Statement Summary</div>
 
-    <div class="detail-section">
-      <div class="detail-section-header">PAYMENT INFO</div>
-      <div class="detail-section-body">
-        <div class="detail-row"><span class="detail-label">Date Received</span><div>${formatDate(s.date_received)}</div></div>
-        <div class="detail-row"><span class="detail-label">Amount</span><div>${formatNumber(s.amount_received)}</div></div>
-        <div class="detail-row"><span class="detail-label">Payment Mode</span><div>${s.mode_of_payment?.name || '-'}</div></div>
-      </div>
-    </div>
+      <!-- Summary Bar - Exact match to your screenshot -->
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="summary-label">Insurer</span>
+          <input type="text" class="summary-input" value="Alliance" readonly>
+        </div>
 
-    <div class="detail-section">
-      <div class="detail-section-header">REMARKS</div>
-      <div class="detail-section-body">
-        <textarea readonly style="width:100%;min-height:80px;">${s.remarks || ''}</textarea>
+        <div class="summary-item">
+          <span class="summary-label">Class</span>
+          <input type="text" class="summary-input" value="General" readonly>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Total</span>
+          <div class="summary-input">2074.89</div>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Date Received</span>
+          <div class="summary-input">28-Sep-24</div>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Mode</span>
+          <input type="text" class="summary-input" value="Bank Transfer" readonly>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">Chq No</span>
+          <input type="text" class="summary-input" value="NOU0000000" readonly>
+        </div>
       </div>
+
+      <!-- Commission Details Title -->
+      <div class="details-title">Commission Details</div>
+
+      <!-- Table -->
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th>CNID</th>
+            <th>Policy Number</th>
+            <th>Client Name</th>
+            <th>Basic Premi</th>
+            <th>Rate</th>
+            <th>Amount Due</th>
+            <th>Amount Received</th>
+            <th>Variance</th>
+            <th>Variance Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CN23061</td>
+            <td>MPV-23-HEA-P0002110</td>
+            <td>Kendra Moller</td>
+            <td>7,356.40</td>
+            <td>10.0%</td>
+            <td>735.64</td>
+            <td>735.64</td>
+            <td>0.00</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>CN23059</td>
+            <td>FSP-23-HEA-P0002309</td>
+            <td>Pierro Leclerc</td>
+            <td>8,441.00</td>
+            <td>15.0%</td>
+            <td>1,266.15</td>
+            <td>633.08</td>
+            <td>633.08</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>CN23055</td>
+            <td>HS1-23-HIN-0000088</td>
+            <td>Margo Slater</td>
+            <td>4,793.50</td>
+            <td>15.0%</td>
+            <td>719.03</td>
+            <td>719.03</td>
+            <td>0.00</td>
+            <td class="variance-reason-cell">Part commission on instalment</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   `;
 }
