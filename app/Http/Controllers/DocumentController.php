@@ -16,7 +16,7 @@ class DocumentController extends Controller
                 ->get();
             return response()->json($documents);
         }
-        
+         
         $query = Document::query();
         
         // Filter by client_id if provided
@@ -27,7 +27,12 @@ class DocumentController extends Controller
                 $query->where('tied_to', $client->clid);
             }
         }
-        
+        if ($request->filled('policy_id')) {
+            $policy = \App\Models\Policy::find($request->policy_id);
+            if ($policy) {
+                $query->where('tied_to', $policy->policy_no); 
+            }
+       }
         $documents = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Use TableConfigHelper for selected columns

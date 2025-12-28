@@ -224,7 +224,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/claims/{claim}', [ClaimController::class, 'update'])->name('claims.update');
     Route::delete('/claims/{claim}', [ClaimController::class, 'destroy'])->name('claims.destroy');
 
-
     // Endorsement Routes
     Route::get('/endorsements/export', [App\Http\Controllers\EndorsementController::class, 'export'])->name('endorsements.export');
     Route::post('/endorsements/save-column-settings', [App\Http\Controllers\EndorsementController::class, 'saveColumnSettings'])->name('endorsements.save-column-settings');

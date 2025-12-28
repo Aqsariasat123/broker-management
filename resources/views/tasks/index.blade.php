@@ -42,7 +42,7 @@
             @if(request()->has('overdue') && request()->overdue)
               <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
             @else
-              <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:{{ request()->has('overdue') && request()->overdue ? '#000' : '#6c757d' }}; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
+              <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:{{ request()->has('overdue') && request()->overdue ? '#000' : '#000' }}; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
             @endif
           </div>
         </div>

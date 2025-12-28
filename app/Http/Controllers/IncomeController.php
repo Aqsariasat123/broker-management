@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\CommissionStatement;
 use Illuminate\Support\Facades\Log; // <-- Add this
 
+
 class IncomeController extends Controller
 {
     public function index()

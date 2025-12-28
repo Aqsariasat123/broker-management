@@ -1360,7 +1360,7 @@
         <div class="detail-section-body">
           <div class="detail-row">
             <span class="detail-label">District</span>
-            <div class="detail-value">${client.district || '-'}</div>
+            <div class="detail-value">${client.districts.name || '-'}</div>
           </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Address</span>
@@ -1368,11 +1368,11 @@
           </div>
             <div class="detail-row" ${hideForBusiness}>
               <span class="detail-label">Island</span>
-            <div class="detail-value">${client.island || '-'}</div>
+            <div class="detail-value">${client.islands.name || '-'}</div>
           </div>
             <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">Country</span>
-            <div class="detail-value">${client.country || '-'}</div>
+            <div class="detail-value">${client.countries.name || '-'}</div>
           </div>
             <div class="detail-row" ${hideForBusiness}>
             <span class="detail-label">P.O. Box No</span>
@@ -1424,9 +1424,9 @@
         <div class="detail-section-header">REGISTRATION DETAILS</div>
         <div class="detail-section-body">
           <div class="detail-row"><span class="detail-label">Sign Up Date</span><div class="detail-value">${signedUp}</div></div>
-          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agency || 'Keystone'}</div></div>
-          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agent || '-'}</div></div>
-          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.source || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agencies.name || 'Keystone'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agents.name || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.sources.name || '-'}</div></div>
           <div class="detail-row"><span class="detail-label">Source Name</span><div class="detail-value">${client.source_name || '-'}</div></div>
         </div>
       </div>
@@ -1439,7 +1439,7 @@
           <div class="detail-section-body">
             <div style="display:flex; gap:10px; align-items:flex-start;">
               <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Salutation</span><div class="detail-value">${client.salutation || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Salutation</span><div class="detail-value">${client.salutations.name || '-'}</div></div>
                 <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">First Name</span><div class="detail-value">${client.first_name || '-'}</div></div>
                 <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Other Names</span><div class="detail-value">${client.other_names || '-'}</div></div>
                 <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Surname</span><div class="detail-value">${client.surname || '-'}</div></div>
@@ -1458,8 +1458,8 @@
         <div class="detail-section">
           <div class="detail-section-header">INDIVIDUAL INCOME DETAILS</div>
           <div class="detail-section-body">
-            <div class="detail-row"><span class="detail-label">Occupation</span><div class="detail-value">${client.occupation || '-'}</div></div>
-            <div class="detail-row"><span class="detail-label">Income Source</span><div class="detail-value">${client.income_source || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Occupation</span><div class="detail-value">${client.occupations.name || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Income Source</span><div class="detail-value">${client.income_sources.name || '-'}</div></div>
             <div class="detail-row"><span class="detail-label">Employer</span><div class="detail-value">${client.employer || '-'}</div></div>
             <div class="detail-row"><span class="detail-label">Monthly Income</span><div class="detail-value">${client.monthly_income || '-'}</div></div>
           </div>
@@ -1544,12 +1544,21 @@
 
     // Helper function to create select options
     const createSelectOptions = (options, selectedValue) => {
+      console.log(options, selectedValue);
+      const selectedInt = parseInt(selectedValue, 0); // convert string to integer
+
+      if (!options || !Array.isArray(options)) return '';
+      return options.map(opt => 
+        `<option value="${opt.id}" ${opt.id === selectedInt ? 'selected' : ''}>${opt.name}</option>`
+      ).join('');
+    };
+   const createclientTypeSelectOptions = (options, selectedValue) => {
+      console.log(options, selectedValue);
       if (!options || !Array.isArray(options)) return '';
       return options.map(opt => 
         `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`
       ).join('');
     };
-
     const clientTypes = lookupData?.client_types || ['Individual', 'Business', 'Company', 'Organization'];
     const clientStatuses = lookupData?.client_statuses || ['Active', 'Inactive', 'Suspended', 'Pending'];
     const districts = lookupData?.districts || [];
@@ -1576,7 +1585,7 @@
             <div class="detail-row">
               <span class="detail-label">Client Type</span>
               <select name="client_type_display" class="detail-value" disabled style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px; background:#f5f5f5; cursor:not-allowed;">
-                ${createSelectOptions(clientTypes, client.client_type)}
+                ${createclientTypeSelectOptions(clientTypes, client.client_type)}
               </select>
               <input type="hidden" name="client_type" value="${client.client_type || ''}">
             </div>
@@ -1602,7 +1611,7 @@
               <span class="detail-label">Client Status</span>
               <select name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                 <option value="">Select</option>
-                ${createSelectOptions(clientStatuses, client.status)}
+                ${createclientTypeSelectOptions(clientStatuses, client.status)}
               </select>
             </div>
           </div>

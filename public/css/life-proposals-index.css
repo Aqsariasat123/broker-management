@@ -97,6 +97,9 @@
     #filterToggle:checked::before {
       left: 28px;
     }
+    /* Modal Styles */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
     /* Form Styles - Compact */
     .modal-content { max-width: 98%; width: 98%; max-height: 95vh; }
     .modal-body { padding: 6px 12px; max-height: calc(95vh - 80px); overflow-y: auto; }

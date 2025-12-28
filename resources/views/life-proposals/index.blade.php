@@ -17,10 +17,14 @@
 <div class="dashboard">
   <!-- Main Life Proposals Table View -->
   <div class="clients-table-view" id="clientsTableView">
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
             Life Proposals
+            @if(isset($actionType) && $actionType === 'follow-up' && isset($contactid))
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> -  To Follow Up</span>
+            @endif
+            
           </h3>
        
       </div>
@@ -29,174 +33,174 @@
     <!-- Life Proposals Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-       <div class="records-found" style="font-size:14px; font-weight:600; color:#333; white-space:nowrap;">
-    Records Found - {{ $proposals->total() }}
-  </div>
-      <div class="page-title-section">
-         <div style="display:flex; align-items:center; gap:15px; flex:1; justify-content:center;">
-         <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-            <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-              <span style="font-size:13px;">Filter</span>
-              @php
-                $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
-                $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
-              @endphp
-              <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
-            </label>
-            <button class="btn btn-follow-up" id="followUpBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
-            <button class="btn btn-submitted" id="submittedBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Submitted</button>
+          <div class="records-found" style="font-size:14px; font-weight:600; color:#333; white-space:nowrap;">
+              Records Found - {{ $proposals->total() }}
           </div>
+        <div class="page-title-section">
+          <div style="display:flex; align-items:center; gap:15px; flex:1; justify-content:center;">
+              <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
+                  <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+                    <span style="font-size:13px;">Filter</span>
+                    @php
+                      $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
+                      $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
+                    @endphp
+                    <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
+                  </label>
+                  <button class="btn btn-follow-up" id="followUpBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
+                  <button class="btn btn-submitted" id="submittedBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Submitted</button>
+                </div>
+              </div>
+          </div>
+            <div class="action-buttons" style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
+                <button class="btn btn-add" id="addProposalBtn">Add</button>
+                <button class="btn btn-close" onclick="window.history.back()">Close</button>
+            </div>
+        </div>
+
+        @if(session('success'))
+          <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
+            {{ session('success') }}
+            <button type="button" class="alert-close" onclick="document.getElementById('successAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
+          </div>
+        @endif
+
+        <div class="table-responsive" id="tableResponsive">
+          <table id="proposalsTable">
+            <thead>
+              <tr>
+                <th style="text-align:center;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                    <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+                  </svg>
+                </th>
+                <th>Action</th>
+                @foreach($selectedColumns as $col)
+                  @if(isset($columnDefinitions[$col]))
+                    <th data-column="{{ $col }}">{{ $columnDefinitions[$col] }}</th>
+                  @endif
+                @endforeach
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($proposals as $index => $proposal)
+                <tr class="{{ $proposal->is_submitted ? 'submitted-row' : '' }}">
+                  <td class="bell-cell {{ $proposal->hasExpired ? 'expired' : ($proposal->hasExpiring ? 'expiring' : '') }}">
+                    <div style="display:flex; align-items:center; justify-content:center;">
+                      @php
+                        $isExpired = $proposal->hasExpired;
+                        $isExpiring = $proposal->hasExpiring;
+                      
+                      $radioChecked = false;
+                      $radioDotColor = 'transparent';
+                      if ($index === 0 && ($isExpired || $isExpiring)) {
+                        $radioChecked = true;
+                        $radioDotColor = '#f3742a'; // Yellow
+                      } elseif ($isExpired) {
+                        $radioDotColor = '#dc3545'; // Red
+                      } elseif ($isExpiring) {
+                        $radioDotColor = '#f3742a'; // Yellow
+                      } elseif ($proposal->offer_date && !$proposal->is_submitted) {
+                        $radioDotColor = '#007bff'; // Blue
+                      }
+                    @endphp
+                    <div style="position:relative; display:inline-block;">
+                      <input type="radio" name="proposal_select" class="action-radio" value="{{ $proposal->id }}" data-proposal-id="{{ $proposal->id }}" data-dot-color="{{ $radioDotColor }}" style="width:16px; height:16px; cursor:pointer; opacity:0; position:absolute; z-index:2;" {{ $radioChecked ? 'checked' : '' }}>
+                      <div class="radio-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid #2d2d2d; background-color:{{ $radioDotColor !== 'transparent' ? $radioDotColor : 'transparent' }}; position:relative; z-index:1;"></div>
+                    </div>
+                  </td>
+                  <td class="action-cell">
+          
+                    <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openProposalDetails({{ $proposal->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+                  
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
+                      <circle cx="12" cy="12" r="10" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
+                      <path d="M12 6V12L16 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+              
+                  </td>
+                  @foreach($selectedColumns as $col)
+                    @if($col == 'proposers_name')
+                      <td data-column="proposers_name">
+                      {{ $proposal->proposers_name }}
+                      </td>
+                    @elseif($col == 'prid')
+                      <td data-column="prid">
+                      {{ $proposal->prid }}
+                      </td>
+                    @elseif($col == 'insurer')
+                      <td data-column="insurer">{{ $proposal->insurer }}</td>
+                    @elseif($col == 'policy_plan')
+                      <td data-column="policy_plan">{{ $proposal->policy_plan }}</td>
+                    @elseif($col == 'sum_assured')
+                      <td data-column="sum_assured">{{ $proposal->sum_assured ? number_format($proposal->sum_assured,2) : '##########' }}</td>
+                    @elseif($col == 'term')
+                      <td data-column="term">{{ $proposal->term }}</td>
+                    @elseif($col == 'add_ons')
+                      <td data-column="add_ons">{{ $proposal->add_ons ?? '-' }}</td>
+                    @elseif($col == 'offer_date')
+                      <td data-column="offer_date">{{ $proposal->offer_date ? $proposal->offer_date->format('d-M-y') : '##########' }}</td>
+                    @elseif($col == 'premium')
+                      <td data-column="premium">{{ number_format($proposal->premium,2) }}</td>
+                    @elseif($col == 'frequency')
+                      <td data-column="frequency">{{ $proposal->frequency }}</td>
+                    @elseif($col == 'stage')
+                      <td data-column="stage">{{ $proposal->stage }}</td>
+                    @elseif($col == 'date')
+                      <td data-column="date">{{ $proposal->date ? $proposal->date->format('d-M-y') : '##########' }}</td>
+                    @elseif($col == 'age')
+                      <td data-column="age">{{ $proposal->age }}</td>
+                    @elseif($col == 'status')
+                      <td data-column="status"><span class="badge-status" style="background:{{ $proposal->status == 'Approved' ? '#28a745' : ($proposal->status=='Pending' ? '#ffc107' : ($proposal->status=='Declined' ? '#dc3545' : '#6c757d')) }}">{{ $proposal->status }}</span></td>
+                    @elseif($col == 'source_of_payment')
+                      <td data-column="source_of_payment">{{ $proposal->source_of_payment }}</td>
+                    @elseif($col == 'mcr')
+                      <td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>
+                    @elseif($col == 'doctor')
+                      <td data-column="doctor">{{ $proposal->doctor ?? '-' }}</td>
+                    @elseif($col == 'date_sent')
+                      <td data-column="date_sent">{{ $proposal->date_sent ? $proposal->date_sent->format('d-M-y') : '##########' }}</td>
+                    @elseif($col == 'date_completed')
+                      <td data-column="date_completed">{{ $proposal->date_completed ? $proposal->date_completed->format('d-M-y') : '##########' }}</td>
+                    @elseif($col == 'notes')
+                      <td data-column="notes">{{ $proposal->notes ?? '-' }}</td>
+                    @elseif($col == 'agency')
+                      <td data-column="agency">{{ $proposal->agency ?? '-' }}</td>
+                    @elseif($col == 'class')
+                      <td data-column="class">{{ $proposal->class }}</td>
+                    @elseif($col == 'is_submitted')
+                      <td data-column="is_submitted">{{ $proposal->is_submitted ? 'Yes' : 'No' }}</td>
+                    @endif
+                  @endforeach
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+        <div class="footer-left">
+          <a class="btn btn-export" href="{{ route('life-proposals.export') }}">Export</a>
+          <button class="btn btn-column" id="columnBtn" type="button">Column</button>
+        </div>
+        <div class="paginator">
+          @php
+            $base = url()->current();
+            $q = request()->query();
+            $current = $proposals->currentPage();
+            $last = max(1,$proposals->lastPage());
+            function page_url($base,$q,$p){ $params = array_merge($q,['page'=>$p]); return $base . '?' . http_build_query($params); }
+          @endphp
+          <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
+          <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
+          <span class="page-info">Page {{ $current }} of {{ $last }}</span>
+          <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$current+1) : '#' }}" @if($current>= $last) disabled @endif>&rsaquo;</a>
+          <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
         </div>
       </div>
-     <div class="action-buttons" style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
-    <button class="btn btn-add" id="addProposalBtn">Add</button>
-    <button class="btn btn-close" onclick="window.history.back()">Close</button>
-  </div>
-    </div>
-
-    @if(session('success'))
-      <div class="alert alert-success" id="successAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #c3e6cb; background:#d4edda; color:#155724;">
-        {{ session('success') }}
-        <button type="button" class="alert-close" onclick="document.getElementById('successAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
-      </div>
-    @endif
-
-    <div class="table-responsive" id="tableResponsive">
-      <table id="proposalsTable">
-        <thead>
-          <tr>
-             <th style="text-align:center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
-                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
-                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
-              </svg>
-            </th>
-            <th>Action</th>
-            @foreach($selectedColumns as $col)
-              @if(isset($columnDefinitions[$col]))
-                <th data-column="{{ $col }}">{{ $columnDefinitions[$col] }}</th>
-              @endif
-            @endforeach
-          </tr>
-        </thead>
-        <tbody>
-          @foreach($proposals as $index => $proposal)
-            <tr class="{{ $proposal->is_submitted ? 'submitted-row' : '' }}">
-               <td class="bell-cell {{ $proposal->hasExpired ? 'expired' : ($proposal->hasExpiring ? 'expiring' : '') }}">
-                <div style="display:flex; align-items:center; justify-content:center;">
-                  @php
-                    $isExpired = $proposal->hasExpired;
-                    $isExpiring = $proposal->hasExpiring;
-                  
-                   $radioChecked = false;
-                  $radioDotColor = 'transparent';
-                  if ($index === 0 && ($isExpired || $isExpiring)) {
-                    $radioChecked = true;
-                    $radioDotColor = '#f3742a'; // Yellow
-                  } elseif ($isExpired) {
-                    $radioDotColor = '#dc3545'; // Red
-                  } elseif ($isExpiring) {
-                    $radioDotColor = '#f3742a'; // Yellow
-                  } elseif ($proposal->offer_date && !$proposal->is_submitted) {
-                    $radioDotColor = '#007bff'; // Blue
-                  }
-                @endphp
-                <div style="position:relative; display:inline-block;">
-                  <input type="radio" name="proposal_select" class="action-radio" value="{{ $proposal->id }}" data-proposal-id="{{ $proposal->id }}" data-dot-color="{{ $radioDotColor }}" style="width:16px; height:16px; cursor:pointer; opacity:0; position:absolute; z-index:2;" {{ $radioChecked ? 'checked' : '' }}>
-                  <div class="radio-dot" style="width:16px; height:16px; border-radius:50%; border:2px solid #2d2d2d; background-color:{{ $radioDotColor !== 'transparent' ? $radioDotColor : 'transparent' }}; position:relative; z-index:1;"></div>
-                </div>
-              </td>
-              <td class="action-cell">
-       
-                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openProposalDetails({{ $proposal->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-               
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <circle cx="12" cy="12" r="10" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
-                  <path d="M12 6V12L16 14" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-          
-              </td>
-              @foreach($selectedColumns as $col)
-                @if($col == 'proposers_name')
-                  <td data-column="proposers_name">
-                  {{ $proposal->proposers_name }}
-                  </td>
-                @elseif($col == 'prid')
-                  <td data-column="prid">
-                  {{ $proposal->prid }}
-                  </td>
-                @elseif($col == 'insurer')
-                  <td data-column="insurer">{{ $proposal->insurer }}</td>
-                @elseif($col == 'policy_plan')
-                  <td data-column="policy_plan">{{ $proposal->policy_plan }}</td>
-                @elseif($col == 'sum_assured')
-                  <td data-column="sum_assured">{{ $proposal->sum_assured ? number_format($proposal->sum_assured,2) : '##########' }}</td>
-                @elseif($col == 'term')
-                  <td data-column="term">{{ $proposal->term }}</td>
-                @elseif($col == 'add_ons')
-                  <td data-column="add_ons">{{ $proposal->add_ons ?? '-' }}</td>
-                @elseif($col == 'offer_date')
-                  <td data-column="offer_date">{{ $proposal->offer_date ? $proposal->offer_date->format('d-M-y') : '##########' }}</td>
-                @elseif($col == 'premium')
-                  <td data-column="premium">{{ number_format($proposal->premium,2) }}</td>
-                @elseif($col == 'frequency')
-                  <td data-column="frequency">{{ $proposal->frequency }}</td>
-                @elseif($col == 'stage')
-                  <td data-column="stage">{{ $proposal->stage }}</td>
-                @elseif($col == 'date')
-                  <td data-column="date">{{ $proposal->date ? $proposal->date->format('d-M-y') : '##########' }}</td>
-                @elseif($col == 'age')
-                  <td data-column="age">{{ $proposal->age }}</td>
-                @elseif($col == 'status')
-                  <td data-column="status"><span class="badge-status" style="background:{{ $proposal->status == 'Approved' ? '#28a745' : ($proposal->status=='Pending' ? '#ffc107' : ($proposal->status=='Declined' ? '#dc3545' : '#6c757d')) }}">{{ $proposal->status }}</span></td>
-                @elseif($col == 'source_of_payment')
-                  <td data-column="source_of_payment">{{ $proposal->source_of_payment }}</td>
-                @elseif($col == 'mcr')
-                  <td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>
-                @elseif($col == 'doctor')
-                  <td data-column="doctor">{{ $proposal->doctor ?? '-' }}</td>
-                @elseif($col == 'date_sent')
-                  <td data-column="date_sent">{{ $proposal->date_sent ? $proposal->date_sent->format('d-M-y') : '##########' }}</td>
-                @elseif($col == 'date_completed')
-                  <td data-column="date_completed">{{ $proposal->date_completed ? $proposal->date_completed->format('d-M-y') : '##########' }}</td>
-                @elseif($col == 'notes')
-                  <td data-column="notes">{{ $proposal->notes ?? '-' }}</td>
-                @elseif($col == 'agency')
-                  <td data-column="agency">{{ $proposal->agency ?? '-' }}</td>
-                @elseif($col == 'class')
-                  <td data-column="class">{{ $proposal->class }}</td>
-                @elseif($col == 'is_submitted')
-                  <td data-column="is_submitted">{{ $proposal->is_submitted ? 'Yes' : 'No' }}</td>
-                @endif
-              @endforeach
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-    </div>
-
-    </div>
-
-    <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-      <div class="footer-left">
-        <a class="btn btn-export" href="{{ route('life-proposals.export') }}">Export</a>
-        <button class="btn btn-column" id="columnBtn" type="button">Column</button>
-      </div>
-      <div class="paginator">
-        @php
-          $base = url()->current();
-          $q = request()->query();
-          $current = $proposals->currentPage();
-          $last = max(1,$proposals->lastPage());
-          function page_url($base,$q,$p){ $params = array_merge($q,['page'=>$p]); return $base . '?' . http_build_query($params); }
-        @endphp
-        <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,1) : '#' }}" @if($current<=1) disabled @endif>&laquo;</a>
-        <a class="btn-page" href="{{ $current>1 ? page_url($base,$q,$current-1) : '#' }}" @if($current<=1) disabled @endif>&lsaquo;</a>
-        <span class="page-info">Page {{ $current }} of {{ $last }}</span>
-        <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$current+1) : '#' }}" @if($current>= $last) disabled @endif>&rsaquo;</a>
-        <a class="btn-page" href="{{ $current<$last ? page_url($base,$q,$last) : '#' }}" @if($current>=$last) disabled @endif>&raquo;</a>
-      </div>
-    </div>
     </div>
   </div>
 
@@ -216,10 +220,8 @@
              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; ">
                <div class="proposal-nav-tabs" id="proposalNavTabs" style="display:none;">
                  <!-- <button class="proposal-nav-tab active" data-tab="details">Nominees</button> -->
-                  <button  class="proposal-nav-tab active" data-tab="details" onclick="window.location.href = '{{ route('nominees.index') }}'">
-  Nominees
-</button>
-                 <button class="proposal-nav-tab" data-tab="followups">Follow Ups</button>
+                  <button  class="proposal-nav-tab active" data-tab="details" onclick="window.location.href = '{{ route('nominees.index') }}'">Nominees</button>
+                  <button class="proposal-nav-tab" data-tab="followups">Follow Ups</button>
                </div>
                <div class="client-page-actions">
                  <button class="btn" id="generatePolicyBtn" onclick="generatePolicyFromProposal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Generate Policy</button>
@@ -244,24 +246,24 @@
          </div>
         
         <!-- Proposal Edit/Add Form -->
-        <div id="proposalFormPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div style="display:flex; justify-content:flex-end; align-items:center; padding:6px 12px; border-bottom:1px solid #ddd; background:#fff;">
-              <div class="client-page-actions">
-                <button type="button" class="btn-delete" id="proposalDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteProposal()">Delete</button>
-                <button type="submit" form="proposalPageForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
-                <button type="button" class="btn" id="closeProposalFormBtn" onclick="closeProposalPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+          <div id="proposalFormPageContent" style="display:none;">
+            <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
+              <div style="display:flex; justify-content:flex-end; align-items:center; padding:6px 12px; border-bottom:1px solid #ddd; background:#fff;">
+                <div class="client-page-actions">
+                  <button type="button" class="btn-delete" id="proposalDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteProposal()">Delete</button>
+                  <button type="submit" form="proposalPageForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
+                  <button type="button" class="btn" id="closeProposalFormBtn" onclick="closeProposalPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+                </div>
               </div>
+              <form id="proposalPageForm" method="POST" action="{{ route('life-proposals.store') }}">
+                @csrf
+                <div id="proposalPageFormMethod" style="display:none;"></div>
+                <div id="proposalPageFormContent" style="padding:6px 12px;">
+                  <!-- Form content will be cloned from modal -->
+                </div>
+              </form>
             </div>
-            <form id="proposalPageForm" method="POST" action="{{ route('life-proposals.store') }}">
-              @csrf
-              <div id="proposalPageFormMethod" style="display:none;"></div>
-              <div id="proposalPageFormContent" style="padding:6px 12px;">
-                <!-- Form content will be cloned from modal -->
-              </div>
-            </form>
           </div>
-        </div>
       </div>
     </div>
   </div>
@@ -323,7 +325,7 @@
               </div>
               <div class="form-group small-grow">
                 <label for="age">Age</label>
-                <input id="age" name="age" type="number" min="1" max="120" class="form-control readonly-field" readonly>
+                <input id="age" name="age" type="number" min="1" max="120" class="form-control" >
               </div>
                  <div class="form-group small-grow">
                  <label for="sex">Sex</label>
@@ -334,7 +336,7 @@
               </div>
               <div class="form-group small-grow">
                 <label for="anb">ANB</label>
-                <input id="anb" name="anb" type="number" class="form-control readonly-field" readonly>
+                <input id="anb" name="anb" type="number" class="form-control">
               </div>
             </div>
 
@@ -561,7 +563,7 @@
       </form>
     </div>
   </div>
-
+                    </div>
 @include('partials.column-selection-modal', [
   'selectedColumns' => $selectedColumns,
   'columnDefinitions' => $columnDefinitions,
@@ -605,15 +607,13 @@
 
 
 
-@include('partials.table-scripts', [
-  'mandatoryColumns' => $mandatoryColumns,
-])
 
 <script>
   // Initialize data from Blade
   let currentProposalId = null;
   const lookupData = @json($lookupData);
   const selectedColumns = @json($selectedColumns);
+  const mandatoryFields = @json($mandatoryColumns ?? []);
   const lifeProposalsStoreRoute = '{{ route("life-proposals.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>

@@ -2,6 +2,7 @@
 // app/Models/Client.php
 
 namespace App\Models;
+use App\Models\LookupValue;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -100,4 +101,46 @@ class Client extends Model
     {
         return $this->hasMany(Nominee::class);
     }
+
+
+       public function agencies()
+    {
+        return $this->belongsTo(LookupValue::class, 'agency', 'id');
+    }
+    public function agents()
+    {
+        return $this->belongsTo(LookupValue::class, 'agent', 'id');
+    }
+    public function districts()
+    {
+        return $this->belongsTo(LookupValue::class, 'district', 'id');
+    
+    }
+        public function salutations()
+    {
+        return $this->belongsTo(LookupValue::class, 'salutation', 'id'); // 'source' stores LookupValue ID
+    }
+    public function sources()
+    {
+        return $this->belongsTo(LookupValue::class, 'source', 'id'); // 'source' stores LookupValue ID
+    }
+    public function occupations()
+    {
+        return $this->belongsTo(LookupValue::class, 'occupation', 'id'); // 'occupation' stores LookupValue ID
+    }
+    
+      public function income_sources()
+    {
+        return $this->belongsTo(LookupValue::class, 'income_source', 'id'); // 'occupation' stores LookupValue ID
+    }
+      public function islands()
+    {
+        return $this->belongsTo(LookupValue::class, 'island', 'id'); // 'occupation' stores LookupValue ID
+    }   
+
+    public function countries()
+    {
+        return $this->belongsTo(LookupValue::class, 'country', 'id'); // 'occupation' stores LookupValue ID
+    }  
+    
 }

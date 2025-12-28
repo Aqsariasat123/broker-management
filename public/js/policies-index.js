@@ -1057,15 +1057,6 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
             <input type="date" name="payment_end_date" id="payment_end_date" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
         </div>
-
-        <div style="margin-top:8px; padding-top:8px; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:8px;">
-          <button type="button" class="btn-cancel" style="padding:4px 10px; font-size:11px; background:#f0f0f0; border:1px solid #ccc; border-radius:3px; cursor:pointer;">
-            Cancel
-          </button>
-          <button type="submit" class="btn-save" style="padding:4px 12px; font-size:11px; background:#f3742a; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:600;">
-            Save Policy
-          </button>
-        </div>
       </div>
     `;
 

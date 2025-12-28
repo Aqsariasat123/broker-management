@@ -163,11 +163,11 @@
                     <input type="checkbox" {{ $client->wa ? 'checked' : '' }} disabled>
                   </td>
                 @elseif($col == 'district')
-                  <td data-column="district">{{ $client->district ?? '-' }}</td>
+                  <td data-column="district">{{ $client->districts->name ?? '-' }}</td>
                 @elseif($col == 'occupation')
-                  <td data-column="occupation">{{ $client->occupation ?? '-' }}</td>
+                  <td data-column="occupation">{{ $client->occupations->name ?? '-' }}</td>
                 @elseif($col == 'source')
-                  <td data-column="source">{{ $client->source }}</td>
+                  <td data-column="source">{{ $client->sources->name }}</td>
                 @elseif($col == 'status')
                   <td data-column="status">{{ $client->status == 'Inactive' ? 'Dormant' : ($client->status == 'Active' ? 'Active' : $client->status) }}</td>
                 @elseif($col == 'signed_up')
@@ -179,7 +179,7 @@
                 @elseif($col == 'contact_person')
                   <td data-column="contact_person">{{ $client->contact_person ?? '-' }}</td>
                 @elseif($col == 'income_source')
-                  <td data-column="income_source">{{ $client->income_source ?? '-' }}</td>
+                  <td data-column="income_source">{{ $client->income_sources->name ?? '-' }}</td>
                 @elseif($col == 'married')
                   <td data-column="married">{{ $client->married ? 'Yes' : 'No' }}</td>
                 @elseif($col == 'spouses_name')
@@ -191,9 +191,9 @@
                 @elseif($col == 'location')
                   <td data-column="location">{{ $client->location ?? '-' }}</td>
                 @elseif($col == 'island')
-                  <td data-column="island">{{ $client->island ?? '-' }}</td>
+                  <td data-column="island">{{ $client->islands->name ?? '-' }}</td>
                 @elseif($col == 'country')
-                  <td data-column="country">{{ $client->country ?? '-' }}</td>
+                  <td data-column="country">{{ $client->countries->name ?? '-' }}</td>
                 @elseif($col == 'po_box_no')
                   <td data-column="po_box_no">{{ $client->po_box_no ?? '-' }}</td>
                 @elseif($col == 'pep')
@@ -203,7 +203,7 @@
                 @elseif($col == 'image')
                   <td data-column="image">{{ $client->image ? '📷' : '-' }}</td>
                 @elseif($col == 'salutation')
-                  <td data-column="salutation">{{ $client->salutation ?? '-' }}</td>
+                  <td data-column="salutation">{{ $client->salutations->name ?? '-' }}</td>
                 @elseif($col == 'first_name')
                   <td data-column="first_name">{{ $client->first_name }}</td>
                 @elseif($col == 'other_names')
@@ -256,7 +256,8 @@
           <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
               <div class="client-page-nav">
-                <button class="nav-tab active" data-tab="policies" data-url="{{ route('policies.index') }}">Policies</button>
+                 <button class="nav-tab active" data-tab="life-proposals" data-url="{{ route('life-proposals.index') }}">Proposal</button>
+                <button class="nav-tab" data-tab="policies" data-url="{{ route('policies.index') }}">Policies</button>
                 <button class="nav-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Payments</button>
                 <button class="nav-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Vehicles</button>
                 <button class="nav-tab" data-tab="claims" data-url="{{ route('claims.index') }}">Claims</button>
@@ -395,7 +396,7 @@
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">Monthly Income</span>
-                <input id="monthly_income" name="monthly_income" type="text" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input id="monthly_income" name="monthly_income" type="number" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">PEP</span>
@@ -418,14 +419,14 @@
                 <span class="detail-label">District</span>
                 <select id="district" name="district" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['districts'] as $d) <option value="{{ $d }}">{{ $d }}</option> @endforeach
+                  @foreach($lookupData['districts'] as $d) <option value="{{ $d['id'] }}">{{ $d['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">District</span>
                 <select id="district_business" name="district" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['districts'] as $d) <option value="{{ $d }}">{{ $d }}</option> @endforeach
+                  @foreach($lookupData['districts'] as $d) <option value="{{ $d['id'] }}">{{ $d['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
@@ -456,7 +457,7 @@
                 <span class="detail-label">Occupation</span>
                 <select id="occupation" name="occupation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['occupations'] as $o) <option value="{{ $o }}">{{ $o }}</option> @endforeach
+                  @foreach($lookupData['occupations'] as $o) <option value="{{ $o['id'] }}">{{ $o['name'] }}</option> @endforeach
                 </select>
               </div>
               <!-- PEP Details - spans 2 columns (Column 2 and 3) - positioned right after Occupation -->
@@ -487,11 +488,17 @@
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">Agency</span>
-                <input id="agency" name="agency" type="text" value="Keystone" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+               <select id="agency" name="agency" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @foreach($lookupData['agencies'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
+                </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Agency</span>
-                <input id="agency_business" name="agency" type="text" value="Keystone" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+                 <select id="agency_business" name="agency" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @foreach($lookupData['agencies'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
+                </select>
               </div>
             </div>
 
@@ -532,23 +539,30 @@
                 <span class="detail-label">Island</span>
                 <select id="island" name="island" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['islands'] as $is) <option value="{{ $is }}">{{ $is }}</option> @endforeach
+                  @foreach($lookupData['islands'] as $is) <option value="{{ $is['id'] }}">{{ $is['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Island</span>
                 <select id="island_business" name="island" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['islands'] as $is) <option value="{{ $is }}">{{ $is }}</option> @endforeach
+                  @foreach($lookupData['islands'] as $is) <option value="{{ $is['id'] }}">{{ $is['name']   }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">Agent</span>
-                <input id="agent" name="agent" type="text" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <select id="agent" name="agent" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @foreach($lookupData['agents'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
+                </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Agent</span>
-                <input id="agent_business" name="agent" type="text" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+
+                <select id="agent_business" name="agent" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                  <option value="">Select</option>
+                  @foreach($lookupData['agents'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
+                </select>
               </div>
             </div> 
 
@@ -586,14 +600,14 @@
                 <span class="detail-label">Country</span>
                 <select id="country" name="country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['countries'] as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
+                  @foreach($lookupData['countries'] as $c) <option value="{{ $c['id'] }}">{{ $c['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">Source</span>
                 <select id="source" name="source" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['sources'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
+                  @foreach($lookupData['sources'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
@@ -612,14 +626,14 @@
                 <span class="detail-label">Country</span>
                 <select id="country_business" name="country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['countries'] as $c) <option value="{{ $c }}">{{ $c }}</option> @endforeach
+                  @foreach($lookupData['countries'] as $c) <option value="{{ $c['id'] }}">{{ $c['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Source</span>
                 <select id="source_business" name="source" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['sources'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
+                  @foreach($lookupData['sources'] as $s) <option value="{{ $s['id'] }}">{{ $s['name']  }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
@@ -637,14 +651,14 @@
                 <span class="detail-label">Salutation</span>
                 <select id="salutation" name="salutation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['salutations'] as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
+                  @foreach($lookupData['salutations'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">Income Source</span>
                 <select id="income_source" name="income_source" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                   <option value="">Select</option>
-                  @foreach($lookupData['income_sources'] as $i) <option value="{{ $i }}">{{ $i }}</option> @endforeach
+                  @foreach($lookupData['income_sources'] as $i) <option value="{{ $i['id'] }}">{{ $i['name'] }}</option> @endforeach
                 </select>
               </div>
               <div class="detail-row" data-field-type="individual" style="display:none;">
@@ -656,7 +670,7 @@
                 <div style="display:flex; gap:5px; align-items:center; flex:1;">
                   <select id="issuing_country" name="issuing_country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
                     <option value="">Select</option>
-                    @foreach($lookupData['countries'] as $c) <option value="{{ $c }}" {{ $c == 'Seychelles' ? 'selected' : '' }}>{{ $c }}</option> @endforeach
+                    @foreach($lookupData['countries'] as $c) <option value="{{ $c['id'] }}" {{ $c['id'] == 131 ? 'selected' : '' }}>{{ $c['name'] }}</option> @endforeach
                   </select>
                   <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; flex-shrink:0;">
                 </div>

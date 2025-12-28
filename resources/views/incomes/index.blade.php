@@ -202,12 +202,16 @@
           <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
             <div class="form-group" style="flex:1;">
               <label for="income_source_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Income Source</label>
+<<<<<<< HEAD
               <select class="form-control" name="income_source_id" id="income_source_id" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
                 <option value="">Select</option>
                 @foreach($comisionlist as $comision)
                   <option value="{{ $comision->id }}">{{ $comision->insurer->name }}</option>
                 @endforeach
               </select>
+=======
+        
+>>>>>>> abdullah_web
             </div>
             <div class="form-group" style="flex:1;">
               <label for="date_rcvd" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Date Received</label>

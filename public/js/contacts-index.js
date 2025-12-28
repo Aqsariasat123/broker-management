@@ -265,7 +265,20 @@ async function openContactDetails(id) {
         if (!currentContactId) return;
         const baseUrl = this.getAttribute('data-url');
         if (!baseUrl || baseUrl === '#') return;
-        window.location.href = baseUrl + '?contact_id=' + currentContactId;
+         const tabType = this.getAttribute('data-tab');
+
+        let actionType = 'view'; // default
+
+        if (tabType === 'life-proposals-view') {
+            actionType = 'view';
+        } else if (tabType === 'life-proposals-add') {
+            actionType = 'add';
+        } else if (tabType === 'life-proposals-follow-up') {
+            actionType = 'follow-up';
+        }
+
+        window.location.href =
+            `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
       });
     });
     // openModalWithContact('edit', contact);
@@ -712,7 +725,17 @@ async function saveContactFromPage() {
     alert('Error saving contact. Please try again.');
   }
 }
-
+function closeContactPageView() {
+  const contactPageView = document.getElementById('contactPageView');
+  const clientsTableView = document.getElementById('clientsTableView');
+  if (contactPageView && clientsTableView) {
+    contactPageView.classList.remove('show');
+    contactPageView.style.display = 'none';
+    clientsTableView.classList.remove('hidden');
+    currentContactId = null;
+  }
+}
+  
 
 
 function deleteContact() {
@@ -734,7 +757,7 @@ function openColumnModal() {
     // Always check mandatory fields, otherwise check if in selectedColumns
     cb.checked = mandatoryFields.includes(cb.value) || selectedColumns.includes(cb.value);
   });
-  document.body.style.overflow = 'hidden';
+
   document.getElementById('columnModal').classList.add('show');
   // Initialize drag and drop after modal is shown
   setTimeout(initDragAndDrop, 100);

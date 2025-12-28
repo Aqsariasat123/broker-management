@@ -16,7 +16,9 @@ class LifeProposalController extends Controller
     public function index(Request $request)
     {
         $query = LifeProposal::query();
-        
+        $actionType = $request->input('action', 'view');
+        $contactid = $request->input('contact_id', null);
+
         // Filter by status
         if ($request->has('status') && $request->status) {
             if ($request->status == 'pending') {
@@ -25,7 +27,12 @@ class LifeProposalController extends Controller
                 $query->where('status', 'Processing');
             }
         }
-        
+         if ($actionType === 'follow-up' ||   $request->boolean('follow_up') ) {
+                $query->whereNotNull('offer_date')
+                    ->where('offer_date', '<=', now()->addDays(7))
+                    ->where('is_submitted', false);
+        }
+
         // Filter for "To Follow Up" - proposals with offer_date in the past or within next 7 days, and not submitted
         $followUp = $request->input('follow_up');
         if ($followUp && ($followUp == 'true' || $followUp == '1')) {
@@ -52,7 +59,7 @@ class LifeProposalController extends Controller
         // Get lookup data for dropdowns
         $lookupData = $this->getLookupData();
         
-        return view('life-proposals.index', compact('proposals', 'lookupData'));
+        return view('life-proposals.index', compact('proposals', 'lookupData','actionType', 'contactid'));
     }
 
     public function store(Request $request)

@@ -9,6 +9,8 @@ use App\Models\LookupCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\LookUpHelper;
+use Illuminate\Support\Facades\Log;
 
 class ClientController extends Controller
 {
@@ -53,7 +55,7 @@ class ClientController extends Controller
         }
         
         // Use paginate instead of get
-        $clients = $query->with('policies')->orderBy('created_at', 'desc')->paginate(10);
+        $clients = $query->with(['policies','agencies','agents','districts','salutations','sources','occupations','income_sources','islands','countries'])->orderBy('created_at', 'desc')->paginate(10);
 
         // Calculate expiration status for each client
         $clients->getCollection()->transform(function ($client) {
@@ -77,7 +79,7 @@ class ClientController extends Controller
         });
 
         // Get lookup data for dropdowns
-        $lookupData = $this->getLookupData();
+        $lookupData =  LookUpHelper::getLookupData();
         
         return view('clients.index', compact('clients', 'lookupData'));
     }
@@ -238,7 +240,7 @@ class ClientController extends Controller
 
     public function create()
     {
-        $lookupData = $this->getLookupData();
+        $lookupData = LookUpHelper::getLookupData();
         return view('clients.create', compact('lookupData'));
     }
 
@@ -246,7 +248,17 @@ class ClientController extends Controller
     {
         // If request expects JSON (AJAX), return JSON
         if (request()->expectsJson() || request()->wantsJson()) {
-            $client->load('documents');
+            $client->load(
+                'documents'  ,  
+                'agencies',
+        'agents',
+        'districts',
+        'salutations',
+        'sources',
+        'occupations',
+        'income_sources',
+        'islands',
+        'countries');
             return response()->json($client);
         }
         
@@ -265,7 +277,7 @@ class ClientController extends Controller
             return response()->json($client);
         }
         
-        $lookupData = $this->getLookupData();
+        $lookupData = LookUpHelper::getLookupData();
         return view('clients.edit', compact('client', 'lookupData'));
     }
 
@@ -279,9 +291,7 @@ class ClientController extends Controller
             'wa' => 'nullable|string|max:20',
             'district' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
-            'source' => 'required|string|max:255',
             'status' => 'required|string|max:50',
-            'signed_up' => 'required|date',
             'employer' => 'nullable|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'income_source' => 'nullable|string|max:255',
@@ -297,9 +307,7 @@ class ClientController extends Controller
             'pep_comment' => 'nullable|string',
             'image' => 'nullable|string|max:255',
             'salutation' => 'nullable|string|max:50',
-            'first_name' => 'nullable|string|max:255',
             'other_names' => 'nullable|string|max:255',
-            'surname' => 'nullable|string|max:255',
             'passport_no' => 'nullable|string|max:50',
             'id_expiry_date' => 'nullable|date',
             'monthly_income' => 'nullable|string|max:255',
@@ -315,7 +323,13 @@ class ClientController extends Controller
             'designation' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ];
-        
+        if ($request->client_type === 'Individual') {
+            $rules['first_name'] = 'required|string|max:255';
+            $rules['surname'] = 'required|string|max:255';
+        } else {
+            $rules['source'] = 'required|string|max:255';
+            $rules['signed_up'] = 'required|date';
+        }
         // Conditional validation based on client type
         // Both Individual and Business now use the same fields (first_name and surname)
         if ($request->client_type === 'Individual' ) {
@@ -737,18 +751,6 @@ class ClientController extends Controller
         ]);
     }
 
-    private function getLookupData()
-    {
-        return [
-            'client_types' => LookupCategory::where('name', 'Client Type')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? ['Individual', 'Business', 'Company', 'Organization'],
-            'sources' => LookupCategory::where('name', 'Source')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? [],
-            'client_statuses' => LookupCategory::where('name', 'Client Status')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? ['Active', 'Inactive', 'Suspended', 'Pending'],
-            'districts' => LookupCategory::where('name', 'District')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? ['Victoria', 'Beau Vallon', 'Mont Fleuri', 'Cascade', 'Providence', 'Grand Anse', 'Anse Aux Pins'],
-            'islands' => LookupCategory::where('name', 'Island')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? [],
-            'countries' => LookupCategory::where('name', 'Issuing Country')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? [],
-            'income_sources' => LookupCategory::where('name', 'Income Source')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? [],
-            'salutations' => LookupCategory::where('name', 'Salutation')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? [],
-            'occupations' => LookupCategory::where('name', 'Occupation')->first()?->values()->where('active', true)->orderBy('seq')->pluck('name')->toArray() ?? ['Accountant', 'Driver', 'Customer Service Officer', 'Real Estate Agent', 'Rock Breaker', 'Payroll Officer', 'Boat Charter', 'Contractor', 'Technician', 'Paymaster', 'Human Resources Manager']
-        ];
-    }
+   
+  
 }

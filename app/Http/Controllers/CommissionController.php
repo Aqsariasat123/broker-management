@@ -47,18 +47,17 @@ class CommissionController extends Controller
     
         // ✅ INSURER FILTER
         $insurerFilter = $request->get('insurer');
-        $commissions = Commission::with(['insurer', 'paymentStatus', 'modeOfPayment'])
-            ->when($insurerFilter, function($q) use ($insurerFilter, $insurers) {
-                $insurer = $insurers->firstWhere('name', $insurerFilter);
-                if ($insurer) {
-                    $q->where('insurer_id', $insurer->id);
-                }
-            })
-            ->orderBy('created_at', 'desc')
+        if ($insurerFilter) {
+            $insurer = $insurers->firstWhere('name', $insurerFilter);
+            if ($insurer) {
+                $query->where('insurer_id', $insurer->id);
+            }
+        }
+    
+        $commissions = $query
+            ->orderByDesc('created_at')
             ->paginate(10);
-
-        // Use TableConfigHelper for selected columns
-        $config = \App\Helpers\TableConfigHelper::getConfig('commissions');
+    
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('commissions');
     
         return view(
@@ -75,6 +74,7 @@ class CommissionController extends Controller
             )
         );
     }
+    
 
     public function store(Request $request)
     {

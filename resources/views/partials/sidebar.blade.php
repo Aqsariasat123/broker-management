@@ -106,7 +106,7 @@
                 </a>
             </li>
             @endif
-            
+<!--             
             @if(auth()->check() && (auth()->user()->hasPermission('schedules.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('schedules.*') ? 'active' : '' }}" data-tooltip="Schedules">
                 <a href="{{ route('schedules.index') }}">
@@ -120,7 +120,7 @@
                 </a>
             </li>
             @endif
-            
+             -->
             @if(auth()->check() && (auth()->user()->hasPermission('commissions.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->is('commissions*') ? 'active' : '' }}" data-tooltip="Commission">
                 <a href="/commissions">
@@ -182,7 +182,7 @@
             </li>
             @endif
             
-            @if(auth()->check() && (auth()->user()->hasPermission('payment-plans.view') || auth()->user()->isAdmin()))
+            <!-- @if(auth()->check() && (auth()->user()->hasPermission('payment-plans.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('payment-plans.*') ? 'active' : '' }}" data-tooltip="Payment Plans">
                 <a href="{{ route('payment-plans.index') }}">
                     <span class="ks-sidebar-icon">
@@ -198,9 +198,9 @@
                     <span class="ks-sidebar-label">Payment Plans</span>
                 </a>
             </li>
-            @endif
+            @endif -->
             
-            @if(auth()->check() && (auth()->user()->hasPermission('debit-notes.view') || auth()->user()->isAdmin()))
+            <!-- @if(auth()->check() && (auth()->user()->hasPermission('debit-notes.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('debit-notes.*') ? 'active' : '' }}" data-tooltip="Debit Notes">
                 <a href="{{ route('debit-notes.index') }}">
                     <span class="ks-sidebar-icon">
@@ -216,8 +216,8 @@
                 </a>
             </li>
             @endif
-            
-            @if(auth()->check() && (auth()->user()->hasPermission('payments.view') || auth()->user()->isAdmin()))
+             -->
+            <!-- @if(auth()->check() && (auth()->user()->hasPermission('payments.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->routeIs('payments.*') ? 'active' : '' }}" data-tooltip="Payments">
                 <a href="{{ route('payments.index') }}">
                     <span class="ks-sidebar-icon">
@@ -232,7 +232,7 @@
                     <span class="ks-sidebar-label">Payments</span>
                 </a>
             </li>
-            @endif
+            @endif -->
             
             @if(auth()->check() && (auth()->user()->hasPermission('claims.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->is('claims*') ? 'active' : '' }}" data-tooltip="Claims">
@@ -278,20 +278,7 @@
             </li>
             @endif
             
-            @if(auth()->check() && (auth()->user()->hasPermission('lookups.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('lookups*') ? 'active' : '' }}" data-tooltip="Settings">
-                <a href="/lookups">
-                    <span class="ks-sidebar-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5"/>
-                        </svg>
-                    </span>
-                    <span class="ks-sidebar-label">Settings</span>
-                </a>
-            </li>
-            @endif
-            
+         
            
             @if(auth()->check() && (auth()->user()->hasPermission('lookups.manage') || auth()->user()->isAdmin()))
             <!-- Web Settings Nested Menu -->
@@ -299,7 +286,7 @@
                 <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); font-weight: 600;">Web Settings</span>
             </li>
             
-            <li class="{{ request()->routeIs('lookup-categories.*') ? 'active' : '' }}" data-tooltip="Lookup Categories">
+            <!-- <li class="{{ request()->routeIs('lookup-categories.*') ? 'active' : '' }}" data-tooltip="Lookup Categories">
                 <a href="{{ route('lookup-categories.index') }}">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -312,7 +299,7 @@
                     </span>
                     <span class="ks-sidebar-label">Lookup Categories</span>
                 </a>
-            </li>
+            </li> -->
             
             <li class="{{ request()->routeIs('lookup-values.*') ? 'active' : '' }}" data-tooltip="Lookup Values">
                 <a href="{{ route('lookup-values.index') }}">
@@ -325,6 +312,19 @@
                         </svg>
                     </span>
                     <span class="ks-sidebar-label">Lookup Values</span>
+                </a>
+            </li>
+            @endif
+               @if(auth()->check() && (auth()->user()->hasPermission('lookups.view') || auth()->user()->isAdmin()))
+            <li class="{{ request()->is('lookups*') ? 'active' : '' }}" data-tooltip="lookups">
+                <a href="/lookups">
+                    <span class="ks-sidebar-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </span>
+                    <span class="ks-sidebar-label">Lookups Category</span>
                 </a>
             </li>
             @endif

@@ -330,19 +330,19 @@
         <!-- Contact Details Content Card - Separate -->
         <div id="contactDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
         <div id="contactDetailsPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+          <div style=" margin-bottom:15px; overflow:hidden;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px;">
                 <div class="client-page-nav">
                        
                 
-                <button class="contact-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">View</button>
-                <button class="contact-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Add</button>
-                <button class="contact-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Follow Up</button>
+                <button class="contact-tab active" data-tab="life-proposals-view" data-url="{{ route('life-proposals.index') }}">View</button>
+                <button class="contact-tab" data-tab="life-proposals-add" data-url="{{ route('life-proposals.index') }}">Add</button>
+                <button class="contact-tab" data-tab="life-proposals-follow-up" data-url="{{ route('life-proposals.index') }}">Follow Up</button>
 
                 </div>
                 <div class="client-page-actions" id="contactHeaderActions">
                   <button class="btn btn-edit" id="editContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="if(currentContactId) openEditContract(currentContactId)">Edit</button>
-                  <button class="btn" id="contactContactPageBtn" onclick="closecontactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;display:none;">Cancel</button>
+                  <button class="btn" id="contactContactPageBtn"  onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;display:none;">Cancel</button>
                    <button
                     class="btn"
                     id="saveContactFromPageBtn"
@@ -368,7 +368,7 @@
         </div>
 
         <!-- Contact Schedule Card - Separate -->
-        <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;">
+        <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;justify-content: space-between; ">
                <button class="contact-bottom-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Not Contacted</button>
                 <button class="contact-bottom-tab" data-tab="payments" data-url="{{ route('payments.index') }}">In Discussion</button>
                 <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Qualified</button>
@@ -624,6 +624,10 @@
   </div>
 
   <!-- Column Selection Modal -->
+
+
+</div>
+
   <div class="modal" id="columnModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -683,10 +687,6 @@
       </div>
     </div>
   </div>
-
-</div>
-
-
 
 <script>
   // Initialize data from Blade
