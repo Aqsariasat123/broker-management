@@ -248,7 +248,7 @@
       contactPageView.classList.add('show');
       contactDetailsPageContent.style.display = 'block';
       document.getElementById('contactDetailsContentWrapper').style.display = 'block';
-      document.getElementById('contactScheduleContentWrapper').style.display = 'block';
+      document.getElementById('contactScheduleContentWrapper').style.display = 'flex';
       document.getElementById('followupsContentWrapper').style.display = 'block';
       contactFormPageContent.style.display = 'none';
       const editContactFromPageBtn = document.getElementById('editContactFromPageBtn');
@@ -458,8 +458,8 @@ function formatDateForInput(dateString) {
           <div class="detail-row">
             <span class="detail-label">Date Of Birth</span>
             <div style="display:flex; gap:5px; align-items:center; flex:1;">
-             <input id="dob" name="dob" type="date" value ="${dob}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;" readonly>
-              <input id="age_display" type="text" value ="${dobAge}"  placeholder="Age" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+             <input id="dob" name="dob" type="date" value ="${dob}" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px; width: 75%" readonly>
+              <input id="age_display" type="text" value ="${dobAge}"  placeholder="Age" readonly class="form-control" style="width:25%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
              
             </div>
           </div>

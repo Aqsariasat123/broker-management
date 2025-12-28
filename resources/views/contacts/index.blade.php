@@ -232,13 +232,13 @@
         <!-- Contact Details Content Card - Separate -->
         <div id="contactDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
         <div id="contactDetailsPageContent" style="display:none;">
-          <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+          <div style=" margin-bottom:15px; overflow:hidden;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px;">
                 <div class="client-page-nav">
                        
                 
-                <button class="contact-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">View</button>
-                <button class="contact-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Add</button>
+                <button class="contact-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">View Proposal</button>
+                <button class="contact-tab" data-tab="payments" data-url="{{ route('payments.index') }}">Add Proposal</button>
                 <button class="contact-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Follow Up</button>
 
                 </div>
@@ -255,7 +255,7 @@
         </div>
 
         <!-- Contact Schedule Card - Separate -->
-        <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;">
+        <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;justify-content: space-between; ">
                <button class="contact-bottom-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Not Contacted</button>
                 <button class="contact-bottom-tab" data-tab="payments" data-url="{{ route('payments.index') }}">In Discussion</button>
                 <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Qualified</button>
