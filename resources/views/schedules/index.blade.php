@@ -43,7 +43,7 @@
         </form>
       </div>
       <div class="action-buttons">
-        <button class="btn btn-add" onclick="openScheduleModal('add')">Add</button>
+        <!-- <button class="btn btn-add" onclick="openScheduleModal('add')">Add</button> -->
         <button class="btn btn-back" onclick="window.history.back()">Back</button>
       </div>
     </div>

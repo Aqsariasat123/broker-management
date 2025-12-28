@@ -906,15 +906,15 @@
           style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
     ${createSelectOptions(lookupData.policy_classes || [])}
   </select>
-  <div style="display:flex; gap:8px;">
-    <button type="button" id="addPolicyClassBtn" 
-            style="flex:1; padding:6px 10px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
-      + Add New
-    </button>
-    <button type="button" id="editPolicyClassBtn" 
-            style="flex:1; padding:6px 10px; font-size:12px; background:#666; color:#fff; border:none; border-radius:3px; cursor:pointer;">
-      Nominees
-    </button>
+             <div style="display:flex; gap:8px;">
+    <div  id="addPolicyClassBtn" 
+            style="flex:1; height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      
+    </div>
+    <div id="addNominclatureBtn" 
+            style="flex:1;  height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      
+    </div>
   </div>
 </div>
           <div class="grey-input">
@@ -947,17 +947,21 @@
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Agent</label>
-            <input type="text" name="agent" id="agent" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+            <select name="agent_id" id="agent_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+              ${createSelectOptions(lookupData.agents || [])}
+            </select>
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Source</label>
-            <input type="text" name="source" id="source" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
+            <select name="source_id" id="source_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+              ${createSelectOptions(lookupData.sources || [])}
+            </select>
           </div>
           
           <!-- Row 3 -->
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Source Name</label>
-            <input type="text" name="source_name" id="source_name" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
+            <input type="text" name="source_name" id="source_name" class="form-control"  style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
           </div>
          <div class="grey-input" style="display:flex; align-items:center; gap:8px;">
              <label style="font-size:12px;font-weight:500; color:#000; margin:0;">Renewal Notices Required?</label>
@@ -1118,6 +1122,20 @@ if (formContent) {
   ========================== */
   formContent.innerHTML += policyDetails; // use += to not overwrite header
   formContent.style.display = 'block';
+
+   const addPolicyClassBtn = document.getElementById('addPolicyClassBtn');
+    if (addPolicyClassBtn) {
+      addPolicyClassBtn.addEventListener('click', () => {
+            openVehicleDialog();
+      });
+    }
+
+    const addNominclatureBtn = document.getElementById('addNominclatureBtn');
+    if (addNominclatureBtn) {
+      addNominclatureBtn.addEventListener('click', () => {
+            openNomineeDialog();
+      });
+    }
 }
 
 
@@ -1350,7 +1368,9 @@ if (formContent) {
           </div>
           <div class="detail-row">
             <span class="detail-label">Agent</span>
-            <input type="text" name="agent" id="agent" class="detail-value" value="${p.agent || ''}">
+            <select name="agent_id" id="agent_id" class="detail-value">
+              ${createSelectOptions(lookupData.agents || [], p.agent_id)}
+            </select>
           </div>
           <div class="detail-row">
             <span class="detail-label">Channel</span>
@@ -1969,5 +1989,161 @@ if (formContent) {
     } else {
       window.open(fileUrl, '_blank');
     }
+  }
+  
+
+  // Vehicle Dialog Functions
+  function openVehicleDialog() {
+    const modal = document.getElementById('vehicleModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('show');
+      // Get current policy ID if available
+      const policyId = currentPolicyId || document.getElementById('policy_id')?.value;
+      if (policyId) {
+        document.getElementById('vehicleForm').dataset.policyId = policyId;
+      }
+    }
+  }
+
+  function closeVehicleDialog() {
+    const modal = document.getElementById('vehicleModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.getElementById('vehicleForm').reset();
+    }
+  }
+
+  async function saveVehicle(addAnother = false) {
+    const form = document.getElementById('vehicleForm');
+    const formData = new FormData(form);
+    
+    // Add policy_id if available
+    const policyId = currentPolicyId || form.dataset.policyId || document.getElementById('policy_id')?.value;
+    if (policyId) {
+      formData.append('policy_id', policyId);
+    }
+
+    try {
+      const response = await fetch(vehiclesStoreRoute, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('Vehicle saved successfully!');
+        if (!addAnother) {
+          closeVehicleDialog();
+        } else {
+          form.reset();
+        }
+      } else {
+        alert('Error: ' + (data.message || 'Failed to save vehicle'));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error saving vehicle: ' + error.message);
+    }
+  }
+
+  function saveVehicleAndAddAnother() {
+    saveVehicle(true);
+  }
+
+  // Nominee Dialog Functions
+  function openNomineeDialog() {
+    const modal = document.getElementById('nomineeModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('show');
+      // Get current policy ID if available
+      const policyId = currentPolicyId || document.getElementById('policy_id')?.value;
+      if (policyId) {
+        document.getElementById('nominee_policy_id').value = policyId;
+        document.getElementById('nomineeForm').dataset.policyId = policyId;
+      }
+    }
+  }
+
+  function closeNomineeDialog() {
+    const modal = document.getElementById('nomineeModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.getElementById('nomineeForm').reset();
+    }
+  }
+
+  async function saveNominee(addAnother = false) {
+    const form = document.getElementById('nomineeForm');
+    const formData = new FormData(form);
+    
+    // Add policy_id if available
+    const policyId = currentPolicyId || form.dataset.policyId || document.getElementById('policy_id')?.value;
+    if (policyId) {
+      formData.append('policy_id', policyId);
+    }
+
+    // Add client_id if available
+    const clientId = document.getElementById('client_id')?.value;
+    if (clientId) {
+      formData.append('client_id', clientId);
+    }
+
+    try {
+      const response = await fetch(nomineesStoreRoute, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        if (!addAnother) {
+          closeNomineeDialog();
+          window.location.href = `/nominees`;
+
+          // // Redirect to nominees page only if policy_id exists
+          // if (policyId) {
+          //   window.location.href = `/nominees?policy_id=${policyId}`;
+          // } else {
+          //   alert('Nominee saved successfully! Note: Please save the policy first to link this nominee to the policy.');
+          // }
+        } else {
+          form.reset();
+          if (policyId) {
+            document.getElementById('nominee_policy_id').value = policyId;
+          }
+        }
+      } else {
+        // Handle validation errors
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat().join('\n');
+          alert('Validation errors:\n' + errorMessages);
+        } else {
+          alert('Error: ' + (data.message || 'Failed to save nominee'));
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error saving nominee: ' + error.message);
+    }
+  }
+
+  function saveNomineeAndAddAnother() {
+    saveNominee(true);
   }
   

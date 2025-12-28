@@ -57,13 +57,14 @@ class TableConfigHelper
                 'route_prefix' => 'policies',
                 'session_key' => 'policy_columns',
                 'default_columns' => [
-                    'policy_no','client_name','insurer','policy_class','policy_plan','sum_insured','start_date',
+                    'policy_no','policy_code','client_name','insurer','policy_class','policy_plan','sum_insured','start_date',
                     'end_date','insured','policy_status','date_registered','policy_id','insured_item','renewable',
                     'biz_type','term','term_unit','base_premium','premium','frequency','pay_plan','agency','agent','notes'
                 ],
-                'mandatory_columns' => ['policy_no', 'client_name', 'policy_status'],
+                'mandatory_columns' => ['policy_code', 'client_name', 'policy_status'],
                 'column_definitions' => [
                     'policy_no' => 'Policy No',
+                    'policy_code' => 'Policy Code',
                     'client_name' => 'Client Name',
                     'insurer' => 'Insurer',
                     'policy_class' => 'Policy Class',

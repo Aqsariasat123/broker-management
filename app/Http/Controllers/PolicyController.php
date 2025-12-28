@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\DebitNote;
 
 use App\Models\Policy;
 use App\Models\Client;
@@ -9,6 +10,14 @@ use App\Models\LookupCategory;
 use App\Models\Schedule;
 use App\Models\PaymentPlan;
 use App\Models\LifeProposal;
+use App\Models\CommissionNote;
+use App\Models\CommissionStatement;
+use App\Models\Commission;
+use App\Models\RenewalNotice;
+
+
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -159,7 +168,7 @@ class PolicyController extends Controller
             ->paginate($perPage);
         
         // Get lookup data for dropdowns
-        $lookupData = $this->getLookupData();
+        $lookupData = \App\Helpers\LookUpHelper::getLookupData();
         
         // Get life proposal data if generating from proposal
         $lifeProposal = null;
@@ -178,7 +187,7 @@ class PolicyController extends Controller
 
     public function create(Request $request)
     {
-        $lookupData = $this->getLookupData();
+        $lookupData =  \App\Helpers\LookUpHelper::getLookupData();
         $selectedClientId = $request->get('client_id');
         return view('policies.create', compact('lookupData', 'selectedClientId'));
     }
@@ -232,14 +241,23 @@ class PolicyController extends Controller
 
             // Generate unique policy_code if not provided
             if (empty($validated['policy_code'])) {
-                $latestPolicy = Policy::orderBy('id', 'desc')->first();
-                $nextId = $latestPolicy ? $latestPolicy->id + 1 : 1;
-                $validated['policy_code'] = 'POL' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+                $validated['policy_code']  = Policy::generatePolicyNo();
+                
             }
 
             // Create policy
             $policy = Policy::create($validated);
             
+            if($validated['renewable'] == true){
+                    RenewalNotice::create([
+                    'policy_id' => $policy->id,
+                    'rnid' => RenewalNotice::generateRNID(), // You need to implement
+                    'notice_date' => now(),
+                    'status' => 'pending',
+                    'delivery_method' => 'email', // or from request
+                ]);
+          
+            }
             // Create schedule and payment plans if payment plan data is provided
             $this->createScheduleAndPaymentPlans($policy, $request);
 
@@ -596,7 +614,7 @@ class PolicyController extends Controller
             return response()->json($policyData);
         }
         // fallback for non-AJAX
-        $lookupData = $this->getLookupData();
+        $lookupData =  \App\Helpers\LookUpHelper::getLookupData();
         return view('policies.edit', compact('policy', 'lookupData'));
     }
 
@@ -739,7 +757,22 @@ class PolicyController extends Controller
             // \Log::info('Updating policy', ['id' => $policy->id, 'data' => $updateData]);
 
             $policy->update($updateData);
-
+            if (!empty($validated['renewable']) && $validated['renewable']) {
+                        // Check if a RenewalNotice already exists
+                        $renewalNotice = $policy->renewalNotices()->first();
+                        if (!$renewalNotice) {
+                            // Create a new RenewalNotice
+                            $policy->renewalNotices()->create([
+                                'rnid' => \App\Models\RenewalNotice::generateRNID(),
+                                'notice_date' => now(),
+                                'status' => 'pending',
+                                'delivery_method' => 'email', // Or get from request if available
+                            ]);
+                        }
+                    } else {
+                        // Policy no longer renewable: optionally delete or deactivate the existing RenewalNotice
+                        $policy->renewalNotices()->delete(); // Or update(['status'=>'cancelled'])
+                    }
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
@@ -1195,7 +1228,7 @@ class PolicyController extends Controller
                     break;
                 }
                 
-                PaymentPlan::create([
+               $paymentPlan =   PaymentPlan::create([
                     'schedule_id' => $schedule->id,
                     'installment_label' => $noOfInstalments == 1 ? 'Full Payment' : ('Instalment ' . $i . ' of ' . $noOfInstalments),
                     'due_date' => $dueDate->copy(),
@@ -1203,7 +1236,16 @@ class PolicyController extends Controller
                     'frequency' => $frequencyName,
                     'status' => 'pending',
                 ]);
-                
+                 DebitNote::create([
+                'payment_plan_id' => $paymentPlan->id,
+                'debit_note_no'   => DebitNote::generateDebitNoteNo(),
+                'issued_on'       => $dueDate->copy(),
+                'amount'          => $amountPerInstalment,
+                'status'          => 'unpaid',
+                'document_path'   => null,
+                'is_encrypted'    => false,
+                ]);
+
                 // Calculate next due date based on frequency (skip if it's the last instalment)
                 if ($i < $noOfInstalments) {
                     switch ($frequencyName) {
@@ -1227,6 +1269,47 @@ class PolicyController extends Controller
                 }
             }
             
+            // -------------------------
+                // COMMISSION CREATION
+                // -------------------------
+                $commissionRate = $policy->commission_rate ?? 0; // e.g. 10%
+                $expectedCommission = ($totalPremium * $commissionRate) / 100;
+
+                // Commission Note
+                $commissionNote = CommissionNote::create([
+                    'schedule_id' => $schedule->id,
+                    'com_note_id' => 'CN' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'issued_on' => now(),
+                    'total_premium' => $totalPremium,
+                    'expected_commission' => $expectedCommission,
+                    'remarks' => 'Auto-generated commission note',
+                ]);
+
+                // Commission Statement
+                $commissionStatement = CommissionStatement::create([
+                    'commission_note_id' => $commissionNote->id,
+                    'com_stat_id' => 'CS' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'period_start' => $policy->start_date,
+                    'period_end' => $policy->end_date,
+                    'net_commission' => $expectedCommission,
+                    'tax_withheld' => 0,
+                    'remarks' => 'Auto-generated commission statement',
+                ]);
+
+                // Commission record
+                Commission::create([
+                    'grouping' => 'Policy Commission',
+                    'basic_premium' => $totalPremium,
+                    'rate' => $commissionRate,
+                    'amount_due' => $expectedCommission,
+                    'payment_status_id' => null,
+                    'amount_received' => 0,
+                    'commission_code' => 'COM' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'date_due' => $policy->end_date,
+                    'commission_note_id' => $commissionNote->id,
+                    'commission_statement_id' => $commissionStatement->id,
+                ]);
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1237,186 +1320,264 @@ class PolicyController extends Controller
     
     private function updateScheduleAndPaymentPlans(Policy $policy, Request $request)
     {
-        // Check if payment plan data is provided
-        $noOfInstalments = $request->input('no_of_instalments');
-        $paymentStartDate = $request->input('payment_start_date');
-        $paymentEndDate = $request->input('payment_end_date');
-        $frequencyId = $request->input('frequency_id');
-        $payPlanId = $request->input('pay_plan_lookup_id');
-        
-        // Check if pay plan is "Full" - if so, create single payment
+        $noOfInstalments   = $request->input('no_of_instalments');
+        $paymentStartDate  = $request->input('payment_start_date');
+        $paymentEndDate    = $request->input('payment_end_date');
+        $frequencyId       = $request->input('frequency_id');
+        $payPlanId         = $request->input('pay_plan_lookup_id');
+
         $payPlan = $payPlanId ? LookupValue::find($payPlanId) : null;
         $payPlanName = $payPlan ? strtolower($payPlan->name) : '';
-        
-        // If "Full" payment plan, always create single payment
+
         if ($payPlanName === 'full') {
             $noOfInstalments = 1;
         }
-        
-        // Default payment dates to policy dates if not provided
+
         if (!$paymentStartDate) {
-            $paymentStartDate = $policy->start_date?->format('Y-m-d') ?: now()->format('Y-m-d');
+            $paymentStartDate = $policy->start_date?->format('Y-m-d') ?? now()->format('Y-m-d');
         }
+
         if (!$paymentEndDate && $policy->end_date) {
             $paymentEndDate = $policy->end_date->format('Y-m-d');
         }
-        
-        // Only update/create if we have the necessary data
+
         if (!$paymentStartDate || !$frequencyId) {
             return;
         }
-        
-        // Default to 1 instalment if not specified
+
         if (!$noOfInstalments || $noOfInstalments < 1) {
             $noOfInstalments = 1;
         }
-        
+
         DB::beginTransaction();
+
         try {
-            // Get or create schedule for this policy
+            /** -----------------------------
+             * Get or Create Schedule
+             * ------------------------------ */
             $schedule = $policy->schedules()->first();
-            
+
             if (!$schedule) {
-                // Create new schedule
-                $latestSchedule = Schedule::orderBy('id', 'desc')->first();
-                $nextScheduleId = $latestSchedule ? $latestSchedule->id + 1 : 1;
-                $scheduleNo = 'SCH' . str_pad($nextScheduleId, 6, '0', STR_PAD_LEFT);
-                
+                $latest = Schedule::latest('id')->first();
+                $scheduleNo = 'SCH' . str_pad(($latest->id ?? 0) + 1, 6, '0', STR_PAD_LEFT);
+
                 $schedule = Schedule::create([
-                    'policy_id' => $policy->id,
-                    'schedule_no' => $scheduleNo,
-                    'issued_on' => $policy->date_registered ?? now(),
+                    'policy_id'      => $policy->id,
+                    'schedule_no'    => $scheduleNo,
+                    'issued_on'      => $policy->date_registered ?? now(),
                     'effective_from' => $policy->start_date,
-                    'effective_to' => $policy->end_date,
-                    'status' => 'active',
-                    'notes' => 'Auto-generated from policy update'
+                    'effective_to'   => $policy->end_date,
+                    'status'         => 'active',
+                    'notes'          => 'Auto-generated from policy update',
                 ]);
             } else {
-                // Update existing schedule
                 $schedule->update([
                     'effective_from' => $policy->start_date,
-                    'effective_to' => $policy->end_date,
+                    'effective_to'   => $policy->end_date,
                 ]);
             }
-            
-            // Delete existing payment plans and create new ones
+
+            /** -----------------------------
+             * Delete OLD Debit Notes first
+             * ------------------------------ */
+            DebitNote::whereIn(
+                'payment_plan_id',
+                $schedule->paymentPlans()->pluck('id')
+            )->delete();
+
+            /** -----------------------------
+             * Delete OLD Payment Plans
+             * ------------------------------ */
             $schedule->paymentPlans()->delete();
-            
-            // Get frequency name
+
+            /** -----------------------------
+             * Recreate Payment Plans
+             * ------------------------------ */
             $frequency = LookupValue::find($frequencyId);
-            $frequencyName = $frequency ? strtolower($frequency->name) : 'monthly';
-            
-            // Calculate payment plan details
+            $frequencyName = strtolower($frequency->name ?? 'monthly');
+
             $totalPremium = $policy->premium ?? $policy->base_premium ?? 0;
-            $amountPerInstalment = $totalPremium / $noOfInstalments;
-            
-            // Calculate due dates based on frequency
+            $amountPerInstalment = round($totalPremium / $noOfInstalments, 2);
+
             $dueDate = Carbon::parse($paymentStartDate);
             $endDate = $paymentEndDate ? Carbon::parse($paymentEndDate) : null;
-            
-            // Create payment plans
+
             for ($i = 1; $i <= $noOfInstalments; $i++) {
-                // Check if we've exceeded the end date
+
                 if ($endDate && $dueDate->gt($endDate)) {
                     break;
                 }
-                
-                PaymentPlan::create([
-                    'schedule_id' => $schedule->id,
-                    'installment_label' => $noOfInstalments == 1 ? 'Full Payment' : ('Instalment ' . $i . ' of ' . $noOfInstalments),
+
+                $paymentPlan = PaymentPlan::create([
+                    'schedule_id'       => $schedule->id,
+                    'installment_label' => $noOfInstalments === 1
+                        ? 'Full Payment'
+                        : "Instalment {$i} of {$noOfInstalments}",
                     'due_date' => $dueDate->copy(),
-                    'amount' => $amountPerInstalment,
-                    'frequency' => $frequencyName,
-                    'status' => 'pending',
+                    'amount'   => $amountPerInstalment,
+                    'frequency'=> $frequencyName,
+                    'status'   => 'pending',
                 ]);
-                
-                // Calculate next due date based on frequency (skip if it's the last instalment)
+
+                /** -----------------------------
+                 * Create Debit Note
+                 * ------------------------------ */
+                DebitNote::create([
+                    'payment_plan_id' => $paymentPlan->id,
+                    'debit_note_no'   => DebitNote::generateDebitNoteNo(),
+                    'issued_on'       => $dueDate->copy(),
+                    'amount'          => $amountPerInstalment,
+                    'status'          => 'unpaid',
+                    'document_path'   => null,
+                    'is_encrypted'    => false,
+                ]);
+
                 if ($i < $noOfInstalments) {
-                    switch ($frequencyName) {
-                        case 'monthly':
-                            $dueDate->addMonth();
-                            break;
-                        case 'quarterly':
-                            $dueDate->addMonths(3);
-                            break;
-                        case 'annually':
-                        case 'yearly':
-                            $dueDate->addYear();
-                            break;
-                        case 'single':
-                        case 'one off':
-                            // Only one payment
-                            break;
-                        default:
-                            $dueDate->addMonth();
-                    }
+                    match ($frequencyName) {
+                        'monthly'   => $dueDate->addMonth(),
+                        'quarterly' => $dueDate->addMonths(3),
+                        'annually', 'yearly' => $dueDate->addYear(),
+                        default     => $dueDate->addMonth(),
+                    };
                 }
             }
-            
+
+            /** -----------------------------
+             * Create/Update Commission
+             * ------------------------------ */
+            $commissionRate = $policy->commission_rate ?? 0;
+            $expectedCommission = ($totalPremium * $commissionRate) / 100;
+
+            // Commission Note
+            $commissionNote = $schedule->commissionNotes()->first();
+            if (!$commissionNote) {
+                $commissionNote = CommissionNote::create([
+                    'schedule_id'         => $schedule->id,
+                    'com_note_id'         => 'CN' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'issued_on'           => now(),
+                    'total_premium'       => $totalPremium,
+                    'expected_commission' => $expectedCommission,
+                    'remarks'             => 'Auto-generated commission note',
+                ]);
+            } else {
+                $commissionNote->update([
+                    'total_premium'       => $totalPremium,
+                    'expected_commission' => $expectedCommission,
+                ]);
+            }
+
+            // Commission Statement
+            $commissionStatement = $commissionNote->commissionStatements()->first();
+            if (!$commissionStatement) {
+                $commissionStatement = CommissionStatement::create([
+                    'commission_note_id' => $commissionNote->id,
+                    'com_stat_id'        => 'CS' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'period_start'       => $policy->start_date,
+                    'period_end'         => $policy->end_date,
+                    'net_commission'     => $expectedCommission,
+                    'tax_withheld'       => 0,
+                    'remarks'            => 'Auto-generated commission statement',
+                ]);
+            } else {
+                $commissionStatement->update([
+                    'period_start'   => $policy->start_date,
+                    'period_end'     => $policy->end_date,
+                    'net_commission' => $expectedCommission,
+                ]);
+            }
+
+            // Commission
+            $commission = $commissionStatement->commissions()->first();
+            if (!$commission) {
+                Commission::create([
+                    'commission_code' => 'COM' . str_pad($schedule->id, 6, '0', STR_PAD_LEFT),
+                    'grouping'                => 'Policy Commission',
+                    'basic_premium'           => $totalPremium,
+                    'rate'                    => $commissionRate,
+                    'amount_due'              => $expectedCommission,
+                    'payment_status_id'       => null,
+                    'amount_received'         => 0,
+                    'date_due'                => $policy->end_date,
+                    'commission_note_id'      => $commissionNote->id,
+                    'commission_statement_id' => $commissionStatement->id,
+                ]);
+            } else {
+                $commission->update([
+                    'basic_premium' => $totalPremium,
+                    'rate'          => $commissionRate,
+                    'amount_due'    => $expectedCommission,
+                    'date_due'      => $policy->end_date,
+                ]);
+            }
+
             DB::commit();
+
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error updating schedule and payment plans: ' . $e->getMessage());
-            // Don't throw - allow policy to be updated even if schedule/payment plan update fails
+            \Log::error('Error updating schedule/payment/debit notes/commissions', [
+                'policy_id' => $policy->id,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
 
-    private function getLookupData()
-    {
-        $getLookupValues = function($categoryName) {
-            $category = LookupCategory::where('name', $categoryName)->first();
-            if (!$category) return [];
-            return $category->values()
-                ->where('active', true)
-                ->get()
-                ->map(function($value) {
-                    return ['id' => $value->id, 'name' => $value->name];
-                })
-                ->toArray();
-        };
 
-        return [
-            'clients' => Client::orderBy('client_name')->get(['id', 'client_name', 'clid'])->toArray(),
-            'insurers' => $getLookupValues('Insurers'),
-            'policy_classes' => $getLookupValues('Class'),
-            'policy_plans' => $getLookupValues('Policy Plans'),
-            'policy_statuses' => $getLookupValues('Policy Status') ?: [
-                ['id' => null, 'name' => 'In Force'],
-                ['id' => null, 'name' => 'DFR'],
-                ['id' => null, 'name' => 'Expired'],
-                ['id' => null, 'name' => 'Cancelled']
-            ],
-            'business_types' => $getLookupValues('Business Type') ?: [
-                ['id' => null, 'name' => 'Direct'],
-                ['id' => null, 'name' => 'Transfer']
-            ],
-            'term_units' => $getLookupValues('Term Units') ?: [
-                ['id' => null, 'name' => 'Year'],
-                ['id' => null, 'name' => 'Month'],
-                ['id' => null, 'name' => 'Days']
-            ],
-            'frequencies' => $getLookupValues('Frequency') ?: [
-                ['id' => null, 'name' => 'Annually'],
-                ['id' => null, 'name' => 'Monthly'],
-                ['id' => null, 'name' => 'Quarterly'],
-                ['id' => null, 'name' => 'One Off'],
-                ['id' => null, 'name' => 'Single']
-            ],
-            'pay_plans' => $getLookupValues('Payment Plan') ?: [
-                ['id' => null, 'name' => 'Full'],
-                ['id' => null, 'name' => 'Instalments'],
-                ['id' => null, 'name' => 'Regular']
-            ],
-            'document_types' => $getLookupValues('Document Type') ?: [
-                ['id' => null, 'name' => 'Policy Document'],
-                ['id' => null, 'name' => 'Certificate'],
-                ['id' => null, 'name' => 'Claim Document'],
-                ['id' => null, 'name' => 'Other Document']
-            ],
-            'agencies' => $getLookupValues('APL Agency'),
-            'channels' => $getLookupValues('Channel')
-        ];
-    }
+    // private function getLookupData()
+    // {
+    //     $getLookupValues = function($categoryName) {
+    //         $category = LookupCategory::where('name', $categoryName)->first();
+    //         if (!$category) return [];
+    //         return $category->values()
+    //             ->where('active', true)
+    //             ->get()
+    //             ->map(function($value) {
+    //                 return ['id' => $value->id, 'name' => $value->name];
+    //             })
+    //             ->toArray();
+    //     };
+
+    //     return [
+    //         'clients' => Client::orderBy('client_name')->get(['id', 'client_name', 'clid'])->toArray(),
+    //         'insurers' => $getLookupValues('Insurers'),
+    //         'policy_classes' => $getLookupValues('Class'),
+    //         'policy_plans' => $getLookupValues('Policy Plans'),
+    //         'policy_statuses' => $getLookupValues('Policy Status') ?: [
+    //             ['id' => null, 'name' => 'In Force'],
+    //             ['id' => null, 'name' => 'DFR'],
+    //             ['id' => null, 'name' => 'Expired'],
+    //             ['id' => null, 'name' => 'Cancelled']
+    //         ],
+    //         'business_types' => $getLookupValues('Business Type') ?: [
+    //             ['id' => null, 'name' => 'Direct'],
+    //             ['id' => null, 'name' => 'Transfer']
+    //         ],
+    //         'term_units' => $getLookupValues('Term Units') ?: [
+    //             ['id' => null, 'name' => 'Year'],
+    //             ['id' => null, 'name' => 'Month'],
+    //             ['id' => null, 'name' => 'Days']
+    //         ],
+    //         'frequencies' => $getLookupValues('Frequency') ?: [
+    //             ['id' => null, 'name' => 'Annually'],
+    //             ['id' => null, 'name' => 'Monthly'],
+    //             ['id' => null, 'name' => 'Quarterly'],
+    //             ['id' => null, 'name' => 'One Off'],
+    //             ['id' => null, 'name' => 'Single']
+    //         ],
+    //         'pay_plans' => $getLookupValues('Payment Plan') ?: [
+    //             ['id' => null, 'name' => 'Full'],
+    //             ['id' => null, 'name' => 'Instalments'],
+    //             ['id' => null, 'name' => 'Regular']
+    //         ],
+    //         'document_types' => $getLookupValues('Document Type') ?: [
+    //             ['id' => null, 'name' => 'Policy Document'],
+    //             ['id' => null, 'name' => 'Certificate'],
+    //             ['id' => null, 'name' => 'Claim Document'],
+    //             ['id' => null, 'name' => 'Other Document']
+    //         ],
+    //         'agencies' => $getLookupValues('APL Agency'),
+    //         'channels' => $getLookupValues('Channel')
+    //     ];
+    // }
 
     public function storeRenewalSchedule(Request $request, Policy $policy)
     {

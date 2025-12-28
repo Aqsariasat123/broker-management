@@ -10,7 +10,8 @@ class CreateCommissionsTable extends Migration
     {
         Schema::create('commissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('policy_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('commission_note_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('commission_statement_id')->nullable()->constrained()->nullOnDelete();
             $table->string('grouping')->nullable();
             $table->decimal('basic_premium', 15, 2)->nullable();
             $table->decimal('rate', 8, 2)->nullable();

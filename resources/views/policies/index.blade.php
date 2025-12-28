@@ -122,6 +122,8 @@
               @foreach($selectedColumns as $col)
                 @if($col == 'policy_no')
                   <td data-column="policy_no">{{ $policy->policy_no }} </td>
+                @elseif($col == 'policy_code')
+                  <td data-column="policy_code">{{ $policy->policy_code }} </td>
                 @elseif($col == 'client_name')
                   <td data-column="client_name">
                     @php $clientName = $policy->client_name; @endphp
@@ -232,7 +234,31 @@
     <div class="client-page-body">
       <div class="client-page-content">
         <!-- Navigation Tabs and Actions Card -->
-      
+        <!-- <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px 15px;">
+              <div class="policy-form-header" style="display:flex; justify-content:space-between; align-items:center;">
+                  <h4 id="policyFormTitle"
+                      style="margin:0; font-size:16px; font-weight:600; color:#333;">
+                    Policy - Add New
+                  </h4>
+
+                <div class="client-page-actions" id="policyFormHeaderActions">
+                  <button type="submit"
+                          form="policyForm"
+                          class="btn-save"
+                          style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">
+                    Save
+                  </button>
+
+                  <button type="button"
+                          class="btn"
+                          style="background:#fff; color:#333; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;"
+                          onclick="closePolicyPageView()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+           </div> -->
+
         
         <!-- Policy Details Content Card - Separate -->
         <div id="policyDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
@@ -589,7 +615,123 @@
       </div>
     </div>
   </div>
+  <div class="modal" id="vehicleModal" style="display:none;" onclick="if(event.target === this) closeVehicleDialog();">
+    <div class="modal-content" style="max-width:600px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;">Add Vehicle Details</h4>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="saveVehicle()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
+          <button type="button" onclick="closeVehicleDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="vehicleForm">
+        <div class="modal-body" style="padding:20px;">
+          <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Registration No.</label>
+              <input type="text" name="regn_no" id="vehicle_regn_no" class="form-control" required style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Make</label>
+              <input type="text" name="make" id="vehicle_make" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Model</label>
+              <input type="text" name="model" id="vehicle_model" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Model Year</label>
+              <input type="text" name="year" id="vehicle_year" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Type</label>
+              <input type="text" name="type" id="vehicle_type" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine Type</label>
+              <input type="text" name="engine_type" id="vehicle_engine_type" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine CC</label>
+              <input type="text" name="cc" id="vehicle_cc" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Engine No.</label>
+              <input type="text" name="engine_no" id="vehicle_engine_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Chassis No.</label>
+              <input type="text" name="chassis_no" id="vehicle_chassis_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Value</label>
+              <input type="number" step="0.01" name="value" id="vehicle_value" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Usage</label>
+              <input type="text" name="useage" id="vehicle_useage" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Comment</label>
+            <textarea name="notes" id="vehicle_notes" class="form-control" rows="3" style="padding:6px; font-size:12px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
+          <button type="button" class="btn-save" onclick="saveVehicleAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload VRC</button>
+          <button type="button" class="btn-save" onclick="saveVehicleAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Add Another Vehicle</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- Nominee Details Modal -->
+  <div class="modal" id="nomineeModal" style="display:none;" onclick="if(event.target === this) closeNomineeDialog();">
+    <div class="modal-content" style="max-width:500px;" onclick="event.stopPropagation();">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;">Add Nominee</h4>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="saveNominee()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
+          <button type="button" onclick="closeNomineeDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+        </div>
+      </div>
+      <form id="nomineeForm">
+        <input type="hidden" name="policy_id" id="nominee_policy_id">
+        <div class="modal-body" style="padding:20px;">
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Full Name</label>
+            <input type="text" name="full_name" id="nominee_full_name" class="form-control" required style="padding:6px; font-size:12px;">
+          </div>
+          <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Date Of Birth</label>
+              <input type="date" name="date_of_birth" id="nominee_date_of_birth" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">NIN/Passport No</label>
+              <input type="text" name="nin_passport_no" id="nominee_nin_passport_no" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Relationship</label>
+              <input type="text" name="relationship" id="nominee_relationship" class="form-control" style="padding:6px; font-size:12px;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Share</label>
+              <input type="number" step="0.01" name="share_percentage" id="nominee_share_percentage" class="form-control" style="padding:6px; font-size:12px;" placeholder="%">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:12px;">Notes</label>
+            <textarea name="notes" id="nominee_notes" class="form-control" rows="3" style="padding:6px; font-size:12px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
+          <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload ID</button>
+          <button type="button" class="btn-save" onclick="saveNomineeAndAddAnother()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Add Another</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <!-- Renewal Schedule Details Modal -->
   <div class="modal" id="renewalScheduleModal" style="display:none;" onclick="if(event.target === this) closeRenewalModal();">
     <div class="modal-content" style="max-width:800px;" onclick="event.stopPropagation();">
@@ -602,15 +744,20 @@
           <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Year</label>
-              <input type="text" id="renewal_year" name="year" class="form-control" style="text-align:right;">
+              <input type="text" id="renewal_year" name="year" class="form-control">
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Policy Plan</label>
-              <input type="text" id="renewal_policy_plan" name="policy_plan" class="form-control" style="text-align:right;">
+              <select id="renewal_policy_plan" name="policy_plan" class="form-control" >
+                <option value="">Select Policy Plan</option>
+                @foreach($lookupData['policy_plans'] as $plan)
+                  <option value="{{ $plan['id'] }}">{{ $plan['name'] }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Sum Insured</label>
-              <input type="number" id="renewal_sum_insured" name="sum_insured" step="0.01" class="form-control" style="text-align:right;">
+              <input type="number" id="renewal_sum_insured" name="sum_insured" step="0.01" class="form-control" >
             </div>
           </div>
           
@@ -619,12 +766,12 @@
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Term</label>
               <div style="display:flex; gap:5px;">
                 <input type="number" id="renewal_term" name="term" class="form-control" style="flex:1; text-align:right;">
-                <input type="text" id="renewal_term_unit" name="term_unit" class="form-control" style="width:80px; text-align:right;" placeholder="Years">
+                <input type="text" id="renewal_term_unit" name="term_unit" class="form-control" style="width:100px; text-align:right;" placeholder="Unit">
               </div>
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Start Date</label>
-              <input type="date" id="renewal_start_date" name="start_date" class="form-control" style="text-align:right;">
+              <input type="date" id="renewal_start_date" name="start_date" class="form-control" >
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">End Date</label>
@@ -635,22 +782,28 @@
           <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Add Ons</label>
-              <input type="text" id="renewal_add_ons" name="add_ons" class="form-control" style="text-align:right;">
+              <input type="text" id="renewal_add_ons" name="add_ons" class="form-control" >
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Base Premium</label>
-              <input type="number" id="renewal_base_premium" name="base_premium" step="0.01" class="form-control" style="text-align:right;">
+              <input type="number" id="renewal_base_premium" name="base_premium" step="0.01" class="form-control" >
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Full Premium</label>
-              <input type="number" id="renewal_full_premium" name="full_premium" step="0.01" class="form-control" style="text-align:right;">
+              <input type="number" id="renewal_full_premium" name="full_premium" step="0.01" class="form-control" >
             </div>
           </div>
           
           <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">Pay Plan Type</label>
-              <input type="text" id="renewal_pay_plan_type" name="pay_plan_type" class="form-control" style="text-align:right;">
+              <select id="renewal_pay_plan_type" name="pay_plan_type" class="form-control" >
+                <option value="">Select Pay Plan</option>
+                @foreach($lookupData['pay_plans'] as $payPlan)
+                  <option value="{{ $payPlan['id'] }}">{{ $payPlan['name'] }}</option>
+                @endforeach
+              </select>
+
             </div>
             <div class="form-group" style="flex:1;">
               <label style="display:block; margin-bottom:5px; font-weight:600; text-align:left;">NOP/Frequency</label>

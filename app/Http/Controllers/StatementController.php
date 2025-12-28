@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Statement;
+use App\Models\CommissionStatement;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
 
@@ -21,7 +21,7 @@ class StatementController extends Controller
 
         // Filter by insurer if requested
         $insurerFilter = $request->get('insurer');
-        $statements = Statement::with(['insurer', 'modeOfPayment'])
+        $statements = CommissionStatement::with(['modeOfPayment'])
             ->when($insurerFilter, function($q) use ($insurerFilter, $insurers) {
                 $insurer = $insurers->firstWhere('name', $insurerFilter);
                 if ($insurer) {
@@ -51,12 +51,11 @@ class StatementController extends Controller
         ]);
 
         // Generate unique Statement No
-        $latest = Statement::orderBy('id', 'desc')->first();
+        $latest = CommissionStatement::orderBy('id', 'desc')->first();
         $nextId = $latest ? (int)str_replace('ST', '', $latest->statement_no) + 1 : 1001;
         $validated['statement_no'] = 'ST' . $nextId;
 
-        $statement = Statement::create($validated);
-
+        $statement = CommissionStatement::create($validated);
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -68,7 +67,7 @@ class StatementController extends Controller
         return redirect()->route('statements.index')->with('success', 'Statement created successfully.');
     }
 
-    public function show(Request $request, Statement $statement)
+    public function show(Request $request, CommissionStatement $statement)
     {
         if ($request->expectsJson()) {
             return response()->json($statement->load(['insurer', 'modeOfPayment']));
@@ -76,7 +75,7 @@ class StatementController extends Controller
         return view('statements.show', compact('statement'));
     }
 
-    public function edit(Statement $statement)
+    public function edit(CommissionStatement $statement)
     {
         if (request()->expectsJson()) {
             return response()->json($statement->load(['insurer', 'modeOfPayment']));
@@ -84,7 +83,7 @@ class StatementController extends Controller
         return view('statements.edit', compact('statement'));
     }
 
-    public function update(Request $request, Statement $statement)
+    public function update(Request $request, CommissionStatement $statement)
     {
         $validated = $request->validate([
             'year' => 'nullable|string|max:10',
@@ -109,7 +108,7 @@ class StatementController extends Controller
         return redirect()->route('statements.index')->with('success', 'Statement updated successfully.');
     }
 
-    public function destroy(Statement $statement)
+    public function destroy(CommissionStatement $statement)
     {
         $statement->delete();
         return redirect()->route('statements.index')->with('success', 'Statement deleted successfully.');
@@ -117,7 +116,7 @@ class StatementController extends Controller
 
     public function export(Request $request)
     {
-        $statements = \App\Models\Statement::with(['insurer', 'modeOfPayment'])->get();
+        $statements = \App\Models\CommissionStatement::with(['insurer', 'modeOfPayment'])->get();
 
         $fileName = 'statements_export_' . date('Y-m-d') . '.csv';
         $headers = [

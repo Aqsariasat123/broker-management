@@ -59,6 +59,29 @@ class Policy extends Model
         'renewable' => 'boolean',
     ];
 
+
+   public static function generatePolicyNo(): string
+    {
+        $latest = self::orderBy('id', 'desc')->first();
+        if (!$latest) {
+            return 'POL000001';
+        }
+
+        // Extract number from latest policy number
+        $number = 1;
+        if (preg_match('/POL(\d+)/', $latest->policy_no, $matches)) {
+            $number = (int)$matches[1] + 1;
+        } else {
+            // If format doesn't match, try to extract any number
+            $extracted = (int)filter_var($latest->policy_no, FILTER_SANITIZE_NUMBER_INT);
+            if ($extracted > 0) {
+                $number = $extracted + 1;
+            }
+        }
+        
+        return 'POL' . str_pad($number, 6, '0', STR_PAD_LEFT);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
@@ -342,4 +365,34 @@ class Policy extends Model
         }
         return null;
     }
+
+    public function commissionNotes(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            CommissionNote::class,
+            Schedule::class
+        );
+    }
+    public function commissions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Commission::class,
+            CommissionNote::class,
+            'schedule_id',          // FK on commission_notes
+            'commission_note_id',   // FK on commissions
+            'id',                   // local key on policies
+            'id'                    // local key on commission_notes
+        );
+    }
+        public function getTotalCommissionAttribute(): float
+        {
+            return $this->commissionNotes()->sum('expected_commission');
+        }
+
+        public function getOutstandingCommissionAttribute(): float
+        {
+            return $this->commissions()
+                ->whereNull('date_rcvd')
+                ->sum('amount_due');
+        }
 }

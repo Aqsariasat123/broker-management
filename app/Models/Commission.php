@@ -11,13 +11,16 @@ class Commission extends Model
     use HasFactory;
 
     protected $fillable = [
-        'policy_number', 'client_name', 'insurer_id', 'grouping', 'basic_premium', 'rate', 'amount_due',
-        'payment_status_id', 'amount_rcvd', 'date_rcvd', 'state_no', 'mode_of_payment_id',
-        'variance', 'reason', 'date_due', 'cnid'
+        'commission_note_id', 'commission_statement_id', 'insurer_id', 'grouping', 'basic_premium', 'rate', 'amount_due',
+        'payment_status_id', 'amount_received', 'date_received', 'state_no', 'mode_of_payment_id',
+        'variance', 'reason', 'date_due', 'cnid','commission_code'
     ];
 
-    protected $dates = ['date_rcvd', 'date_due'];
-
+    protected $dates = ['date_received', 'date_due'];
+    protected $casts = [
+        'date_received' => 'datetime',
+        'date_due'  => 'datetime',
+    ];
     public function insurer()
     {
         return $this->belongsTo(\App\Models\LookupValue::class, 'insurer_id');

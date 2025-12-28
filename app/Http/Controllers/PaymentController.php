@@ -9,6 +9,7 @@ use App\Services\EncryptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -80,6 +81,7 @@ class PaymentController extends Controller
             $client = \App\Models\Client::find($request->client_id);
         }
 
+        Log::info('Selected payment columns: ', $payments->toArray());
         return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns', 'client'));
     }
 
