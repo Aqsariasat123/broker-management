@@ -958,3 +958,39 @@
 </script>
 <script src="{{ asset('js/policies-index.js') }}"></script>
 @endsection
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px 15px;">
+              <div class="policy-form-header" style="display:flex; justify-content:space-between; align-items:center;">
+                  <h4 id="policyFormTitle"
+                      style="margin:0; font-size:16px; font-weight:600; color:#333;">
+                    Policy - Add New
+                  </h4>
+
+                <div class="client-page-actions" id="policyFormHeaderActions">
+                  <button type="submit"
+                          form="policyForm"
+                          class="btn-save"
+                          style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px; margin-right:8px;">
+                    Save
+                  </button>
+
+                  <button type="button"
+                          class="btn"
+                          style="background:#fff; color:#333; border:1px solid #ddd; padding:6px 16px; border-radius:3px; cursor:pointer; font-size:13px;"
+                          onclick="closePolicyPageView()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+           </div>
+
+
+             <div style="display:flex; gap:8px;">
+    <div  id="addPolicyClassBtn" 
+            style="flex:1; height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      
+    </div>
+    <div id="editPolicyClassBtn" 
+            style="flex:1;  height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+      
+    </div>
+  </div>
