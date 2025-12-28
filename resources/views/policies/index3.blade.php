@@ -35,14 +35,31 @@
   
   <!-- Main Policies Table View -->
   <div class="clients-table-view" id="clientsTableView">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            Policies
+            @if(isset($client) && $client)
+              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
+            @endif
+          </h3>
+       
+      </div>
+    </div>
   <div class="container-table">
     <!-- Policies Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
       <div class="page-title-section">
-        <h3>Policies</h3>
         <div class="records-found">Records Found - {{ $policies->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+        <div class="filter-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="filterToggle" {{ (request()->get('dfr') == 'true') || request()->has('search_term') || request()->has('client_name') || request()->has('policy_number') || request()->has('insurer_id') || request()->has('policy_class_id') || request()->has('agency_id') || request()->has('agent') || request()->has('policy_status_id') || request()->has('start_date_from') || request()->has('end_date_from') || request()->has('premium_unpaid') || request()->has('comm_unpaid') ? 'checked' : '' }}>
+              <span class="toggle-slider"></span>
+            </label>
+            <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
+          </div>
         <div class="filter-group">
             @if(request()->get('dfr') == 'true')
               <button class="btn btn-list-all" id="listAllBtn">List ALL</button>
