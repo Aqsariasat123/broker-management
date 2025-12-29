@@ -34,4 +34,6 @@ class Statement extends Model
 {
     return $this->hasMany(CommissionLine::class); // or whatever your model name is
 }
+
+
 }

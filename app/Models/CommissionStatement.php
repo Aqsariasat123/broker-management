@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CommissionStatement extends Model
 {
@@ -20,6 +21,7 @@ class CommissionStatement extends Model
         'tax_withheld',
         'attachment_path',
         'remarks',
+        'income_source_id', // make sure this is fillable
     ];
 
     protected $casts = [
@@ -29,27 +31,21 @@ class CommissionStatement extends Model
         'tax_withheld' => 'decimal:2',
     ];
 
-    /**
-     * Get the commission note that owns the commission statement.
-     */
+    // CommissionNote relation
     public function commissionNote(): BelongsTo
     {
         return $this->belongsTo(CommissionNote::class);
     }
 
-    /**
-     * Get the commissions for the commission statement.
-     */
+    // Commissions relation
     public function commissions(): HasMany
     {
-        return $this->hasMany(Commission::class);
+        return $this->hasMany(Commission::class, 'commission_statement_id');
     }
 
-    /**
-     * Get the incomes for the commission statement.
-     */
-    public function incomes(): HasMany
+    // Income relation (1-1)
+    public function income(): HasOne
     {
-        return $this->hasMany(Income::class, 'commission_statement_id');
+        return $this->hasOne(Income::class, 'id', 'income_source_id');
     }
 }

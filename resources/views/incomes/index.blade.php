@@ -206,7 +206,11 @@
               <select class="form-control" name="income_source_id" id="income_source_id" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
                 <option value="">Select</option>
                 @foreach($comisionlist as $comision)
-                  <option value="{{ $comision->id }}">{{ $comision->insurer->name }}</option>
+                    @foreach($comision->commissions as $commission)
+                        <option value="{{ $commission->id }}">
+                          {{ $commission->commissionNote->schedule->policy->insurer->name }}
+                        </option>
+                    @endforeach
                 @endforeach
               </select>
             </div>

@@ -117,7 +117,6 @@
                   <circle cx="12" cy="12" r="9" stroke="#2d2d2d" stroke-width="1.5" fill="none"/>
                   <path d="M12 7V12L15 15" stroke="#2d2d2d" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                <span class="action-ellipsis" style="cursor:pointer;">⋯</span>
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'policy_no')

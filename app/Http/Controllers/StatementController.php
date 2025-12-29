@@ -5,39 +5,57 @@ namespace App\Http\Controllers;
 use App\Models\CommissionStatement;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class StatementController extends Controller
 {
-    public function index(Request $request)
-    {
-        // Lookup values for selects
-        $insurers = LookupValue::whereHas('lookupCategory', function($q){
-            $q->where('name', 'Insurers');
-        })->where('active', 1)->orderBy('seq')->get();
+    
+  public function index(Request $request)
+        {
+            // Lookup values for selects
+            $insurers = LookupValue::whereHas('lookupCategory', fn($q) => $q->where('name', 'Insurers'))
+                ->where('active', 1)
+                ->orderBy('seq')
+                ->get();
 
-        $modesOfPayment = LookupValue::whereHas('lookupCategory', function($q){
-            $q->where('name', 'Mode Of Payment (Life)');
-        })->where('active', 1)->orderBy('seq')->get();
+            $modesOfPayment = LookupValue::whereHas('lookupCategory', fn($q) => $q->where('name', 'Mode Of Payment (Life)'))
+                ->where('active', 1)
+                ->orderBy('seq')
+                ->get();
 
-        // Filter by insurer if requested
-        $insurerFilter = $request->get('insurer');
-        $statements = CommissionStatement::with(['modeOfPayment'])
+           $soruces = LookupValue::whereHas('lookupCategory', fn($q) => $q->where('name', 'Insurer'))
+                ->where('active', 1)
+                ->orderBy('seq')
+                ->get();    
+            $insurerFilter = $request->get('insurer');
+         
+            // Build query
+             $statements = CommissionStatement::with([
+                'income',
+                'commissions',
+                'commissionNote.schedule.policy.insurer'
+            ])
             ->when($insurerFilter, function($q) use ($insurerFilter, $insurers) {
                 $insurer = $insurers->firstWhere('name', $insurerFilter);
                 if ($insurer) {
-                    $q->where('insurer_id', $insurer->id);
+                    $q->whereHas('commissionNote.schedule.policy', fn($query) => $query->where('insurer_id', $insurer->id));
                 }
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        // Use TableConfigHelper for selected columns
-        $config = \App\Helpers\TableConfigHelper::getConfig('statements');
-        $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('statements');
 
-        return view('statements.index', compact('statements', 'insurers', 'modesOfPayment', 'insurerFilter', 'selectedColumns'));
-    }
 
+
+            // Selected columns via TableConfigHelper
+            $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('statements');
+
+            Log::info('Selected statements: ' . $soruces->toJson());
+
+            return view('statements.index', compact(
+                'statements', 'insurers', 'modesOfPayment', 'insurerFilter', 'selectedColumns','soruces'
+            ));
+        }
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -70,18 +88,28 @@ class StatementController extends Controller
     public function show(Request $request, CommissionStatement $statement)
     {
         if ($request->expectsJson()) {
-            return response()->json($statement->load(['insurer', 'modeOfPayment']));
+                 return response()->json($statement->load([
+            'income',
+            'commissions.modeOfPayment',
+            'commissionNote.schedule.policy.insurer'
+        ]));
         }
         return view('statements.show', compact('statement'));
     }
 
-    public function edit(CommissionStatement $statement)
-    {
-        if (request()->expectsJson()) {
-            return response()->json($statement->load(['insurer', 'modeOfPayment']));
-        }
-        return view('statements.edit', compact('statement'));
+public function edit(CommissionStatement $statement)
+{
+    if (request()->expectsJson()) {
+        return response()->json($statement->load([
+            'income',
+            'commissions.modeOfPayment',
+            'commissionNote.schedule.policy.insurer'
+        ]));
     }
+
+    return view('statements.edit', compact('statement'));
+}
+
 
     public function update(Request $request, CommissionStatement $statement)
     {

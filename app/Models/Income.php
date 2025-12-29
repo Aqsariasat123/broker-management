@@ -45,8 +45,12 @@ class Income extends Model
     /**
      * Get the commission statement that owns the income.
      */
-    public function commissionStatement(): BelongsTo
+ public function commissionStatement()
     {
-        return $this->belongsTo(CommissionStatement::class, 'commission_statement_id');
+        return $this->hasOne(
+            CommissionStatement::class,
+            'id',
+            'commission_statement_id'
+        );
     }
 }

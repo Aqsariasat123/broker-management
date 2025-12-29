@@ -17,12 +17,9 @@
 <div class="dashboard">
   <!-- Main Vehicles Table View -->
   <div class="clients-table-view" id="clientsTableView">
-  <div class="container-table">
-    <!-- Vehicles Card -->
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
-      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-      <div class="page-title-section">
-        <h3>
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+             <h3>
           @if($policy)
             {{ $policy->policy_code }} - 
                <span style="color:#f3742a;">Vehicles</span>
@@ -33,9 +30,21 @@
              <span style="color:#f3742a;">{{ $client->client_name }} -  </span>
             
           @endif
-                         <span>Vehicles</span>
+                    @if(!$policy)
+           <span>Vehicles</span>    
+            @endif
+
 
         </h3>
+       
+      </div>
+  </div> 
+  <div class="container-table">
+    <!-- Vehicles Card -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+      <div class="page-title-section">
+     
         <div class="records-found">Records Found - {{ $vehicles->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">

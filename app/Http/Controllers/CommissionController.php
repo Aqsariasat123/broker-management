@@ -6,6 +6,7 @@ use App\Models\Policy;
 use App\Models\Commission;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CommissionController extends Controller
 {
@@ -32,7 +33,8 @@ class CommissionController extends Controller
             'insurer',
             'paymentStatus',
             'modeOfPayment',
-            'commissionNote.schedule.policy'
+            'commissionNote.schedule.policy',
+             'commissionNote.schedule.policy.insurer',
         ]);
         $policies = Policy::with('client')->get(); // all policies
 
@@ -46,13 +48,18 @@ class CommissionController extends Controller
         }
     
         // ✅ INSURER FILTER
-        $insurerFilter = $request->get('insurer');
-        if ($insurerFilter) {
-            $insurer = $insurers->firstWhere('name', $insurerFilter);
-            if ($insurer) {
-                $query->where('insurer_id', $insurer->id);
+            $insurerFilter = $request->get('insurer');
+
+            if ($insurerFilter) {
+                $insurer = $insurers->firstWhere('name', $insurerFilter);
+
+                if ($insurer) {
+                    $query->whereHas(
+                        'commissionNote.schedule.policy',
+                        fn ($q) => $q->where('insurer_id', $insurer->id)
+                    );
+                }
             }
-        }
     
         $commissions = $query
             ->orderByDesc('created_at')
@@ -60,6 +67,7 @@ class CommissionController extends Controller
     
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('commissions');
     
+        Log::info('Selected Columns: ', $commissions->toArray());
         return view(
             'commissions.index',
             compact(
@@ -70,7 +78,8 @@ class CommissionController extends Controller
                 'paymentStatuses',
                 'modesOfPayment',
                 'insurerFilter',
-                'selectedColumns'
+                'selectedColumns',
+                
             )
         );
     }
@@ -122,13 +131,24 @@ class CommissionController extends Controller
         return view('commissions.show', compact('commission'));
     }
 
-    public function edit(Commission $commission)
-    {
-        if (request()->expectsJson()) {
-            return response()->json($commission->load(['insurer', 'paymentStatus', 'modeOfPayment']));
+        public function edit(Commission $commission)
+        {
+            if (request()->expectsJson()) {
+                // Load the same nested relationships as in index
+                $commission->load([
+                    'commissionNote.schedule.policy',   // for client_name
+                    'commissionNote.schedule.policy.client',   // for client_name
+                    'commissionNote.schedule.policy.insurer',  // for insurer
+                    'paymentStatus',
+                    'modeOfPayment',
+                ]);
+
+                return response()->json($commission);
+            }
+
+            return view('commissions.edit', compact('commission'));
         }
-        return view('commissions.edit', compact('commission'));
-    }
+
 
     public function update(Request $request, Commission $commission)
     {
@@ -141,9 +161,9 @@ class CommissionController extends Controller
             'rate' => 'nullable|numeric',
             'amount_due' => 'nullable|numeric',
             'payment_status_id' => 'nullable|exists:lookup_values,id',
-            'amount_rcvd' => 'nullable|numeric',
-            'date_rcvd' => 'nullable|date',
-            'state_no' => 'nullable|string|max:255',
+            'amount_received' => 'nullable|numeric',
+            'date_received' => 'nullable|date',
+            'statement_no' => 'nullable|string|max:255',
             'mode_of_payment_id' => 'nullable|exists:lookup_values,id',
             'variance' => 'nullable|numeric',
             'reason' => 'nullable|string|max:255',

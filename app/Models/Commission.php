@@ -12,7 +12,7 @@ class Commission extends Model
 
     protected $fillable = [
         'commission_note_id', 'commission_statement_id', 'insurer_id', 'grouping', 'basic_premium', 'rate', 'amount_due',
-        'payment_status_id', 'amount_received', 'date_received', 'state_no', 'mode_of_payment_id',
+        'payment_status_id', 'amount_received', 'date_received', 'statement_no', 'mode_of_payment_id',
         'variance', 'reason', 'date_due', 'cnid','commission_code'
     ];
 
@@ -37,9 +37,12 @@ class Commission extends Model
     /**
      * Get the commission note that owns the commission.
      */
-    public function commissionNote(): BelongsTo
+   public function commissionNote()
     {
-        return $this->belongsTo(CommissionNote::class);
+        return $this->belongsTo(
+            CommissionNote::class,
+            'commission_note_id'
+        );
     }
 
     /**

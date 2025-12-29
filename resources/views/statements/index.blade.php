@@ -33,8 +33,8 @@
         
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
-            @foreach(['SACOS','Alliance','Hsavy','MUA'] as $insurerBtn)
-              <button class="btn btn-column" onclick="filterByInsurer('{{ $insurerBtn }}')" style="margin-left:5px;{{ isset($insurerFilter) && $insurerFilter==$insurerBtn ? 'background:#007bff;color:#fff;' : '' }}">{{ $insurerBtn }}</button>
+            @foreach($soruces as $insurerBtn)
+              <button class="btn btn-column" onclick="filterByInsurer('{{ $insurerBtn->name }}')" style="margin-left:5px;{{ isset($insurerFilter) && $insurerFilter==$insurerBtn->name ? 'background:#007bff;color:#fff;' : '' }}">{{ $insurerBtn->name }}</button>
             @endforeach
             <button class="btn btn-back" onclick="window.location.href='{{ route('statements.index') }}'">All</button>
           </div>
@@ -73,35 +73,40 @@
           @foreach($statements as $st)
             <tr>
               <td class="action-cell">
-                <svg class="action-expand" onclick="openStatementDetails({{ $st->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <!-- Maximize icon: four arrows pointing outward from center -->
-                  <!-- Top arrow -->
-                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Right arrow -->
-                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Bottom arrow -->
-                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Left arrow -->
-                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+             <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openStatementDetails({{ $st->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+
+              
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'statement_no')
                   <td data-column="statement_no">
-                    <a href="javascript:void(0)" onclick="openStatementDetails({{ $st->id }})" style="color:#007bff; text-decoration:underline;">{{ $st->statement_no }}</a>
+                      {{ $st->com_stat_id  }}
                   </td>
                 @elseif($col == 'year')
                   <td data-column="year">{{ $st->year ?? '-' }}</td>
                 @elseif($col == 'insurer')
-                  <td data-column="insurer">{{ $st->insurer ? $st->insurer->name : '-' }}</td>
+                    <td data-column="insurer">
+                      {{ $st->commissionNote && $st->commissionNote->schedule && $st->commissionNote->schedule->policy && $st->commissionNote->schedule->policy->insurer
+                            ? $st->commissionNote->schedule->policy->insurer->name
+                            : '-' }}
+                    </td>
                 @elseif($col == 'business_category')
                   <td data-column="business_category">{{ $st->business_category ?? '-' }}</td>
                 @elseif($col == 'date_received')
-                  <td data-column="date_received">{{ $st->date_received ? $st->date_received->format('d-M-y') : '-' }}</td>
+                  <td data-column="date_received">
+                    {{ optional($st->commissions->first())->date_received ? \Carbon\Carbon::parse($st->commissions->first()->date_received)->format('d-M-y') : '-' }}
+                </td>
                 @elseif($col == 'amount_received')
-                  <td data-column="amount_received">{{ $st->amount_received ? number_format($st->amount_received, 2) : '-' }}</td>
+                    <td data-column="amount_received">
+                        {{ $st->commissions->first()->amount_received 
+                            ? number_format($st->commissions->first()->amount_received, 2) 
+                            : '-' }}
+                    </td>
+
                 @elseif($col == 'mode_of_payment')
-                  <td data-column="mode_of_payment">{{ $st->modeOfPayment ? $st->modeOfPayment->name : '-' }}</td>
+                  <td data-column="mode_of_payment">
+                      {{ $st->commissions->first()->modeOfPayment->name ?? '-' }}
+                  </td>
                 @elseif($col == 'remarks')
                   <td data-column="remarks">{{ $st->remarks ?? '-' }}</td>
                 @endif
@@ -115,10 +120,10 @@
     </div>
 
     <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-      <div class="footer-left">
+      <!-- <div class="footer-left">
         <a class="btn btn-export" href="{{ route('statements.export', array_merge(request()->query(), ['page' => $statements->currentPage()])) }}">Export</a>
         <button class="btn btn-column" id="columnBtn2" type="button">Column</button>
-      </div>
+      </div> -->
       <div class="paginator">
         @php
           $base = url()->current();
@@ -153,7 +158,7 @@
       
      
       <div class="client-page-actions">
-        <button class="btn btn-edit" id="editStatementFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button>
+        <!-- <button class="btn btn-edit" id="editStatementFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; display:none;">Edit</button> -->
         <button class="btn" id="closeStatementPageBtn" onclick="closeStatementPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
       </div>
     </div>

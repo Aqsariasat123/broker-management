@@ -60,7 +60,7 @@
         <button class="btn btn-add" id="addDocumentBtn">Add</button>
       </div>
       @endif -->
-      @if(isset($client) && $client)
+      @if(isset($policy) && $policy)
         <div class="action-buttons">
           <button class="btn btn-add" id="addClaimBtn">Add</button>
         </div>

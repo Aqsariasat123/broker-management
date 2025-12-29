@@ -31,10 +31,12 @@ class Schedule extends Model
         'effective_from' => 'date',
         'effective_to' => 'date',
     ];
-
-    public function policy(): BelongsTo
+   public function policy()
     {
-        return $this->belongsTo(Policy::class);
+        return $this->belongsTo(
+            Policy::class,
+            'policy_id'
+        );
     }
 
     public function paymentPlans(): HasMany

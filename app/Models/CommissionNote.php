@@ -30,9 +30,13 @@ class CommissionNote extends Model
     /**
      * Get the schedule that owns the commission note.
      */
-    public function schedule(): BelongsTo
+       public function schedule()
     {
-        return $this->belongsTo(Schedule::class);
+        return $this->hasOne(
+            Schedule::class,
+            'id',
+            'schedule_id'
+        );
     }
 
     /**

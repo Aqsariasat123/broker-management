@@ -187,27 +187,25 @@ input:checked + .slider:before {
           @foreach($commissions as $com)
             <tr>
               <td class="action-cell">
-                <svg class="action-expand" onclick="openCommissionDetails({{ $com->id }})" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer; vertical-align:middle;">
-                  <!-- Maximize icon: four arrows pointing outward from center -->
-                  <!-- Top arrow -->
-                  <path d="M12 2L12 8M12 2L10 4M12 2L14 4" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Right arrow -->
-                  <path d="M22 12L16 12M22 12L20 10M22 12L20 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Bottom arrow -->
-                  <path d="M12 22L12 16M12 22L10 20M12 22L14 20" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Left arrow -->
-                  <path d="M2 12L8 12M2 12L4 10M2 12L4 14" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+              
+                <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openCommissionDetails({{ $com->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
+
               </td>
               @foreach($selectedColumns as $col)
-                @if($col == 'policy_number')
-                  <td data-column="policy_number">
-                    <a href="javascript:void(0)" onclick="openCommissionDetails({{ $com->id }})" style="color:#007bff; text-decoration:underline;">{{ $com->policy_number }}</a>
+                @if($col == 'policy_code')
+                  <td data-column="policy_code">
+                  {{ $com->commissionNote?->schedule?->policy?->policy_code ?? '-' }}
+
                   </td>
                 @elseif($col == 'client_name')
-                  <td data-column="client_name">{{ $com->client_name }}</td>
+                  <td data-column="client_name">{{ $com->commissionNote?->schedule?->policy->client?->client_name }}</td>
                 @elseif($col == 'insurer')
-                  <td data-column="insurer">{{ $com->insurer ? $com->insurer->name : '-' }}</td>
+                  <td data-column="insurer">
+                    {{ $com->commissionNote && $com->commissionNote->schedule && $com->commissionNote->schedule->policy && $com->commissionNote->schedule->policy->insurer 
+                        ? $com->commissionNote->schedule->policy->insurer->name 
+                        : '-' 
+                    }}
+                </td>
                 @elseif($col == 'grouping')
                   <td data-column="grouping">{{ $com->grouping ?? '-' }}</td>
                 @elseif($col == 'basic_premium')
@@ -218,12 +216,12 @@ input:checked + .slider:before {
                   <td data-column="amount_due">{{ $com->amount_due ? number_format($com->amount_due, 2) : '-' }}</td>
                 @elseif($col == 'payment_status')
                   <td data-column="payment_status">{{ $com->paymentStatus ? $com->paymentStatus->name : '-' }}</td>
-                @elseif($col == 'amount_rcvd')
-                  <td data-column="amount_rcvd">{{ $com->amount_rcvd ? number_format($com->amount_rcvd, 2) : '-' }}</td>
-                @elseif($col == 'date_rcvd')
-                  <td data-column="date_rcvd">{{ $com->date_rcvd ? $com->date_rcvd->format('d-M-y') : '-' }}</td>
-                @elseif($col == 'state_no')
-                  <td data-column="state_no">{{ $com->state_no ?? '-' }}</td>
+                @elseif($col == 'amount_received')
+                  <td data-column="amount_received">{{ $com->amount_received ? number_format($com->amount_received, 2) : '-' }}</td>
+                @elseif($col == 'date_received')
+                  <td data-column="date_received">{{ $com->date_received ? $com->date_received->format('d-M-y') : '-' }}</td>
+                @elseif($col == 'statement_no')
+                  <td data-column="statement_no">{{ $com->statement_no ?? '-' }}</td>
                 @elseif($col == 'mode_of_payment')
                   <td data-column="mode_of_payment">{{ $com->modeOfPayment ? $com->modeOfPayment->name : '-' }}</td>
                 @elseif($col == 'variance')
@@ -380,12 +378,12 @@ input:checked + .slider:before {
             </div>
           
           <div class="form-group">
-              <label for="amount_rcvd">Amount Rcvd</label>
-              <input type="number" step="0.01" class="form-control" name="amount_rcvd" id="amount_rcvd">
+              <label for="amount_received">Amount Recieved</label>
+              <input type="number" step="0.01" class="form-control" name="amount_received" id="amount_received">
             </div>
             <div class="form-group">
-              <label for="date_rcvd">Date Rcvd</label>
-              <input type="date" class="form-control" name="date_rcvd" id="date_rcvd">
+              <label for="date_received">Date Recieved</label>
+              <input type="date" class="form-control" name="date_received" id="date_received">
             </div>
             <div class="form-group">
               <label for="mode_of_payment_id">Mode</label>
@@ -397,8 +395,8 @@ input:checked + .slider:before {
               </select>
             </div>
             <div class="form-group">
-              <label for="state_no">Statement No</label>
-              <input type="text" class="form-control" name="state_no" id="state_no">
+              <label for="statement_no">Statement No</label>
+              <input type="text" class="form-control" name="statement_no" id="statement_no">
             </div>
          
           </div>

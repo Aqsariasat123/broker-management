@@ -63,7 +63,7 @@ async function openStatementDetails(id) {
     showPageView();
     document.getElementById('statementDetailsPageContent').style.display = 'block';
     document.getElementById('statementFormPageContent').style.display = 'none';
-    document.getElementById('editStatementFromPageBtn').style.display = 'inline-block';
+    // document.getElementById('editStatementFromPageBtn').style.display = 'inline-block';
 
   } catch (e) {
     alert('Error loading statement');
@@ -74,19 +74,123 @@ async function openStatementDetails(id) {
 /* ============================================================
    DETAILS HTML
 ============================================================ */
-function populateStatementDetails() {
+// function populateStatementDetails(statement) {
+
+//   console.log('Statement details:', statement); // For debugging
+//   const el = document.getElementById('statementDetailsContent');
+
+//   el.innerHTML = `
+//     <div class="statement-container">
+//       <!-- Summary Title -->
+//       <div class="summary-title">Commission Statement Summary</div>
+
+//       <!-- Summary Bar - Exact match to your screenshot -->
+//       <div class="summary-bar">
+//         <div class="summary-item">
+//           <span class="summary-label">Insurer</span>
+//           <input type="text" class="summary-input" value="${statement.commission_note.schedule.policy.insurer.name}" readonly>
+//         </div>
+
+//         <div class="summary-item">
+//           <span class="summary-label">Class</span>
+//           <input type="text" class="summary-input" value="General" readonly>
+//         </div>
+
+//         <div class="summary-item">
+//           <span class="summary-label">Total</span>
+//           <div class="summary-input">2074.89</div>
+//         </div>
+
+//         <div class="summary-item">
+//           <span class="summary-label">Date Received</span>
+//           <div class="summary-input">28-Sep-24</div>
+//         </div>
+
+//         <div class="summary-item">
+//           <span class="summary-label">Mode</span>
+//           <input type="text" class="summary-input" value="Bank Transfer" readonly>
+//         </div>
+
+//         <div class="summary-item">
+//           <span class="summary-label">Chq No</span>
+//           <input type="text" class="summary-input" value="NOU0000000" readonly>
+//         </div>
+//       </div>
+
+//       <!-- Commission Details Title -->
+//       <div class="details-title">Commission Details</div>
+
+//       <!-- Table -->
+//       <table class="details-table">
+//         <thead>
+//           <tr>
+//             <th>CNID</th>
+//             <th>Policy Number</th>
+//             <th>Client Name</th>
+//             <th>Basic Premi</th>
+//             <th>Rate</th>
+//             <th>Amount Due</th>
+//             <th>Amount Received</th>
+//             <th>Variance</th>
+//             <th>Variance Reason</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           <tr>
+//             <td>CN23061</td>
+//             <td>MPV-23-HEA-P0002110</td>
+//             <td>Kendra Moller</td>
+//             <td>7,356.40</td>
+//             <td>10.0%</td>
+//             <td>735.64</td>
+//             <td>735.64</td>
+//             <td>0.00</td>
+//             <td>-</td>
+//           </tr>
+//           <tr>
+//             <td>CN23059</td>
+//             <td>FSP-23-HEA-P0002309</td>
+//             <td>Pierro Leclerc</td>
+//             <td>8,441.00</td>
+//             <td>15.0%</td>
+//             <td>1,266.15</td>
+//             <td>633.08</td>
+//             <td>633.08</td>
+//             <td>-</td>
+//           </tr>
+//           <tr>
+//             <td>CN23055</td>
+//             <td>HS1-23-HIN-0000088</td>
+//             <td>Margo Slater</td>
+//             <td>4,793.50</td>
+//             <td>15.0%</td>
+//             <td>719.03</td>
+//             <td>719.03</td>
+//             <td>0.00</td>
+//             <td class="variance-reason-cell">Part commission on instalment</td>
+//           </tr>
+//         </tbody>
+//       </table>
+//     </div>
+//   `;
+// }
+function populateStatementDetails(statement) {
+  console.log('Statement details:', statement); // For debugging
   const el = document.getElementById('statementDetailsContent');
+
+  // Get first commission (if exists)
+  const firstCommission = statement.commissions.length > 0 ? statement.commissions[0] : null;
 
   el.innerHTML = `
     <div class="statement-container">
       <!-- Summary Title -->
       <div class="summary-title">Commission Statement Summary</div>
 
-      <!-- Summary Bar - Exact match to your screenshot -->
+      <!-- Summary Bar -->
       <div class="summary-bar">
         <div class="summary-item">
           <span class="summary-label">Insurer</span>
-          <input type="text" class="summary-input" value="Alliance" readonly>
+          <input type="text" class="summary-input" value="${statement.commission_note.schedule.policy.insurer.name}" readonly>
         </div>
 
         <div class="summary-item">
@@ -96,22 +200,32 @@ function populateStatementDetails() {
 
         <div class="summary-item">
           <span class="summary-label">Total</span>
-          <div class="summary-input">2074.89</div>
+          <div class="summary-input">${Number(statement.net_commission).toFixed(2)}</div>
         </div>
 
         <div class="summary-item">
           <span class="summary-label">Date Received</span>
-          <div class="summary-input">28-Sep-24</div>
+          <div class="summary-input">${firstCommission && firstCommission.date_received
+      ? new Date(firstCommission.date_received).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit'
+      })
+      : '-'
+    }</div>
         </div>
 
         <div class="summary-item">
           <span class="summary-label">Mode</span>
-          <input type="text" class="summary-input" value="Bank Transfer" readonly>
+          <input type="text" class="summary-input" value="${firstCommission && firstCommission.mode_of_payment
+      ? firstCommission.mode_of_payment.name
+      : '-'
+    }" readonly>
         </div>
 
         <div class="summary-item">
           <span class="summary-label">Chq No</span>
-          <input type="text" class="summary-input" value="NOU0000000" readonly>
+          <input type="text" class="summary-input" value="${firstCommission ? firstCommission.statement_no : '-'}" readonly>
         </div>
       </div>
 
@@ -134,39 +248,23 @@ function populateStatementDetails() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>CN23061</td>
-            <td>MPV-23-HEA-P0002110</td>
-            <td>Kendra Moller</td>
-            <td>7,356.40</td>
-            <td>10.0%</td>
-            <td>735.64</td>
-            <td>735.64</td>
-            <td>0.00</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>CN23059</td>
-            <td>FSP-23-HEA-P0002309</td>
-            <td>Pierro Leclerc</td>
-            <td>8,441.00</td>
-            <td>15.0%</td>
-            <td>1,266.15</td>
-            <td>633.08</td>
-            <td>633.08</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>CN23055</td>
-            <td>HS1-23-HIN-0000088</td>
-            <td>Margo Slater</td>
-            <td>4,793.50</td>
-            <td>15.0%</td>
-            <td>719.03</td>
-            <td>719.03</td>
-            <td>0.00</td>
-            <td class="variance-reason-cell">Part commission on instalment</td>
-          </tr>
+          ${statement.commissions
+      .map(
+        (c) => `
+            <tr>
+              <td>${statement.commission_note.com_note_id}</td>
+              <td>${statement.commission_note.schedule.policy.policy_no}</td>
+              <td>${statement.commission_note.schedule.policy.insured_item || '-'}</td>
+              <td>${Number(c.basic_premium).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>${c.rate}%</td>
+              <td>${Number(c.amount_due).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>${Number(c.amount_received).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td>${c.variance ? Number(c.variance).toFixed(2) : '0.00'}</td>
+              <td>${c.variance_reason || '-'}</td>
+            </tr>
+          `
+      )
+      .join('')}
         </tbody>
       </table>
     </div>
@@ -211,7 +309,7 @@ function openStatementForm(mode, s = null) {
     method.innerHTML = `<input type="hidden" name="_method" value="PUT">`;
     document.getElementById('statementDeleteBtn').style.display = 'inline-block';
 
-    ['year','insurer_id','business_category','date_received','amount_received','mode_of_payment_id','remarks']
+    ['year', 'insurer_id', 'business_category', 'date_received', 'amount_received', 'mode_of_payment_id', 'remarks']
       .forEach(f => {
         const el = form.querySelector(`#${f}`);
         if (el) el.value = s[f] ?? '';
@@ -258,5 +356,17 @@ function deleteStatement() {
 document.getElementById('addStatementBtn')
   ?.addEventListener('click', openAddForm);
 
-document.getElementById('editStatementFromPageBtn')
-  ?.addEventListener('click', () => currentStatementId && openEditStatement(currentStatementId));
+// document.getElementById('editStatementFromPageBtn')
+//   ?.addEventListener('click', () => currentStatementId && openEditStatement(currentStatementId));
+function filterByInsurer(insurer = null) {
+
+  const url = new URL(window.location);
+
+  if (insurer) {
+    url.searchParams.set('insurer', insurer);
+  } else {
+    url.searchParams.delete('insurer');
+  }
+
+  window.location.href = url.toString();
+}
