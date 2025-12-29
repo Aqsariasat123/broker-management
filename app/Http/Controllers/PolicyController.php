@@ -162,7 +162,6 @@ class PolicyController extends Controller
                 'businessType',
                 'frequency',
                 'payPlan',
-                'agency',
                 'channel'
             ])
             ->orderBy('date_registered', 'desc')

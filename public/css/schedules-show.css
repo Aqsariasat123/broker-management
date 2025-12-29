@@ -24,3 +24,11 @@
   tbody tr:nth-child(even) { background-color:#f8f8f8; }
   tbody td { padding:5px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
   .btn-action { padding:2px 6px; font-size:11px; margin:1px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:2px; display:inline-block; text-decoration:none; color:#333; }
+   .btn-follow-up { background:#000; color:#fff; border-color:#000; }
+    .btn-follow-up.inactive { background:#000; color:#fff; border-color:#000; }
+    .btn-follow-up.filter-active { background:#28a745; color:#fff; border-color:#28a745; }
+    .btn-submitted { background:#000; color:#fff; border-color:#000; }
+    .btn-submitted.active { background:#000; color:#fff; border-color:#000; }
+    .btn-submitted.filter-active { background:#28a745; color:#fff; border-color:#28a745; }
+    .filter-group { display:flex; align-items:center; gap:8px; }
+    

@@ -343,6 +343,7 @@ document.addEventListener('change', async function (e) {
 
 // Populate policy details view
 function populatePolicyDetails(policy) {
+  console.log('Populating policy details for policy:', policy);
   const content = document.getElementById('policyDetailsContent');
   const scheduleContent = document.getElementById('policyScheduleContent');
   const documentsContent = document.getElementById('documentsContent');
@@ -379,6 +380,37 @@ function populatePolicyDetails(policy) {
   const sourceName = policy.source_name || client.source_name || '';
   const applicationDate = formatDate(policy.date_registered);
   const channelName = policy.channel_name || (policy.channel ? policy.channel.name : '');
+
+  const selectedSourceId = policy?.channel_id ?? null;
+
+  const sourceOptions = lookupData.sources
+    .map(ct => `
+        <option value="${ct.id}" ${ct.id == source ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+    .join('');
+
+
+  const selectedAgencyId = policy?.agency_id ?? null;
+
+  const agencyOptions = lookupData.agencies
+    .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedAgencyId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+    .join('');
+  const selectedAgentId = policy?.agent ?? null;
+
+  const agentsOptions = lookupData.agents
+    .map(ct => `
+        <option value="${ct.id}" ${ct.id == selectedAgentId ? 'selected' : ''}>
+          ${ct.name}
+        </option>
+      `)
+    .join('');
+
 
   // Top Section: 4 columns
   const col1 = `
@@ -454,15 +486,25 @@ function populatePolicyDetails(policy) {
         <div class="detail-section-body">
           <div class="detail-row">
             <span class="detail-label">Agency</span>
-            <input type="text" class="detail-value" value="${policy.agency_name || (policy.agency ? policy.agency.name : '') || ''}" readonly>
+              <select id="agency_name" name="agency_name" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" disabled >
+              <option value="">Select</option>
+              ${agencyOptions}
+            </select>
+        
           </div>
           <div class="detail-row">
             <span class="detail-label">Agent</span>
-            <input type="text" class="detail-value" value="${policy.agent || ''}" readonly>
+              <select id="agent" name="agent" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" disabled>
+              <option value="">Select</option>
+              ${agentsOptions}
+            </select>
           </div>
           <div class="detail-row">
             <span class="detail-label">Source</span>
-            <input type="text" class="detail-value" value="${source || ''}" readonly>
+             <select id="Source" name="Source" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" disabled>
+              <option value="">Select</option>
+              ${sourceOptions}
+            </select>
             </div>
           <div class="detail-row">
             <span class="detail-label">Source Name</span>
@@ -886,6 +928,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
     return html;
   }
 
+
   // Policy Details Section - 5 columns layout
   const policyDetails = `
       <div style="padding:5px 12px; ">
@@ -949,7 +992,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Agent</label>
-            <select name="agent_id" id="agent_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
+            <select name="agent" id="agent" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
               ${createSelectOptions(lookupData.agents || [])}
             </select>
           </div>
@@ -1288,6 +1331,7 @@ function populatePolicyForm(policy, formContent, formScheduleContent, formDocume
     return html;
   }
 
+
   // Top Section: 4 columns - Matching details view exactly
   const col1 = `
       <div class="detail-section-card">
@@ -1357,7 +1401,7 @@ function populatePolicyForm(policy, formContent, formScheduleContent, formDocume
         </div>
       </div>
     `;
-
+  console.log('Source Name:', sourceName);
   const col3 = `
       <div class="detail-section-card">
         <div class="detail-section-header">AGENCY & SOURCE</div>
@@ -1370,8 +1414,8 @@ function populatePolicyForm(policy, formContent, formScheduleContent, formDocume
           </div>
           <div class="detail-row">
             <span class="detail-label">Agent</span>
-            <select name="agent_id" id="agent_id" class="detail-value">
-              ${createSelectOptions(lookupData.agents || [], p.agent_id)}
+            <select name="agent" id="agent" class="detail-value">
+              ${createSelectOptions(lookupData.agents || [], p.agent)}
             </select>
           </div>
           <div class="detail-row">
@@ -1382,7 +1426,9 @@ function populatePolicyForm(policy, formContent, formScheduleContent, formDocume
           </div>
           <div class="detail-row">
             <span class="detail-label">Source</span>
-            <input type="text" name="source" id="source" class="detail-value" value="${source}" readonly>
+             <select name="source" id="source" class="detail-value">
+              ${createSelectOptions(lookupData.sources || [], client.source || p.source)}
+            </select>
           </div>
           <div class="detail-row">
             <span class="detail-label">Source Name</span>
