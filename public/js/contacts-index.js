@@ -265,20 +265,20 @@ async function openContactDetails(id) {
         if (!currentContactId) return;
         const baseUrl = this.getAttribute('data-url');
         if (!baseUrl || baseUrl === '#') return;
-         const tabType = this.getAttribute('data-tab');
+        const tabType = this.getAttribute('data-tab');
 
         let actionType = 'view'; // default
 
         if (tabType === 'life-proposals-view') {
-            actionType = 'view';
+          actionType = 'view';
         } else if (tabType === 'life-proposals-add') {
-            actionType = 'add';
+          actionType = 'add';
         } else if (tabType === 'life-proposals-follow-up') {
-            actionType = 'follow-up';
+          actionType = 'follow-up';
         }
 
         window.location.href =
-            `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
+          `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
       });
     });
     // openModalWithContact('edit', contact);
@@ -587,10 +587,10 @@ function populateContactDetails(contact, type = 'view') {
       <div class="detail-row">
         <span class="detail-label">Assets</span>
         <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-          <label>Vehicle <input type="checkbox" name="has_vehicle" value="1" ${contact.has_vehicle ? 'checked' : ''} ${dis}></label>
-          <label>Home <input type="checkbox" name="has_house" value="1" ${contact.has_house ? 'checked' : ''} ${dis}></label>
-          <label>Business <input type="checkbox" name="has_business" value="1" ${contact.has_business ? 'checked' : ''} ${dis}></label>
-          <label>Boat <input type="checkbox" name="has_boat" value="1" ${contact.has_boat ? 'checked' : ''} ${dis}></label>
+          <label>Vehicle <input type="checkbox"   class="rider-checkbox"  name="vehicle" value="1" ${contact.vehicle == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Home <input type="checkbox"  class="rider-checkbox"  name="house" value="1" ${contact.house == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Business <input type="checkbox"  class="rider-checkbox"  name="business" value="1" ${contact.business == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Boat <input type="checkbox"  class="rider-checkbox"  name="other" value="1" ${contact.other == '1' ? 'checked' : ''} ${dis}></label>
         </div>
       </div>
       <div class="detail-row">
@@ -686,10 +686,10 @@ async function saveContactFromPage() {
       dob: document.getElementById('dob')?.value || '',
       savings_budget: document.getElementById('savings_budget')?.value || '',
       children: document.getElementById('children')?.value || '',
-      has_vehicle: document.querySelector('input[name="has_vehicle"]')?.checked ? 1 : 0,
-      has_house: document.querySelector('input[name="has_house"]')?.checked ? 1 : 0,
-      has_business: document.querySelector('input[name="has_business"]')?.checked ? 1 : 0,
-      has_boat: document.querySelector('input[name="has_boat"]')?.checked ? 1 : 0,
+      vehicle: document.querySelector('input[name="vehicle"]')?.checked ? "1" : "0",
+      house: document.querySelector('input[name="house"]')?.checked ? "1" : "0",
+      business: document.querySelector('input[name="business"]')?.checked ? "1" : "0",
+      other: document.querySelector('input[name="other"]')?.checked ? "1" : "0",
       other: document.querySelector('#contactDetailsContent input[name="other"]')?.value || '',
       status: document.getElementById('status')?.value || '',
       rank: document.getElementById('rank')?.value || '',
@@ -735,7 +735,7 @@ function closeContactPageView() {
     currentContactId = null;
   }
 }
-  
+
 
 
 function deleteContact() {

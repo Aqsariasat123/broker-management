@@ -110,7 +110,7 @@
               @foreach($selectedColumns as $col)
                 @if($col == 'regn_no')
                   <td data-column="regn_no">
-                    <a href="javascript:void(0)" onclick="openVehicleDetails({{ $vh->id }})" style="color:#007bff; text-decoration:underline;">{{ $vh->regn_no }}</a>
+                      {{ $vh->regn_no }}
                   </td>
                 @elseif($col == 'make')
                   <td data-column="make">{{ $vh->make ?? '-' }}</td>
