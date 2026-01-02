@@ -163,11 +163,11 @@
                     <input type="checkbox" {{ $client->wa ? 'checked' : '' }} disabled>
                   </td>
                 @elseif($col == 'district')
-                  <td data-column="district">{{ $client->districts->name ?? '-' }}</td>
+                  <td data-column="district">{{ $client->districts?->name ?? '-' }}</td>
                 @elseif($col == 'occupation')
-                  <td data-column="occupation">{{ $client->occupations->name ?? '-' }}</td>
+                  <td data-column="occupation">{{ $client->occupations?->name ?? '-' }}</td>
                 @elseif($col == 'source')
-                  <td data-column="source">{{ $client->sources->name }}</td>
+                  <td data-column="source">{{ $client->sources?->name }}</td>
                 @elseif($col == 'status')
                   <td data-column="status">{{ $client->status == 'Inactive' ? 'Dormant' : ($client->status == 'Active' ? 'Active' : $client->status) }}</td>
                 @elseif($col == 'signed_up')
@@ -179,7 +179,7 @@
                 @elseif($col == 'contact_person')
                   <td data-column="contact_person">{{ $client->contact_person ?? '-' }}</td>
                 @elseif($col == 'income_source')
-                  <td data-column="income_source">{{ $client->income_sources->name ?? '-' }}</td>
+                  <td data-column="income_source">{{ $client->income_sources?->name ?? '-' }}</td>
                 @elseif($col == 'married')
                   <td data-column="married">{{ $client->married ? 'Yes' : 'No' }}</td>
                 @elseif($col == 'spouses_name')
@@ -191,9 +191,9 @@
                 @elseif($col == 'location')
                   <td data-column="location">{{ $client->location ?? '-' }}</td>
                 @elseif($col == 'island')
-                  <td data-column="island">{{ $client->islands->name ?? '-' }}</td>
+                  <td data-column="island">{{ $client->islands?->name ?? '-' }}</td>
                 @elseif($col == 'country')
-                  <td data-column="country">{{ $client->countries->name ?? '-' }}</td>
+                  <td data-column="country">{{ $client->countries?->name ?? '-' }}</td>
                 @elseif($col == 'po_box_no')
                   <td data-column="po_box_no">{{ $client->po_box_no ?? '-' }}</td>
                 @elseif($col == 'pep')
@@ -203,7 +203,7 @@
                 @elseif($col == 'image')
                   <td data-column="image">{{ $client->image ? '📷' : '-' }}</td>
                 @elseif($col == 'salutation')
-                  <td data-column="salutation">{{ $client->salutations->name ?? '-' }}</td>
+                  <td data-column="salutation">{{ $client->salutations?->name ?? '-' }}</td>
                 @elseif($col == 'first_name')
                   <td data-column="first_name">{{ $client->first_name }}</td>
                 @elseif($col == 'other_names')
@@ -304,7 +304,7 @@
             <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" novalidate>
               @csrf
               <div id="clientFormMethod" style="display:none;"></div>
-              <div style="padding:12px;">
+              <div  style=" padding:12px; overflow-x: auto; white-space: nowrap;">
                 <!-- Form content will be cloned from modal -->
               </div>
             </form>
@@ -335,7 +335,7 @@
           </div>
         </div>
 
-        <div class="modal-body" style="background:#f5f5f5; padding:12px;">
+        <div class="modal-body" style="background:#f5f5f5; padding:12px; overflow-x: auto; white-space: nowrap;" >
           <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;">
             <!-- Column 1 -->
             <div>
@@ -775,7 +775,7 @@
           <button class="modal-close" onclick="closeClientDetailsModal()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
         </div>
       </div>
-      <div class="modal-body" style="background:#f5f5f5; padding:12px;">
+      <div class="modal-body" style="background:#f5f5f5; padding:12px; overflow-x: auto; white-space: nowrap;">
         <div id="clientDetailsContentModal" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; align-items:start;">
           <!-- Content will be loaded via JavaScript -->
         </div>

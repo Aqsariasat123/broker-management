@@ -2,7 +2,30 @@
 <div class="ks-sidebar-logo">
   <label class="ks-sidebar-logo-text custom-logo" id="login-title"><span class="ks-sidebar-orange">Key</span>stone</label>
 </div>
-        
+             @php
+                      $currentRoute = request()->path();
+                    $query = request()->query();
+
+                    $isClientContext     = request()->has('client_id');
+                    $isPolicyContext     = request()->is('policies*') && !request()->has('client_id');
+                    $isPolicySchedule    = request()->is('schedules*') && request()->has('policy_id');
+                    $isPolicyPayment   = request()->is('payments*') && request()->has('policy_id');
+                    $isPolicyVehicle   = request()->is('vehicles*') && request()->has('policy_id');
+                    $isPolicyClaim = request()->is('claims*') && request()->has('policy_id');
+                    $isPolicyDoc = request()->is('documents*') && request()->has('policy_id');
+                    $isPolicyNominee   = request()->is('nominees*') && request()->has('policy_id');
+
+                    $isPolicyEndorment = request()->is('endorsements*') && request()->has('policy_id');
+                    $isPolicyComision = request()->is('commissions*') && request()->has('policy_id');
+                    $isProposalContext   = request()->is('life-proposals*') && !request()->has('client_id');
+                    $isProposalNominee   = request()->is('nominees*') && request()->has('life-proposal-id');
+                    $isClaimContext      = request()->is('claims*') && !request()->has('client_id');
+                    $isVehicleContext    = request()->is('vehicles*') && !request()->has('client_id');
+                    $isDocumentContext   = request()->is('documents*') && !request()->has('client_id');
+                    
+
+                @endphp
+
         <ul class="ks-sidebar-menu">
             @if(auth()->check() && (auth()->user()->hasPermission('dashboard.view') || auth()->user()->isAdmin()))
             <li class="{{ request()->is('dashboard') || request()->is('/') ? 'active' : '' }}" data-tooltip="Dashboard">
@@ -63,7 +86,8 @@
             @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('clients.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('clients*') ? 'active' : '' }}" data-tooltip="Clients">
+        
+                <li class="{{ $isClientContext ||  request()->is('clients*') ? 'active' : '' }}" data-tooltip="Clients">
                 <a href="/clients">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -78,7 +102,7 @@
             @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('life-proposals.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('life-proposals*') ? 'active' : '' }}" data-tooltip="Proposals">
+            <li class="{{ (request()->is('life-proposals*') || $isProposalNominee) && !request()->has('client_id') ? 'active' : '' }}" data-tooltip="Proposals">
                 <a href="/life-proposals">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -93,7 +117,7 @@
             @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('policies.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('policies*') ? 'active' : '' }}" data-tooltip="Policies">
+            <li class="{{ (request()->is('policies*') || $isPolicyNominee || $isPolicyComision || $isPolicyEndorment || $isPolicySchedule || $isPolicyVehicle || $isPolicyPayment || $isPolicyClaim || $isPolicyDoc )  && !request()->has('client_id') ? 'active' : '' }}" data-tooltip="Policies">
                 <a href="/policies">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -122,7 +146,7 @@
             @endif
              -->
             @if(auth()->check() && (auth()->user()->hasPermission('commissions.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('commissions*') ? 'active' : '' }}" data-tooltip="Commission">
+            <li class="{{ request()->is('commissions*') && !request()->has('policy_id') ? 'active' : '' }}" data-tooltip="Commission">
                 <a href="/commissions">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -235,7 +259,7 @@
             @endif -->
             
             @if(auth()->check() && (auth()->user()->hasPermission('claims.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('claims*') ? 'active' : '' }}" data-tooltip="Claims">
+            <li class="{{  (!request()->has('client_id') && !request()->has('policy_id')  &&  request()->is('claims*')) ? 'active' : '' }}" data-tooltip="Claims">
                 <a href="/claims?pending=1">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -250,7 +274,7 @@
             @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('vehicles.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('vehicles*') ? 'active' : '' }}" data-tooltip="Vehicles">
+            <li class="{{  (request()->is('vehicles*') &&  !$isPolicyVehicle)  &&   (!request()->has('client_id') ) ? 'active' : '' }}" data-tooltip="Vehicles">
                 <a href="/vehicles">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -265,7 +289,7 @@
             @endif
             
             @if(auth()->check() && (auth()->user()->hasPermission('documents.view') || auth()->user()->isAdmin()))
-            <li class="{{ request()->is('documents*') ? 'active' : '' }}" data-tooltip="Documents">
+            <li class="{{  (!request()->has('client_id') && !request()->has('policy_id') && request()->is('documents*')) ? 'active' : '' }}" data-tooltip="Documents">
                 <a href="/documents">
                     <span class="ks-sidebar-icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

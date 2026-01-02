@@ -137,7 +137,7 @@ class AuthController extends Controller
             'follow_ups_today' => Task::whereDate('due_date', $today)
                 ->where('task_status', '!=', 'Completed')
                 ->count(),
-          'proposals_pending' => LifeProposal::with([
+           'proposals_pending' => LifeProposal::with([
                 'contact',
                 'insurer',
                 'policyPlan',
@@ -169,6 +169,7 @@ class AuthController extends Controller
                 $query->where('name', 'Processing');
             })
             ->count(),
+
             'life_policies' => $this->countLifePolicies(),
             'birthdays_today' => Client::whereMonth('dob_dor', now()->month)
                 ->whereDay('dob_dor', now()->day)

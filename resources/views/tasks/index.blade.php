@@ -92,7 +92,7 @@
                 $isExpiring = $task->isExpiringSoon();
             @endphp
             <div class="status-indicator {{ $isExpired ? 'expired' : 'normal' }}"
-                 style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : ($isExpiring ? '#f3742a' : 'transparent') }}; 
+                 style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : ($isExpiring ? '#f3742a' : 'black') }}; 
                         background-color:{{ $isExpired ? '#dc3545' : 'transparent' }};">
             </div>
         </div>

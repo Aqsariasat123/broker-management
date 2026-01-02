@@ -100,7 +100,7 @@ function toggleFilter() {
         input.type = 'text';
         input.className = 'column-filter';
         input.placeholder = 'Filter...';
-        input.style.cssText = 'width:100%; padding:4px; margin-top:4px; border:1px solid #ddd; border-radius:2px; font-size:12px;';
+        input.style.cssText = 'width:100%; margin-top:4px; padding:4px 6px; font-size:11px; border:1px solid #666; background:#000; color:#fff; border-radius:2px; transition:all 0.2s;';
         input.addEventListener('input', filterTable);
         th.appendChild(input);
       }
@@ -234,11 +234,11 @@ async function openEditVehicleModal(id) {
     document.getElementById('vehicleFormMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
     document.querySelector('#vehicleModal #vehicleDeleteBtn').style.display = 'inline-block';
 
-    ['regn_no','make','model','type','useage','year','value','policy_id','engine','engine_type','cc','engine_no','chassis_no','from','to','notes'].forEach(key => {
+    ['regn_no', 'make', 'model', 'type', 'useage', 'year', 'value', 'policy_id', 'engine', 'engine_type', 'cc', 'engine_no', 'chassis_no', 'from', 'to', 'notes'].forEach(key => {
       const el = document.getElementById(key);
       if (el) {
         let val = vehicle[key] ?? '';
-        if (el.type === 'date' && val) val = val.substring(0,10);
+        if (el.type === 'date' && val) val = val.substring(0, 10);
         el.value = val;
       }
     });
