@@ -36,7 +36,7 @@
   <div class="cards">
 
     <!-- Tasks Today -->
-    <a href="{{ route('tasks.index') }}?filter=today" class="card-link">
+    <a href="{{ route('tasks.index') }}?filter=today " class="card-link">
       <div class="card icon-green">
         <span class="icon">⏰</span>
         <span class="value">{{ $stats['tasks_today'] ?? 0 }}</span>
