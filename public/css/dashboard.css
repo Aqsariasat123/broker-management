@@ -280,3 +280,7 @@
   text-decoration: none !important;
   color: inherit;
 }
+.icon img {
+    vertical-align: middle;
+    display: inline-block;
+}

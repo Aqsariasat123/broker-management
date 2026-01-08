@@ -36,110 +36,160 @@
   <div class="cards">
 
     <!-- Tasks Today -->
-    <a href="{{ route('tasks.index') }}?filter=today " class="card-link">
+    <a href="{{ route('tasks.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-green">
-        <span class="icon">⏰</span>
+      <span class="icon">
+          <img src="{{ asset('asset/alarm-clock.png') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['tasks_today'] ?? 0 }}</span>
-        <span>Tasks Today</span>
+        <span>Tasks</span>
       </div>
     </a>
 
     <!-- Policies Expiring -->
-    <a href="{{ route('policies.index') }}?filter=expiring" class="card-link">
+    <a href="{{ route('policies.index', ['filter' => 'expiring', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-red">
-        <span class="icon">⚠️</span>
+            <span class="icon">
+          <img src="{{ asset('asset/exlimation_sign.png') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['policies_expiring'] ?? 0 }}</span>
         <span>Policies Expiring</span>
       </div>
     </a>
 
     <!-- Instalments Overdue -->
-    <a href="{{ route('debit-notes.index') }}?filter=overdue" class="card-link">
+    <a href="{{ route('debit-notes.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-pink">
-        <span class="icon">💰</span>
+        <span class="icon">
+          <img src="{{ asset('asset/dollar.png') }}" 
+              alt="Time" 
+              width="60" 
+              height="60">
+      </span>
         <span class="value">{{ $stats['instalments_overdue'] ?? 0 }}</span>
         <span>Instalments Overdue</span>
       </div>
     </a>
 
     <!-- IDs Expired -->
-    <a href="{{ route('clients.index') }}?filter=ids_expired" class="card-link">
+    <a href="{{ route('clients.index', ['filter' => 'ids_expired', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">🆔</span>
+           <span class="icon">
+          <img src="{{ asset('asset/user.png') }}" 
+              alt="Time" 
+              width="30" 
+              height="30">
+      </span>
         <span class="value">{{ $stats['ids_expired'] ?? 0 }}</span>
         <span>IDs Expired</span>
       </div>
     </a>
 
     <!-- General Policies -->
-    <a href="{{ route('policies.index') }}" class="card-link">
+    <a href="{{ route('policies.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">📄</span>
+     <span class="icon">
+          <img src="{{ asset('asset/arrow-expand.svg') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['general_policies'] ?? 0 }}</span>
         <span>General Policies</span>
       </div>
     </a>
 
     <!-- Gen-Com Outstanding -->
-    <a href="{{ route('payment-plans.index') }}?filter=outstanding" class="card-link">
+    <a href="{{ route('payment-plans.index', ['filter' => 'outstanding', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">💵</span>
+      <span class="icon">
+          <img src="{{ asset('asset/arrow-expand.svg') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ number_format($stats['gen_com_outstanding'] ?? 0,2) }}</span>
         <span>Gen-Com Outstanding</span>
       </div>
     </a>
 
     <!-- Open Leads -->
-    <a href="{{ route('contacts.index') }}?status=open" class="card-link">
+    <a href="{{ route('contacts.index', ['status' => 'open', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">👥</span>
+              <span class="icon">
+          <img src="{{ asset('asset/user.png') }}" 
+              alt="Time" 
+              width="30" 
+              height="30">
+      </span>
         <span class="value">{{ $stats['open_leads'] ?? 0 }}</span>
         <span>Open Leads</span>
       </div>
     </a>
 
     <!-- Follow Ups Today -->
-    <a href="{{ route('tasks.index') }}?filter=today" class="card-link">
+    <a href="{{ route('contacts.index', ['follow_up' => '1', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-red">
         <span class="icon">📅</span>
         <span class="value">{{ $stats['follow_ups_today'] ?? 0 }}</span>
-        <span>Follow Ups Today</span>
+        <span>Follow Ups</span>
       </div>
     </a>
 
     <!-- Proposals Pending -->
-    <a href="{{ route('life-proposals.index') }}?status=pending" class="card-link">
+    <a href="{{ route('life-proposals.index', ['status' => 'pending', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">📋</span>
+    <span class="icon">
+          <img src="{{ asset('asset/arrow-expand.svg') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['proposals_pending'] ?? 0 }}</span>
         <span>Proposals Pending</span>
       </div>
     </a>
 
     <!-- Proposals Processing -->
-    <a href="{{ route('life-proposals.index') }}?status=processing" class="card-link">
+    <a href="{{ route('life-proposals.index', ['status' => 'processing', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">⚙️</span>
+       <span class="icon">
+          <img src="{{ asset('asset/arrow-expand.svg') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['proposals_processing'] ?? 0 }}</span>
         <span>Proposals Processing</span>
       </div>
     </a>
 
     <!-- Life Policies -->
-    <a href="{{ route('policies.index') }}?type=life" class="card-link">
+    <a href="{{ route('policies.index', ['type' => 'life', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-black">
-        <span class="icon">❤️</span>
+      <span class="icon">
+          <img src="{{ asset('asset/arrow-expand.svg') }}" 
+              alt="Time" 
+              width="50" 
+              height="50">
+      </span>
         <span class="value">{{ $stats['life_policies'] ?? 0 }}</span>
         <span>Life Policies</span>
       </div>
     </a>
 
     <!-- Birthdays Today -->
-    <a href="{{ route('clients.index') }}?filter=birthday_today" class="card-link">
+    <a href="{{ route('clients.index', ['filter' => 'birthday_today', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card icon-red">
-        <span class="icon">🎂</span>
+        <span class="icon">📅</span>
         <span class="value">{{ $stats['birthdays_today'] ?? 0 }}</span>
-        <span>Birthdays Today</span>
+        <span>Birthdays </span>
       </div>
     </a>
 

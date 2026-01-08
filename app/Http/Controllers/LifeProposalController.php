@@ -14,6 +14,7 @@ use App\Models\Medical;
 use App\Models\Followup;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; // <-- Add this
+use Carbon\Carbon;
 
 class LifeProposalController extends Controller
 {
@@ -36,7 +37,53 @@ class LifeProposalController extends Controller
     $contactId  = $request->input('contact_id');
 
     $hasFollowUpFilter = false;
+             $year = $request->input('year', date('Y'));
 
+        $month = $request->input('month', date('n'));
+        
+        $dateRange = $request->input('date_range', 'month');
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek(); // Monday
+                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                break;
+            case 'month':
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                break;
+            case 'quarter':
+                $quarter = floor(($month - 1) / 3) + 1;
+                $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                break;
+            case 'year':
+                $startDate = Carbon::create($year)->startOfYear();
+                $endDate = Carbon::create($year)->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($yearOnly)->startOfYear();
+                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                } else {
+                    $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                }
+                break;
+       }
+
+     if ($startDate && $endDate) {
+            $query->where(function($q) use ($startDate, $endDate) {
+                // Example 1: Filter by client DOB within range
+                $q->whereBetween('start_date', [$startDate->toDateString(), $endDate->toDateString()]);
+            
+            });
+        }
     /* ===============================
      | FOLLOW-UP FILTER (TABLE)
      |===============================*/

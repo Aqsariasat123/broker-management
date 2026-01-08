@@ -336,7 +336,7 @@ document.addEventListener('change', async function (e) {
   const listAllBtn = document.getElementById('listAllBtn');
   if (listAllBtn) {
     listAllBtn.addEventListener('click', () => {
-      window.location.href = '{{ route("policies.index") }}';
+      window.location.href = '/policies';
     });
   }
 })();

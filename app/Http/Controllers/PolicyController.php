@@ -27,175 +27,206 @@ use Carbon\Carbon;
 class PolicyController extends Controller
 {
     public function index(Request $request)
-    {
+{
+    $filter = null;
 
+    $query = Policy::query();
 
-        $filter = null;
+    // Get year and month from request or defaults
+    $year = $request->input('year', date('Y'));
+    $month = $request->input('month', date('n'));
+    $dateRange = $request->input('date_range', 'month');
 
-        $query = Policy::query();
-        
-        // Filter by client_id if provided
-        if ($request->has('client_id') && $request->client_id) {
-            $query->where('client_id', $request->client_id);
-        }
-        
-        // Filter by type (life or general)
-        if ($request->has('type') && $request->type) {
-            if ($request->type == 'life') {
-                $query->whereHas('policyClass', function($q) {
-                    $q->where('name', 'like', '%life%');
-                });
-            } elseif ($request->type == 'general') {
-                $query->whereDoesntHave('policyClass', function($q) {
-                    $q->where('name', 'like', '%life%');
-                });
+    // Calculate startDate and endDate based on date_range
+    switch ($dateRange) {
+        case 'today':
+            $startDate = Carbon::today();
+            $endDate = Carbon::today();
+            break;
+        case 'week':
+            $startDate = Carbon::now()->startOfWeek();
+            $endDate = Carbon::now()->endOfWeek();
+            break;
+        case 'month':
+            $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+            break;
+        case 'quarter':
+            $quarter = floor(($month - 1) / 3) + 1;
+            $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+            $endDate = $startDate->copy()->addMonths(3)->subDay();
+            break;
+        case 'year':
+            $startDate = Carbon::create($year, 1, 1)->startOfYear();
+            $endDate = Carbon::create($year, 12, 31)->endOfYear();
+            break;
+        default:
+            if (str_starts_with($dateRange, 'year-')) {
+                $yearOnly = (int) str_replace('year-', '', $dateRange);
+                $startDate = Carbon::create($yearOnly, 1, 1)->startOfYear();
+                $endDate = Carbon::create($yearOnly, 12, 31)->endOfYear();
+            } else {
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
             }
-        }
-        
-        if ($request->has('filter')) {
-            if ($request->filter == 'expiring') {
-                $today = now()->toDateString();
-                $thirtyDaysFromNow = now()->addDays(30)->toDateString();
-                $query->whereDate('end_date', '>=', $today)
-                      ->whereDate('end_date', '<=', $thirtyDaysFromNow);
-            }
-
-            $filter = $request->filter ;
-        }
-        // Filter for Due for Renewal
-        if ($request->has('dfr') && $request->dfr == 'true') {
-            $today = now()->toDateString();
-            $thirtyDaysFromNow = now()->addDays(30)->toDateString();
-            
-            $query->where(function($q) use ($today, $thirtyDaysFromNow) {
-                $q->whereHas('policyStatus', function($subQ) {
-                    $subQ->where('name', 'DFR');
-                })->orWhere(function($subQ) use ($today, $thirtyDaysFromNow) {
-                    $subQ->whereNotNull('end_date')
-                         ->whereDate('end_date', '>=', $today)
-                         ->whereDate('end_date', '<=', $thirtyDaysFromNow);
-                });
-            });
-        }
-
-        // Filter by search term (searches policy_no, client name, insured)
-        if ($request->has('search_term') && $request->search_term) {
-            $searchTerm = $request->search_term;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('policy_no', 'like', "%{$searchTerm}%")
-                  ->orWhere('insured', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('client', function($subQ) use ($searchTerm) {
-                      $subQ->where('client_name', 'like', "%{$searchTerm}%");
-                  });
-            });
-        }
-
-        // Filter by client name
-        if ($request->has('client_name') && $request->client_name) {
-            $query->whereHas('client', function($q) use ($request) {
-                $q->where('client_name', 'like', "%{$request->client_name}%");
-            });
-        }
-
-        // Filter by policy number
-        if ($request->has('policy_number') && $request->policy_number) {
-            $query->where('policy_no', 'like', "%{$request->policy_number}%");
-        }
-
-        // Filter by insurer
-        if ($request->has('insurer_id') && $request->insurer_id) {
-            $query->where('insurer_id', $request->insurer_id);
-        }
-
-        // Filter by policy class (Insurance Class)
-        if ($request->has('policy_class_id') && $request->policy_class_id) {
-            $query->where('policy_class_id', $request->policy_class_id);
-        }
-
-        // Filter by agency
-        if ($request->has('agency_id') && $request->agency_id) {
-            $query->where('agency_id', $request->agency_id);
-        }
-
-        // Filter by agent
-        if ($request->has('agent') && $request->agent) {
-            $query->where('agent', 'like', "%{$request->agent}%");
-        }
-
-        // Filter by policy status
-        if ($request->has('policy_status_id') && $request->policy_status_id) {
-            $query->where('policy_status_id', $request->policy_status_id);
-        }
-
-        // Filter by start date range
-        if ($request->has('start_date_from') && $request->start_date_from) {
-            $query->whereDate('start_date', '>=', $request->start_date_from);
-        }
-        if ($request->has('start_date_to') && $request->start_date_to) {
-            $query->whereDate('start_date', '<=', $request->start_date_to);
-        }
-
-        // Filter by end date range
-        if ($request->has('end_date_from') && $request->end_date_from) {
-            $query->whereDate('end_date', '>=', $request->end_date_from);
-        }
-        if ($request->has('end_date_to') && $request->end_date_to) {
-            $query->whereDate('end_date', '<=', $request->end_date_to);
-        }
-
-        // Filter by premium unpaid (assuming this means premium > 0 and payment status)
-        // This would need to check payment records, but for now we'll filter by premium > 0
-        if ($request->has('premium_unpaid') && $request->premium_unpaid !== null && $request->premium_unpaid !== '') {
-            // This is a simplified check - you may need to join with payments table
-            $query->where('premium', '>', 0);
-        }
-
-        // Filter by commission unpaid (similar to premium unpaid)
-        if ($request->has('comm_unpaid') && $request->comm_unpaid !== null && $request->comm_unpaid !== '') {
-            // This would need to check commission records
-            // For now, we'll just ensure the query continues
-        }
-
-        $perPage = $request->get('record_lines', 10);
-        $perPage = max(1, min(100, (int)$perPage)); // Limit between 1 and 100
-
-        $policyId = null;
-
-        if ($request->has('policy_id') && $request->policy_id) {
-          $policyId=  $request->policy_id;
-        }
-        
-        $policies = $query->with([
-                'client',
-                'insurer',
-                'policyClass',
-                'policyPlan',
-                'policyStatus',
-                'businessType',
-                'frequency',
-                'payPlan',
-                'channel'
-            ])
-            ->orderBy('date_registered', 'desc')
-            ->paginate($perPage);
-        
-        // Get lookup data for dropdowns
-        $lookupData = \App\Helpers\LookUpHelper::getLookupData();
-        
-        // Get life proposal data if generating from proposal
-        $lifeProposal = null;
-        if ($request->has('life_proposal_id')) {
-            $lifeProposal = LifeProposal::find($request->life_proposal_id);
-        }
-        
-        // Get client information if filtering by client_id
-        $client = null;
-        if ($request->has('client_id') && $request->client_id) {
-            $client = Client::find($request->client_id);
-        }
-        
-        return view('policies.index', compact('policies', 'lookupData', 'lifeProposal', 'client','policyId','filter'));
+            break;
     }
+
+    // Apply date_range filter if no manual date filters provided
+    if ((!$request->has('start_date_from') && !$request->has('start_date_to')) &&
+        (!$request->has('end_date_from') && !$request->has('end_date_to'))) {
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('end_date', [$startDate->toDateString(), $endDate->toDateString()]);
+        }
+    }
+
+    // Manual date filters (override date_range if provided)
+    if ($request->has('start_date_from') && $request->start_date_from) {
+        $query->whereDate('start_date', '>=', $request->start_date_from);
+    }
+    if ($request->has('start_date_to') && $request->start_date_to) {
+        $query->whereDate('start_date', '<=', $request->start_date_to);
+    }
+    if ($request->has('end_date_from') && $request->end_date_from) {
+        $query->whereDate('end_date', '>=', $request->end_date_from);
+    }
+    if ($request->has('end_date_to') && $request->end_date_to) {
+        $query->whereDate('end_date', '<=', $request->end_date_to);
+    }
+
+    // Filter by client_id if provided
+    if ($request->has('client_id') && $request->client_id) {
+        $query->where('client_id', $request->client_id);
+    }
+
+    // Filter by policy type
+    if ($request->has('type') && $request->type) {
+        if ($request->type == 'life') {
+            $query->whereHas('policyClass', function($q) {
+                $q->where('name', 'like', '%life%');
+            });
+        } elseif ($request->type == 'general') {
+            $query->whereDoesntHave('policyClass', function($q) {
+                $q->where('name', 'like', '%general%');
+            });
+        }
+    }
+
+    // Filter for expiring policies (next 30 days)
+    if ($request->has('filter') && $request->filter == 'expiring') {
+        
+        if ($startDate && $endDate) {
+            $query->whereBetween('end_date', [$startDate->toDateString(), $endDate->toDateString()]);
+        }else{
+  $today = now()->toDateString();
+        $thirtyDaysFromNow = now()->addDays(30)->toDateString();
+        $query->whereDate('end_date', '>=', $today)
+              ->whereDate('end_date', '<=', $thirtyDaysFromNow);
+
+        }
+      
+        $filter = $request->filter;
+    }
+
+    // Filter for Due for Renewal
+    if ($request->has('dfr') && $request->dfr == 'true') {
+        $today = now()->toDateString();
+        $thirtyDaysFromNow = now()->addDays(30)->toDateString();
+
+        $query->where(function($q) use ($today, $thirtyDaysFromNow) {
+            $q->whereHas('policyStatus', function($subQ) {
+                $subQ->where('name', 'DFR');
+            })->orWhere(function($subQ) use ($today, $thirtyDaysFromNow) {
+                $subQ->whereNotNull('end_date')
+                     ->whereDate('end_date', '>=', $today)
+                     ->whereDate('end_date', '<=', $thirtyDaysFromNow);
+            });
+        });
+    }
+
+    // Search filter (policy_no, insured, client name)
+    if ($request->has('search_term') && $request->search_term) {
+        $searchTerm = $request->search_term;
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('policy_no', 'like', "%{$searchTerm}%")
+              ->orWhere('insured', 'like', "%{$searchTerm}%")
+              ->orWhereHas('client', function($subQ) use ($searchTerm) {
+                  $subQ->where('client_name', 'like', "%{$searchTerm}%");
+              });
+        });
+    }
+
+    // Other filters (client_name, policy_number, insurer, policy_class_id, agency_id, agent, policy_status_id)
+    if ($request->has('client_name') && $request->client_name) {
+        $query->whereHas('client', function($q) use ($request) {
+            $q->where('client_name', 'like', "%{$request->client_name}%");
+        });
+    }
+    if ($request->has('policy_number') && $request->policy_number) {
+        $query->where('policy_no', 'like', "%{$request->policy_number}%");
+    }
+    if ($request->has('insurer_id') && $request->insurer_id) {
+        $query->where('insurer_id', $request->insurer_id);
+    }
+    if ($request->has('policy_class_id') && $request->policy_class_id) {
+        $query->where('policy_class_id', $request->policy_class_id);
+    }
+    if ($request->has('agency_id') && $request->agency_id) {
+        $query->where('agency_id', $request->agency_id);
+    }
+    if ($request->has('agent') && $request->agent) {
+        $query->where('agent', 'like', "%{$request->agent}%");
+    }
+    if ($request->has('policy_status_id') && $request->policy_status_id) {
+        $query->where('policy_status_id', $request->policy_status_id);
+    }
+
+    // Premium unpaid filter (simplified)
+    if ($request->has('premium_unpaid') && $request->premium_unpaid !== null && $request->premium_unpaid !== '') {
+        $query->where('premium', '>', 0);
+    }
+
+    // Pagination
+    $perPage = $request->get('record_lines', 10);
+    $perPage = max(1, min(100, (int)$perPage)); // Limit between 1 and 100
+
+    $policyId = $request->input('policy_id', null);
+
+    // Get policies with relationships
+    $policies = $query->with([
+            'client',
+            'insurer',
+            'policyClass',
+            'policyPlan',
+            'policyStatus',
+            'businessType',
+            'frequency',
+            'payPlan',
+            'channel'
+        ])
+        ->orderBy('date_registered', 'desc')
+        ->paginate($perPage);
+
+    // Lookup data
+    $lookupData = \App\Helpers\LookUpHelper::getLookupData();
+
+    // Optional: life proposal
+    $lifeProposal = $request->has('life_proposal_id') ? LifeProposal::find($request->life_proposal_id) : null;
+
+    // Optional: client
+    $client = $request->has('client_id') ? Client::find($request->client_id) : null;
+
+    return view('policies.index', compact(
+        'policies',
+        'lookupData',
+        'lifeProposal',
+        'client',
+        'policyId',
+        'filter'
+    ));
+}
+
 
     public function create(Request $request)
     {

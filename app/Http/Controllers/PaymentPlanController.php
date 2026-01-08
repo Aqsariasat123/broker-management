@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\LookupValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PaymentPlanController extends Controller
 {
@@ -14,6 +15,49 @@ class PaymentPlanController extends Controller
     {
         $query = PaymentPlan::with(['schedule.policy.client','lookuFrequency']);
 
+         $dateRange = $request->get('date_range', 'month'); // default = 'month'
+            $now = Carbon::now();
+            $startDate = null;
+            $endDate = null;
+
+            switch ($dateRange) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    break;
+
+                case 'week':
+                    $startDate = $now->copy()->startOfWeek();
+                    $endDate = $now->copy()->endOfWeek();
+                    break;
+
+                case 'month':
+                    $startDate = $now->copy()->startOfMonth();
+                    $endDate = $now->copy()->endOfMonth();
+                    break;
+
+                case 'quarter':
+                    $startDate = $now->copy()->firstOfQuarter();
+                    $endDate = $now->copy()->lastOfQuarter();
+                    break;
+
+                case 'year':
+                    $startDate = $now->copy()->startOfYear();
+                    $endDate = $now->copy()->endOfYear();
+                    break;
+
+                default:
+                    if (str_starts_with($dateRange, 'year-')) {
+                        $selectedYear = (int) str_replace('year-', '', $dateRange);
+                        $startDate = Carbon::create($selectedYear, 1, 1)->startOfDay();
+                        $endDate = Carbon::create($selectedYear, 12, 31)->endOfDay();
+                    }
+                    break;
+            }
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('due_date', [$startDate, $endDate]);
+            }
         // Filter by status
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);

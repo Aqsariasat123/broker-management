@@ -2,6 +2,7 @@
 // app/Http/Controllers/ClientController.php
 
 namespace App\Http\Controllers;
+use Carbon\Carbon;
 
 use App\Models\Client;
 use App\Models\Document;
@@ -20,6 +21,50 @@ class ClientController extends Controller
 
         $query = Client::query();
         
+        $year = $request->input('year', date('Y'));
+
+        $month = $request->input('month', date('n'));
+        
+        $dateRange = $request->input('date_range', 'month');
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek(); // Monday
+                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                break;
+            case 'month':
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                break;
+            case 'quarter':
+                $quarter = floor(($month - 1) / 3) + 1;
+                $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                break;
+            case 'year':
+                $startDate = Carbon::create($year)->startOfYear();
+                $endDate = Carbon::create($year)->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($yearOnly)->startOfYear();
+                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                } else {
+                    $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                }
+                break;
+       }
+        if ($startDate && $endDate) {
+             $query->whereBetween('id_expiry_date', [$startDate, $endDate]);
+
+        }
+      
         // Filter for To Follow Up - show only clients with expired or expiring policies
         if ($request->has('follow_up') && $request->follow_up == 'true') {
             $query->whereHas('policies', function($q) {

@@ -22,10 +22,45 @@ class CalendarController extends Controller
         $year = $request->input('year', date('Y'));
         $month = $request->input('month', date('n'));
         $filter = $request->input('filter', 'all');
+        $dateRange = $request->input('date_range', 'month');
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek(); // Monday
+                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                break;
+            case 'month':
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                break;
+            case 'quarter':
+                $quarter = floor(($month - 1) / 3) + 1;
+                $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                break;
+            case 'year':
+                $startDate = Carbon::create($year)->startOfYear();
+                $endDate = Carbon::create($year)->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($yearOnly)->startOfYear();
+                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                } else {
+                    $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                }
+                break;
+       }
 
         // Include previous and next month days that are visible in calendar
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        // $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+        // $endDate = $startDate->copy()->endOfMonth();
         
         // Get first day of week (Monday = 0)
         $firstDayOfWeek = $startDate->dayOfWeek; // 0 = Sunday, 1 = Monday, etc.

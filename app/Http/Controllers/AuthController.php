@@ -73,15 +73,13 @@ class AuthController extends Controller
             // -------------------------------
             // 1. Get selected date range & year
             // -------------------------------
-            $dateRange = $request->get('date_range', null); // null = default filter
+            $dateRange = $request->get('date_range', 'month'); // null = default filter
             $selectedYear = now()->year; // default
 
-            if ($dateRange) {
-                if ($dateRange == 'year') {
-                    $selectedYear = now()->year;
-                } elseif (str_starts_with($dateRange, 'year-')) {
-                    $selectedYear = (int) str_replace('year-', '', $dateRange);
-                }
+          if ($dateRange === 'year') {
+                $selectedYear = now()->year;
+            } elseif (str_starts_with($dateRange, 'year-')) {
+                $selectedYear = (int) str_replace('year-', '', $dateRange);
             }
 
             $incomeExpenseYear = (int) $request->get('incomeExpenseYear', $selectedYear);
@@ -141,57 +139,82 @@ class AuthController extends Controller
                     break;
             }
 
-            // -------------------------------
-            // 4. Helper for year/date filtering
-            // -------------------------------
-            $applyDateRange = function ($query, $column) use ($startDate, $endDate) {
-                return $query->whereBetween($column, [$startDate, $endDate]);
-            };
-
-            // -------------------------------
-            // 5. Stats cards
-            // -------------------------------
+           
             $stats = [
-                'tasks_today' => $applyDateRange(Task::query()->where('task_status', '!=', 'Completed'), 'due_date')->count(),
+                // Tasks (not completed) in selected date range
+                'tasks_today' => Task::query()
+                ->where('task_status', '!=', 'Completed')
+                ->where('due_date', '<', now()->format('Y-m-d')) // only overdue
+                ->whereBetween('due_date',[$startDate, $endDate]) // respect selected date range
+                ->count(),
 
+                // Policies expiring in selected date range
                 'policies_expiring' => Policy::query()
-                    ->whereBetween('end_date', [$today, $today->copy()->addDays(30)]) // next 30 days
+                    ->whereBetween('end_date', [$startDate, $endDate])
                     ->count(),
 
+                // Instalments (Unpaid) in selected date range
                 'instalments_overdue' => DebitNote::with(['paymentPlan.schedule.policy.client'])
                     ->where('status', 'Unpaid')
                     ->whereHas('paymentPlan', fn($q) => $q->whereBetween('due_date', [$startDate, $endDate]))
                     ->count(),
 
-                'ids_expired' => Client::where('status','Expired')->count(),
+                // IDs expired in selected date range
+                'ids_expired' => Client::query()
+                    ->where('status', 'Expired')
+                    ->whereBetween('id_expiry_date', [$startDate, $endDate]) // or status_changed_at if you track status change
+                    ->count(),
 
-                'general_policies' => $applyDateRange(Policy::query(), 'created_at')->count(),
+                // General policies created in date range
+                
+                  'general_policies' => Policy::whereDoesntHave('policyClass', function($q) {
+                        $q->where('name', 'like', '%general%');
+                    })
+                    ->whereBetween('end_date', [$startDate, $endDate])
+                    ->count(),
 
+                // Gen-Com Outstanding in selected date range
                 'gen_com_outstanding' => PaymentPlan::query()
                     ->where('status', '!=', 'paid')
                     ->whereBetween('due_date', [$startDate, $endDate])
                     ->sum('amount'),
 
-                'open_leads' => $applyDateRange(Contact::query()->where('status', '!=', 'Archived'), 'created_at')->count(),
+                // Open leads in date range
+                'open_leads' => Contact::query()
+                    ->where('status', '!=', 'Archived')
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->count(),
 
-                'follow_ups_today' => $applyDateRange(Task::query()->where('task_status', '!=', 'Completed'), 'due_date')->count(),
+                // Follow-ups in date range (not completed tasks)
+                'follow_ups_today' => Contact::query()
+                    ->whereHas('followups', fn($q) => $q->where('status', 'Pending'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->count(),
 
-                'proposals_pending' => $applyDateRange(
-                    LifeProposal::query()->whereHas('status', fn($q) => $q->where('name', 'Pending')),
-                    'created_at'
-                )->count(),
+                // Proposals pending in date range
+                'proposals_pending' => LifeProposal::query()
+                    ->whereHas('status', fn($q) => $q->where('name', 'Pending'))
+                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->count(),
 
-                'proposals_processing' => $applyDateRange(
-                    LifeProposal::query()->whereHas('status', fn($q) => $q->where('name', 'Processing')),
-                    'created_at'
-                )->count(),
+                // Proposals processing in date range
+                'proposals_processing' => LifeProposal::query()
+                    ->whereHas('status', fn($q) => $q->where('name', 'Processing'))
+                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->count(),
 
+                // Life policies (custom method)
                 'life_policies' => $this->countLifePolicies(),
 
-                'birthdays_today' => Client::whereMonth('dob_dor', $today->month)
-                    ->whereDay('dob_dor', $today->day)
+                // Birthdays in selected date range (month/day range)
+                'birthdays_today' => Client::query()
+                    ->whereMonth('dob_dor', '>=', $startDate->month)
+                    ->whereMonth('dob_dor', '<=', $endDate->month)
+                    ->whereDay('dob_dor', '>=', $startDate->day)
+                    ->whereDay('dob_dor', '<=', $endDate->day)
                     ->count(),
             ];
+
 
             // -------------------------------
             // 6. Monthly Chart Data

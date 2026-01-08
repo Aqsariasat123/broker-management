@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\LookupCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ContactController extends Controller
 {
@@ -15,7 +16,48 @@ class ContactController extends Controller
 
         $statusfilter = null;
         $query = Contact::query();
+           $year = $request->input('year', date('Y'));
+
+        $month = $request->input('month', date('n'));
         
+        $dateRange = $request->input('date_range', 'month');
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek(); // Monday
+                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                break;
+            case 'month':
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                break;
+            case 'quarter':
+                $quarter = floor(($month - 1) / 3) + 1;
+                $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                break;
+            case 'year':
+                $startDate = Carbon::create($year)->startOfYear();
+                $endDate = Carbon::create($year)->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($yearOnly)->startOfYear();
+                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                } else {
+                    $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                }
+                break;
+       }
+        if ($startDate && $endDate) {
+          $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
         // Filter for Archived contacts
         if ($request->has('archived') && $request->archived == 'true') {
             $query->where('status', 'Archived');

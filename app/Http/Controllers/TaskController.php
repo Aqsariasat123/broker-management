@@ -18,48 +18,105 @@ use Carbon\Carbon;
 
 class TaskController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $query = Task::query();
 
-        if ($request->has('overdue') && $request->overdue) {
-            $query->where('due_date', '<', now()->format('Y-m-d'))
-                  ->where('task_status', '!=', 'Completed');
-        }
-        if ($request->has('filter')) {
-            if ($request->filter == 'today') {
-                $query->whereDate('due_date', today());
+
+        public function index(Request $request): View
+        {
+            $query = Task::query();
+
+            // Apply task-specific filters
+            if ($request->has('filter') && $request->filter == 'overdue') {
+                $query->where('due_date', '<', now()->format('Y-m-d'))
+                    ->where('task_status', '!=', 'Completed');
             }
+
+            // Handle date range filter
+            $dateRange = $request->get('date_range', 'month'); // default = 'month'
+            $now = Carbon::now();
+            $startDate = null;
+            $endDate = null;
+
+            switch ($dateRange) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    break;
+
+                case 'week':
+                    $startDate = $now->copy()->startOfWeek();
+                    $endDate = $now->copy()->endOfWeek();
+                    break;
+
+                case 'month':
+                    $startDate = $now->copy()->startOfMonth();
+                    $endDate = $now->copy()->endOfMonth();
+                    break;
+
+                case 'quarter':
+                    $startDate = $now->copy()->firstOfQuarter();
+                    $endDate = $now->copy()->lastOfQuarter();
+                    break;
+
+                case 'year':
+                    $startDate = $now->copy()->startOfYear();
+                    $endDate = $now->copy()->endOfYear();
+                    break;
+
+                default:
+                    if (str_starts_with($dateRange, 'year-')) {
+                        $selectedYear = (int) str_replace('year-', '', $dateRange);
+                        $startDate = Carbon::create($selectedYear, 1, 1)->startOfDay();
+                        $endDate = Carbon::create($selectedYear, 12, 31)->endOfDay();
+                    }
+                    break;
+            }
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('due_date', [$startDate, $endDate]);
+            }
+
+            // Paginate and eager load relations
+            $tasks = $query->with([
+                'categoryValues',  // Task Category
+                'assigneeUser',    // User
+                'contact',         // Contact
+                'client'           // Client
+            ])->orderBy('due_date', 'desc')->paginate(10);
+
+            // Get selected columns from session using TableConfigHelper
+            $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
+            $selectedColumns = session($config['session_key'], $config['default_columns']);
+
+            // Fetch dropdown data
+            $taskCategory = LookupCategory::where('name', 'Task Category')->first();
+            $categories = $taskCategory
+                ? $taskCategory->values()->where('active', true)->orderBy('seq')->get()
+                : collect();
+
+            $frequencyCategories = LookupCategory::where('name', 'Frequency')->first();
+
+            // Contacts and clients for dropdown
+            $contacts = Contact::select('id', 'contact_name as name', 'contact_no')
+                ->orderBy('contact_name')->get();
+            $clients = Client::select('id', 'client_name as name', 'mobile_no as contact_no')
+                ->orderBy('client_name')->get();
+
+            // Users for assignee dropdown
+            $users = User::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
+
+            Log::info('Selected Columns: ', $tasks->toArray());
+
+            return view('tasks.index', compact(
+                'tasks',
+                'selectedColumns',
+                'categories',
+                'frequencyCategories',
+                'contacts',
+                'clients',
+                'users'
+            ));
         }
-    
-        // paginate 10 per page
-        $tasks = $query->with([
-            'categoryValues',   // joins Task Category
-            'assigneeUser',     // joins User
-            'contact',          // joins Contact
-            'client'            // joins Client
-        ])->orderBy('due_date', 'desc')->paginate(10);
 
-        // Get selected columns from session using TableConfigHelper
-        $config = \App\Helpers\TableConfigHelper::getConfig('tasks');
-        $selectedColumns = session($config['session_key'], $config['default_columns']);
-
-        // Fetch dropdown data for form
-        $taskCategory = LookupCategory::where('name', 'Task Category')->first();
-        $categories = $taskCategory ? $taskCategory->values()->where('active', true)->orderBy('seq')->get() : collect();
-        $frequencyCategories = LookupCategory::where('name', 'Frequency')->first();
-
-        // Get contacts and clients for Name/Contact dropdown
-        $contacts = Contact::select('id', 'contact_name as name', 'contact_no')->orderBy('contact_name')->get();
-        $clients = Client::select('id', 'client_name as name', 'mobile_no as contact_no')->orderBy('client_name')->get();
-        
-        // Get users for assignee dropdown
-        $users = User::where('is_active', true)->select('id', 'name')->orderBy('name')->get();
-
-
-        Log::info('Selected Columns: ', $tasks->toArray());
-        return view('tasks.index', compact('tasks', 'selectedColumns', 'categories', 'frequencyCategories', 'contacts', 'clients', 'users'));
-    }
 
     public function store(Request $request): RedirectResponse
     {

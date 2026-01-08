@@ -1,49 +1,95 @@
+// ---------------------------------
+// 1. URL PARAMS & INITIAL STATE
+// ---------------------------------
+const urlParams = new URLSearchParams(window.location.search);
+const today = new Date();
 
-  // Calendar state
-  const today = new Date();
-  let currentYear = today.getFullYear();
-  let currentMonth = today.getMonth(); // 0-indexed
-  let currentFilter = 'all';
-  let eventsData = {};
-  
-  const monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+// Filter
+let currentFilter = urlParams.get('filter') || 'all';
 
-  // Fetch events from API
-  async function fetchEvents() {
+// Date Range
+const dateRange = urlParams.get('date_range') || 'month';
+
+// Calendar state
+let currentYear = today.getFullYear();
+let currentMonth = today.getMonth(); // 0-indexed
+
+// Lock navigation for fixed ranges (today, week, month)
+const isFixedRange = ['today', 'week', 'month'].includes(dateRange);
+
+// ---------------------------------
+// 2. DATE RANGE HANDLING
+// ---------------------------------
+switch (dateRange) {
+    case 'today':
+    case 'week':
+    case 'month':
+        currentYear = today.getFullYear();
+        currentMonth = today.getMonth();
+        break;
+    case 'quarter':
+        const quarter = Math.floor(today.getMonth() / 3);
+        currentYear = today.getFullYear();
+        currentMonth = quarter * 3;
+        break;
+    case 'year':
+        currentYear = today.getFullYear();
+        currentMonth = 0;
+        break;
+    default:
+        if (dateRange.startsWith('year-')) {
+            currentYear = parseInt(dateRange.replace('year-', ''), 10);
+            currentMonth = 0;
+        }
+        break;
+}
+
+// ---------------------------------
+// 3. CONSTANTS
+// ---------------------------------
+let eventsData = {};
+const monthNames = [
+    'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+];
+
+// ---------------------------------
+// 4. FETCH EVENTS
+// ---------------------------------
+async function fetchEvents() {
     try {
-      const response = await fetch(`${calendarEventsRoute}?year=${currentYear}&month=${currentMonth + 1}&filter=${currentFilter}`);
-      const data = await response.json();
-      eventsData = data;
-      generateCalendar();
+        const response = await fetch(
+            `${calendarEventsRoute}?year=${currentYear}&month=${currentMonth + 1}&filter=${currentFilter}&date_range=${dateRange}`
+        );
+        eventsData = await response.json();
     } catch (error) {
-      console.error('Error fetching events:', error);
-      eventsData = {};
-      generateCalendar();
+        console.error('Error fetching events:', error);
+        eventsData = {};
     }
-  }
+    generateCalendar();
+}
 
-  // Update display
-  function updateDisplay() {
+// ---------------------------------
+// 5. UPDATE HEADER + LOAD EVENTS
+// ---------------------------------
+function updateDisplay() {
     document.getElementById('current-year').textContent = currentYear;
     document.getElementById('current-month').textContent = monthNames[currentMonth];
     fetchEvents();
-  }
+}
 
-  // Generate calendar
-  function generateCalendar() {
+// ---------------------------------
+// 6. GENERATE CALENDAR GRID
+// ---------------------------------
+function generateCalendar() {
     const calendarBody = document.getElementById('calendar-body');
     calendarBody.innerHTML = '';
 
-    // Get first day of month (Monday = 0)
     const firstDay = new Date(currentYear, currentMonth, 1);
-    let startDay = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    // Convert to Monday = 0
-    startDay = startDay === 0 ? 6 : startDay - 1;
+    let startDay = firstDay.getDay(); // Sunday = 0
+    startDay = startDay === 0 ? 6 : startDay - 1; // Convert Monday = 0
 
-    // Days in current month
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
-    // Days in previous month
     const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
     const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
@@ -52,153 +98,136 @@
     let nextMonthDay = 1;
     let prevMonthDay = daysInPrevMonth - startDay + 1;
 
-    // Generate 6 weeks
     for (let week = 0; week < 6; week++) {
-      const row = document.createElement('tr');
+        const row = document.createElement('tr');
 
-      for (let day = 0; day < 7; day++) {
-        const cell = document.createElement('td');
-        const dayNumber = document.createElement('div');
-        dayNumber.className = 'day-number';
+        for (let day = 0; day < 7; day++) {
+            const cell = document.createElement('td');
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
 
-        if (week === 0 && day < startDay) {
-          // Previous month days
-          cell.classList.add('outside-month');
-          dayNumber.classList.add('outside');
-          dayNumber.textContent = prevMonthDay++;
-        } else if (dayCounter > daysInMonth) {
-          // Next month days
-          cell.classList.add('outside-month');
-          dayNumber.classList.add('outside');
-          dayNumber.textContent = nextMonthDay++;
-        } else {
-          // Current month days
-          dayNumber.textContent = dayCounter;
-          
-          // Add events
-          const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
-          const events = eventsData[dateKey] || [];
-          
-          events.forEach(event => {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = `event ${event.class || event.type}`;
-            eventDiv.textContent = event.text;
-            eventDiv.title = event.text; // Tooltip
-            cell.appendChild(eventDiv);
-          });
+            let dateKey;
 
-          dayCounter++;
+            if (week === 0 && day < startDay) {
+                cell.classList.add('outside-month');
+                dayNumber.classList.add('outside');
+                dayNumber.textContent = prevMonthDay++;
+                dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNumber.textContent).padStart(2, '0')}`;
+            }
+            else if (dayCounter > daysInMonth) {
+                cell.classList.add('outside-month');
+                dayNumber.classList.add('outside');
+                dayNumber.textContent = nextMonthDay++;
+                const nextMonth = (currentMonth + 1) % 12;
+                const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+                dateKey = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(dayNumber.textContent).padStart(2, '0')}`;
+            }
+            else {
+                dayNumber.textContent = dayCounter;
+                dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
+
+                // Add events for this day
+                const events = eventsData[dateKey] || [];
+                events.forEach(event => {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = `event ${event.class || event.type}`;
+                    eventDiv.textContent = event.text;
+                    eventDiv.title = event.text;
+                    cell.appendChild(eventDiv);
+                });
+
+                dayCounter++;
+            }
+
+            cell.appendChild(dayNumber);
+            row.appendChild(cell);
         }
 
-        cell.appendChild(dayNumber);
-        row.appendChild(cell);
-      }
-
-      calendarBody.appendChild(row);
+        calendarBody.appendChild(row);
     }
-  }
+}
 
-  // Event listeners
-  document.getElementById('year-prev').addEventListener('click', () => {
+// ---------------------------------
+// 7. NAVIGATION CONTROLS
+// ---------------------------------
+document.getElementById('year-prev').onclick = () => {
+    if (isFixedRange) return;
     currentYear--;
     updateDisplay();
-  });
+};
 
-  document.getElementById('year-next').addEventListener('click', () => {
+document.getElementById('year-next').onclick = () => {
+    if (isFixedRange) return;
     currentYear++;
     updateDisplay();
-  });
+};
 
-  document.getElementById('month-prev').addEventListener('click', () => {
+document.getElementById('month-prev').onclick = () => {
+    if (isFixedRange) return;
     currentMonth--;
     if (currentMonth < 0) {
-      currentMonth = 11;
-      currentYear--;
+        currentMonth = 11;
+        currentYear--;
     }
     updateDisplay();
-  });
+};
 
-  document.getElementById('month-next').addEventListener('click', () => {
+document.getElementById('month-next').onclick = () => {
+    if (isFixedRange) return;
     currentMonth++;
     if (currentMonth > 11) {
-      currentMonth = 0;
-      currentYear++;
+        currentMonth = 0;
+        currentYear++;
     }
     updateDisplay();
-  });
+};
 
-  document.getElementById('prev-btn').addEventListener('click', () => {
-    currentMonth--;
-    if (currentMonth < 0) {
-      currentMonth = 11;
-      currentYear--;
-    }
-    updateDisplay();
-  });
-
-  document.getElementById('next-btn').addEventListener('click', () => {
-    currentMonth++;
-    if (currentMonth > 11) {
-      currentMonth = 0;
-      currentYear++;
-    }
-    updateDisplay();
-  });
-
-  document.getElementById('today-btn').addEventListener('click', () => {
-    const today = new Date();
+document.getElementById('today-btn').onclick = () => {
     currentYear = today.getFullYear();
     currentMonth = today.getMonth();
     updateDisplay();
-  });
+};
 
-  // View buttons
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
+// ---------------------------------
+// 8. FILTER BUTTONS
+// ---------------------------------
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.category-btn').forEach(b =>
+            b.classList.remove('selected', 'tasks', 'follow-ups', 'renewals', 'instalments', 'birthdays')
+        );
+        document.querySelectorAll('.category-dropdown').forEach(d =>
+            d.classList.remove('show')
+        );
+
+        currentFilter = this.dataset.filter;
+        this.classList.add('selected');
+
+        if (currentFilter !== 'all') {
+            this.classList.add(currentFilter);
+            const dropdown = document.getElementById(`dropdown-${currentFilter}`);
+            if (dropdown) dropdown.classList.add('show');
+        }
+
+        fetchEvents();
     });
-  });
+});
 
-  // Category filter buttons
-  document.querySelectorAll('.category-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Remove selected class and special classes from all buttons
-      document.querySelectorAll('.category-btn').forEach(b => {
-        b.classList.remove('selected', 'tasks', 'follow-ups', 'renewals', 'instalments', 'birthdays');
-      });
-      
-      // Hide all dropdowns
-      document.querySelectorAll('.category-dropdown').forEach(d => {
-        d.classList.remove('show');
-      });
-      
-      // Add selected class to clicked button
-      this.classList.add('selected');
-      const filter = this.getAttribute('data-filter');
-      currentFilter = filter;
-      
-      // Show dropdown and make button green for all filter types except 'all'
-      if (filter === 'tasks') {
-        this.classList.add('tasks');
-        document.getElementById('dropdown-tasks').classList.add('show');
-      } else if (filter === 'follow-ups') {
-        this.classList.add('follow-ups');
-        document.getElementById('dropdown-follow-ups').classList.add('show');
-      } else if (filter === 'renewals') {
-        this.classList.add('renewals');
-        document.getElementById('dropdown-renewals').classList.add('show');
-      } else if (filter === 'instalments') {
-        this.classList.add('instalments');
-        document.getElementById('dropdown-instalments').classList.add('show');
-      } else if (filter === 'birthdays') {
-        this.classList.add('birthdays');
-        document.getElementById('dropdown-birthdays').classList.add('show');
-      }
-      
-      fetchEvents();
-    });
-  });
+// ---------------------------------
+// 9. PRESELECT FILTER FROM URL
+// ---------------------------------
+document.querySelectorAll('.category-btn').forEach(btn => {
+    if (btn.dataset.filter === currentFilter) {
+        btn.classList.add('selected');
+        if (currentFilter !== 'all') {
+            btn.classList.add(currentFilter);
+            const dropdown = document.getElementById(`dropdown-${currentFilter}`);
+            if (dropdown) dropdown.classList.add('show');
+        }
+    }
+});
 
-  // Initialize
-  updateDisplay();
+// ---------------------------------
+// 10. INIT
+// ---------------------------------
+updateDisplay();

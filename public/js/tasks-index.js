@@ -483,7 +483,7 @@
 
       // determine whether overdue param is active (supports '1' or 'true')
       const urlParams = new URLSearchParams(window.location.search);
-      const overdueActive = urlParams.get('overdue') === 'true' || urlParams.get('overdue') === '1';
+      const overdueActive = urlParams.get('filter') === 'overdue';
 
       // Filter toggle handler
       const filterToggle = document.getElementById('filterToggle');
@@ -497,10 +497,10 @@
         filterToggle.addEventListener('change', function(e) {
           const u = new URL(window.location.href);
           if (this.checked) {
-            u.searchParams.set('overdue', '1');
+            u.searchParams.set('filter', 'overdue');
             if (filterToggleLabel) filterToggleLabel.textContent = 'ON';
           } else {
-            u.searchParams.delete('overdue');
+            u.searchParams.delete('filter');
             if (filterToggleLabel) filterToggleLabel.textContent = 'OFF';
           }
           window.location.href = u.toString();
@@ -518,7 +518,7 @@
         overdueBtn.addEventListener('click', function(e) {
           e.preventDefault();
           const u = new URL(window.location.href);
-          u.searchParams.set('overdue', '1');
+          u.searchParams.set('filter', 'overdue');
           window.location.href = u.toString();
         });
       }
@@ -529,12 +529,31 @@
         listAllBtn.addEventListener('click', function(e) {
           e.preventDefault();
           const u = new URL(window.location.href);
-          u.searchParams.delete('overdue');
+          u.searchParams.delete('filter');
           window.location.href = u.toString();
         });
       }
     });
+  function handleBack() {
+      const referrer = document.referrer;
 
+      // Get date_range from current URL
+      const params = new URLSearchParams(window.location.search);
+      const dateRange = params.get('date_range') ?? 'month';
+
+      // If coming from dashboard
+      if (referrer.includes('/dashboard')) {
+          window.location.href =
+              "/calendar" +
+              `?filter=tasks&date_range=${dateRange}`;
+      } 
+      else if (window.history.length > 1) {
+          window.history.back();
+      } 
+      else {
+          window.location.href = "{{ route('dashboard') }}";
+      }
+  }
   function printTable() {
     const table = document.getElementById('tasksTable');
     if (!table) return;

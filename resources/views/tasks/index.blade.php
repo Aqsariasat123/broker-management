@@ -22,7 +22,7 @@
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
-            {{ request()->has('overdue') && request()->overdue ? 'Tasks - Overdue' : 'Tasks' }}
+            {{ request()->has('filter') && request()->filter== 'overdue' ? 'Tasks - Overdue' : 'Tasks' }}
           </h3>
        
       </div>
@@ -37,9 +37,9 @@
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
             <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
               <span style="font-size:13px;">Filter</span>
-              <input type="checkbox" id="filterToggle" {{ request()->has('overdue') && request()->overdue ? 'checked' : '' }}>
+              <input type="checkbox" id="filterToggle" {{ request()->has('filter') && request()->filter =='overdue' ? 'checked' : '' }}>
             </label>
-            @if(request()->has('overdue') && request()->overdue)
+            @if(request()->has('filter') && request()->filter== 'overdue')
               <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
             @else
               <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:{{ request()->has('overdue') && request()->overdue ? '#000' : '#000' }}; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
@@ -49,7 +49,7 @@
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addTaskBtn">Add</button>
-        <button class="btn btn-back" onclick="window.history.back()">Back</button>
+        <button class="btn btn-back" onclick="handleBack()">Back</button>
       </div>
     </div>
 
