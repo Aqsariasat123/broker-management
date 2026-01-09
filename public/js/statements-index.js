@@ -415,12 +415,18 @@ document.addEventListener('DOMContentLoaded', function () {
 ============================================================ */
 document.addEventListener('DOMContentLoaded', function() {
   // Add Statement Button
-  document.getElementById('addStatementBtn')
-    ?.addEventListener('click', openAddForm);
+  const addBtn = document.getElementById('addStatementBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', openAddForm);
+  }
 
   // Column Button
-  document.getElementById('columnBtn')
-    ?.addEventListener('click', openColumnModal);
+  const columnBtn = document.getElementById('columnBtn');
+  if (columnBtn) {
+    columnBtn.addEventListener('click', function() {
+      openColumnModal();
+    });
+  }
 });
 
 /* ============================================================

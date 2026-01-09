@@ -168,8 +168,19 @@
 
   // Add Document Button - wrapped in DOMContentLoaded for reliability
   document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('addDocumentBtn')?.addEventListener('click', () => openDocumentModal('add'));
-    document.getElementById('columnBtn')?.addEventListener('click', () => openColumnModal());
+    const addBtn = document.getElementById('addDocumentBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', function() {
+        openDocumentModal('add');
+      });
+    }
+
+    const columnBtn = document.getElementById('columnBtn');
+    if (columnBtn) {
+      columnBtn.addEventListener('click', function() {
+        openColumnModal();
+      });
+    }
   });
 
   // Legacy functions for backward compatibility
