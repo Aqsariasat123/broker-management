@@ -172,7 +172,7 @@ class LifeProposalController extends Controller
                 'maturity_date' => 'nullable|date',
                 'method_of_payment' => 'nullable|string|max:255',
                 'agency' => 'nullable|string|max:255',
-                'medical_type_id' => 'required|exists:lookup_values,id',
+                'medical_type_id' => 'nullable|exists:lookup_values,id',
                 'medical.status_id' => 'nullable|exists:lookup_values,id',
 
                 'is_submitted' => 'sometimes|boolean',
@@ -298,7 +298,7 @@ class LifeProposalController extends Controller
                 'method_of_payment' => 'nullable|string|max:255',
                 'agency' => 'nullable|string|max:255',
 
-                'medical_type_id' => 'required|exists:lookup_values,id',
+                'medical_type_id' => 'nullable|exists:lookup_values,id',
 
                 'is_submitted' => 'sometimes|boolean',
                 'sex' => 'nullable|string|max:1',
