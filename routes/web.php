@@ -162,6 +162,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
         Route::post('/contacts/save-column-settings', [ContactController::class, 'saveColumnSettings'])
             ->name('contacts.save-column-settings');
+        Route::post('/contacts/{contact}/followup', [ContactController::class, 'storeFollowup'])
+            ->name('contacts.store-followup');
 
     // Life Proposals Routes
     Route::get('/life-proposals/export', [LifeProposalController::class, 'export'])->name('life-proposals.export');

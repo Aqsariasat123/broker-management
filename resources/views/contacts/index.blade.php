@@ -534,6 +534,10 @@
               </select>
             </div>
             <div>
+              <label for="mobile_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Mobile No.</label>
+              <input id="mobile_no" name="mobile_no" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            </div>
+            <div>
               <label for="contact_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact No.</label>
               <div style="display: flex; gap: 6px;">
                 <input id="contact_no" name="contact_no" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
@@ -639,6 +643,59 @@
 
 
 </div>
+
+  <!-- Add Follow Up Modal -->
+  <div class="modal" id="followUpModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;">
+        <h4 style="margin: 0; font-size: 16px; font-weight: bold;">Add Follow Up</h4>
+        <div style="display: flex; gap: 8px;">
+          <button type="submit" form="followUpForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
+          <button type="button" class="btn-cancel" onclick="closeFollowUpModal()" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+        </div>
+      </div>
+      <form id="followUpForm" method="POST" action="">
+        @csrf
+        <div class="modal-body" style="padding: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 6px;">
+            <div>
+              <label for="follow_up_date" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Follow Up Date *</label>
+              <input id="follow_up_date" name="follow_up_date" type="date" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            </div>
+            <div>
+              <label for="channel" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Channel</label>
+              <select id="channel" name="channel" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="">Select</option>
+                <option value="Phone">Phone</option>
+                <option value="Email">Email</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Video Call">Video Call</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="fu_status" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Status</label>
+              <select id="fu_status" name="status" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+                <option value="Open">Open</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div style="grid-column: span 2;">
+              <label for="summary" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Summary</label>
+              <textarea id="summary" name="summary" class="form-control" rows="2" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;"></textarea>
+            </div>
+            <div style="grid-column: span 2;">
+              <label for="next_action" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Next Action</label>
+              <textarea id="next_action" name="next_action" class="form-control" rows="2" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;"></textarea>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div class="modal" id="columnModal">
     <div class="modal-content column-modal-vertical">

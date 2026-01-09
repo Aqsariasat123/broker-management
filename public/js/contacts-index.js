@@ -124,7 +124,7 @@ function openModalWithContact(mode, contact) {
     }
     if (deleteBtn) deleteBtn.style.display = 'block';
 
-    const fields = ['type', 'contact_name', 'contact_no', 'wa', 'occupation', 'employer', 'email_address', 'address', 'location', 'dob', 'acquired', 'source', 'source_name', 'agency', 'agent', 'status', 'rank', 'savings_budget', 'children'];
+    const fields = ['type', 'contact_name', 'mobile_no', 'contact_no', 'wa', 'occupation', 'employer', 'email_address', 'address', 'location', 'dob', 'acquired', 'source', 'source_name', 'agency', 'agent', 'status', 'rank', 'savings_budget', 'children'];
     fields.forEach(id => {
       const el = form.querySelector(`#${id}`);
       if (!el) return;
@@ -525,6 +525,10 @@ function populateContactDetails(contact, type = 'view') {
       </div>
       <div class="detail-row">
         <span class="detail-label">Mobile No</span>
+        <input type="text" name="mobile_no" class="detail-value" value="${contact.mobile_no || ''}" ${ro}>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Contact No</span>
         <input type="text" name="contact_no" class="detail-value" value="${contact.contact_no || ''}" ${ro}>
       </div>
       <div class="detail-row">
@@ -534,14 +538,6 @@ function populateContactDetails(contact, type = 'view') {
       <div class="detail-row">
         <span class="detail-label">Address</span>
         <input type="text" name="address" class="detail-value" value="${contact.address || ''}" ${ro}>
-      </div>
-       <div class="detail-row">
-        <span class="detail-label">salutation</span>
-        <select id="salutation" name="salutation" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
-          <option value="">Select</option>
-          ${salvationOptions}
-        </select>
-        
       </div>
     </div>
   </div>
@@ -736,8 +732,8 @@ async function saveContactFromPage() {
     // Gather values from the form fields
     const contactData = {
       contact_name: document.getElementById('contactPageName')?.textContent || '',
-      salutation: document.getElementById('salutation')?.value || '',
       type: document.getElementById('type')?.value || '',
+      mobile_no: document.querySelector('#contactDetailsContent input[name="mobile_no"]')?.value || '',
       contact_no: document.querySelector('#contactDetailsContent input[name="contact_no"]')?.value || '',
       email_address: document.querySelector('#contactDetailsContent input[name="email_address"]')?.value || '',
       address: document.querySelector('#contactDetailsContent input[name="address"]')?.value || '',
@@ -810,6 +806,36 @@ function deleteContact() {
   const method = document.createElement('input'); method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE'; form.appendChild(method);
   document.body.appendChild(form);
   form.submit();
+}
+
+// Follow Up modal functions
+function openAddFollowUpModal() {
+  if (!currentContactId) {
+    alert('Please select a contact first');
+    return;
+  }
+  const modal = document.getElementById('followUpModal');
+  const form = document.getElementById('followUpForm');
+  if (modal && form) {
+    // Set the form action to the correct route
+    form.action = `/contacts/${currentContactId}/followup`;
+    // Reset form
+    form.reset();
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('follow_up_date').value = today;
+    // Show modal
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeFollowUpModal() {
+  const modal = document.getElementById('followUpModal');
+  if (modal) {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
 }
 
 // Column modal functions
@@ -1003,7 +1029,7 @@ function initDragAndDrop() {
 
 // close modals on ESC and clicking backdrop
 document.addEventListener('DOMContentLoaded', function () {
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); closeFollowUpModal(); } });
   document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
   });

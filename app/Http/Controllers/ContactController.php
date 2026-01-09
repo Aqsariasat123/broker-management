@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log; // <-- Add this
 
 use App\Models\Contact;
+use App\Models\Followup;
 use App\Models\LookupCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -116,6 +117,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'contact_name' => 'required|string|max:255',
             'contact_no' => 'nullable|string|max:20',
+            'mobile_no' => 'nullable|string|max:20',
             'wa' => 'nullable|string|max:20',
             'type' => 'required|string',
             'occupation' => 'nullable|string|max:255',
@@ -128,7 +130,7 @@ class ContactController extends Controller
             'next_follow_up' => 'nullable|date',
             'coid' => 'nullable|string|max:50',
             'dob' => 'nullable|date',
-            'salutation' => 'required|string',
+            'salutation' => 'nullable|string',
             'source_name' => 'nullable|string|max:255',
             'agency' => 'nullable|string|max:255',
             'agent' => 'nullable|string|max:255',
@@ -182,6 +184,7 @@ class ContactController extends Controller
     $validated = $request->validate([
         'contact_name' => 'required|string|max:255',
         'contact_no' => 'nullable|string|max:20',
+        'mobile_no' => 'nullable|string|max:20',
         'wa' => 'nullable|string|max:20',
         'type' => 'required|string',
         'occupation' => 'nullable|string|max:255',
@@ -194,7 +197,7 @@ class ContactController extends Controller
         'next_follow_up' => 'nullable|date',
         'coid' => 'nullable|string|max:50',
         'dob' => 'nullable|date',
-        'salutation' => 'required|string',
+        'salutation' => 'nullable|string',
         'source_name' => 'nullable|string|max:255',
         'agency' => 'nullable|string|max:255',
         'agent' => 'nullable|string|max:255',
@@ -295,10 +298,43 @@ class ContactController extends Controller
     {
         // Save column settings to session or database
         session(['contact_columns' => $request->columns ?? []]);
-        
+
         return redirect()->route('contacts.index')
             ->with('success', 'Column settings saved successfully.');
     }
 
- 
+    public function storeFollowup(Request $request, Contact $contact)
+    {
+        $validated = $request->validate([
+            'follow_up_date' => 'required|date',
+            'channel' => 'nullable|string|max:50',
+            'status' => 'nullable|string|max:50',
+            'summary' => 'nullable|string',
+            'next_action' => 'nullable|string',
+        ]);
+
+        // Generate follow_up_code
+        $latestFollowup = Followup::orderBy('id', 'desc')->first();
+        $nextId = $latestFollowup ? $latestFollowup->id + 1 : 1;
+        $validated['follow_up_code'] = 'FU' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+        $validated['contact_id'] = $contact->id;
+        $validated['user_id'] = auth()->id();
+
+        $followup = Followup::create($validated);
+
+        // Update contact's next_follow_up if needed
+        if ($validated['follow_up_date']) {
+            $contact->update(['next_follow_up' => $validated['follow_up_date']]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'followup' => $followup,
+                'message' => 'Follow up added successfully.'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Follow up added successfully.');
+    }
 }
