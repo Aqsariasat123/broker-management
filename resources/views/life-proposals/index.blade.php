@@ -636,5 +636,5 @@
   const lifeProposalsStoreRoute = '{{ route("life-proposals.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>
-<script src="{{ asset('js/life-proposals-index.js') }}"></script>
+<script src="{{ asset('js/life-proposals-index.js') }}?v={{ time() }}"></script>
 @endsection
