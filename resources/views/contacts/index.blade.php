@@ -404,7 +404,7 @@
         <div id="followupsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
             <h4 style="margin:0; font-size:12px; font-weight:600; color:#333;">Follow Ups</h4>
-            <!-- <button class="btn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Add Follow Up</button> -->
+            <button class="btn" id="addFollowUpBtn" onclick="openAddFollowUpModal()" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Add Follow Up</button>
           </div>
           <div id="followupcontent" style="display:flex; gap:10px; flex-wrap:wrap; padding:10px;">
             <!-- Documents will be loaded via JavaScript -->
@@ -515,13 +515,6 @@
                 @foreach($lookupData['contact_types'] as $t) <option value="{{ $t['id'] }}">{{ $t['name'] }}</option> @endforeach
               </select>
             </div>
-             <div>
-                 <label for="salutation" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Salutation</label>
-               <select id="salutation" name="salutation" class="form-control" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                  <option value="">Select</option>
-                  @foreach($lookupData['salutations'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
-                </select>
-              </div>
             <div>
               <label for="contact_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Name</label>
               <input id="contact_name" name="contact_name" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
