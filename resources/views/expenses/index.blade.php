@@ -46,6 +46,17 @@
       </div>
     @endif
 
+    @if($errors->any())
+      <div class="alert alert-danger" id="errorAlert" style="padding:8px 12px; margin:15px 20px; border:1px solid #f5c6cb; background:#f8d7da; color:#721c24;">
+        <ul style="margin:0; padding-left:20px;">
+          @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+        <button type="button" class="alert-close" onclick="document.getElementById('errorAlert').style.display='none'" style="float:right;background:none;border:none;font-size:16px;cursor:pointer;">×</button>
+      </div>
+    @endif
+
     <div class="table-responsive" id="tableResponsive">
       <table id="expensesTable">
         <thead>
