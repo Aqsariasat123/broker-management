@@ -36,7 +36,7 @@
   <div class="cards">
 
     <!-- Tasks Today -->
-    <a href="{{ route('tasks.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('tasks.index') }}" class="card-link">
       <div class="card">
         <span class="icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
           <i class="fa-solid fa-clipboard-check" style="font-size: 24px;"></i>
