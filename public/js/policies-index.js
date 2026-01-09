@@ -970,7 +970,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
        <div class="grey-input">
   <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurance Class</label>
   <select name="policy_class" id="policy_class" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-    ${createSelectOptions(lookupData.insurance_classes || [])}
+    ${createSelectOptions(lookupData.policy_classes || [])}
   </select>
 </div>
           <div class="grey-input">
@@ -1049,7 +1049,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
         <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Plan</label>
             <select name="policy_plan" id="policy_plan" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.plans || [])}
+              ${createSelectOptions(lookupData.policy_plans || [])}
             </select>
           </div>
          <div class="grey-input">
@@ -1063,7 +1063,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
            <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Period</label>
             <select name="term_unit" id="term_unit" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.periods || [])}
+              ${createSelectOptions(lookupData.term_units || [])}
             </select>
           </div>
           <div class="grey-input">
