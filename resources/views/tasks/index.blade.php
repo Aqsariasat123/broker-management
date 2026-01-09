@@ -112,7 +112,7 @@
                     @php $value = $task->task_id; @endphp
                     @break
                 @case('category')
-                    @php $value = $task->categoryValues->value ?? '-'; @endphp
+                    @php $value = $task->category ?? '-'; @endphp
                     @break
                 @case('item')
                     @php $value = $task->item ?? '-'; @endphp
