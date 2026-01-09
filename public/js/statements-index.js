@@ -411,14 +411,17 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* ============================================================
-   EVENTS
+   EVENTS - Setup on DOMContentLoaded
 ============================================================ */
-document.getElementById('addStatementBtn')
-  ?.addEventListener('click', openAddForm);
+document.addEventListener('DOMContentLoaded', function() {
+  // Add Statement Button
+  document.getElementById('addStatementBtn')
+    ?.addEventListener('click', openAddForm);
 
-// Column Button
-document.getElementById('columnBtn')
-  ?.addEventListener('click', openColumnModal);
+  // Column Button
+  document.getElementById('columnBtn')
+    ?.addEventListener('click', openColumnModal);
+});
 
 /* ============================================================
    COLUMN MODAL FUNCTIONS

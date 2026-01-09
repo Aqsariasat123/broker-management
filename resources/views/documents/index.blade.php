@@ -142,9 +142,9 @@
     </div>
 
     <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-      <div class="footer-left">
-        <a class="btn btn-export" href="{{ route('documents.export') }}">Export</a>
-        <button class="btn btn-column" id="columnBtn2" type="button">Column</button>
+      <div class="footer-left" style="display:flex; gap:8px;">
+        <a class="btn btn-export" href="{{ route('documents.export') }}" style="background:#fff; border:1px solid #ddd; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; color:#333;">Export</a>
+        <button class="btn btn-column" id="columnBtn" type="button" style="background:#fff; border:1px solid #ddd; padding:6px 16px; border-radius:2px; cursor:pointer;">Column</button>
       </div>
       <div class="paginator">
         @php

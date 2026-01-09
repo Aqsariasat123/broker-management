@@ -166,9 +166,11 @@
     currentDocumentId = null;
   }
 
-  // Add Document Button
-  document.getElementById('addDocumentBtn').addEventListener('click', () => openDocumentModal('add'));
-  document.getElementById('columnBtn2').addEventListener('click', () => openColumnModal());
+  // Add Document Button - wrapped in DOMContentLoaded for reliability
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('addDocumentBtn')?.addEventListener('click', () => openDocumentModal('add'));
+    document.getElementById('columnBtn')?.addEventListener('click', () => openColumnModal());
+  });
 
   // Legacy functions for backward compatibility
   async function openDocumentPage(mode) {
