@@ -227,7 +227,12 @@
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
               <label for="category" style="display: block; margin-bottom: 5px; font-weight: 500;">Category</label>
-              <input type="text" class="form-control" id="category" name="category" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;" placeholder="Enter Category">
+              <select class="form-control" id="category" name="category" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Category</option>
+                @foreach($categories as $cat)
+                  <option value="{{ $cat->value }}">{{ $cat->value }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group">
               <label for="item" style="display: block; margin-bottom: 5px; font-weight: 500;">Item</label>
@@ -239,7 +244,15 @@
             </div>
             <div class="form-group">
               <label for="name" style="display: block; margin-bottom: 5px; font-weight: 500;">Name</label>
-              <input type="text" class="form-control" id="name" name="name" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;" placeholder="Enter Name">
+              <select class="form-control" id="name" name="name" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Name</option>
+                @foreach($contacts as $contact)
+                  <option value="{{ $contact->name }}">{{ $contact->name }}</option>
+                @endforeach
+                @foreach($clients as $client)
+                  <option value="{{ $client->name }}">{{ $client->name }}</option>
+                @endforeach
+              </select>
             </div>
            
           </div>
@@ -272,7 +285,12 @@
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
               <label for="assignee" style="display: block; margin-bottom: 5px; font-weight: 500;">Assignee</label>
-              <input type="text" class="form-control" id="assignee" name="assignee" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;" placeholder="Enter Assignee">
+              <select class="form-control" id="assignee" name="assignee" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                <option value="">Select Assignee</option>
+                @foreach($users as $user)
+                  <option value="{{ $user->name }}">{{ $user->name }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="form-group">
               <label for="task_status" style="display: block; margin-bottom: 5px; font-weight: 500;">Task Status</label>
@@ -305,7 +323,14 @@
               <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="repeat" name="repeat" value="1" style="width: 18px; height: 18px; cursor: pointer;">
                 <label for="repeat" style="margin: 0; cursor: pointer;">Repeat</label>
-                <input type="text" class="form-control" id="frequency" name="frequency" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;" placeholder="Enter Frequency">
+                <select class="form-control" id="frequency" name="frequency" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+                  <option value="">Select Frequency</option>
+                  @if($frequencyCategories && $frequencyCategories->values)
+                    @foreach($frequencyCategories->values as $freq)
+                      <option value="{{ $freq->value }}">{{ $freq->value }}</option>
+                    @endforeach
+                  @endif
+                </select>
               </div>
             
               <div class="form-group">
