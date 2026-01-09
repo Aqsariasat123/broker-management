@@ -963,33 +963,15 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
            <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Clients Name *</label>
-            <select name="client_id" id="client_id" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.clients || [])}
-            </select>
+            <input type="text" name="client_name" id="client_name" class="form-control" required style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
        <div class="grey-input">
   <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurance Class</label>
-  
-  <select name="policy_class_id" id="policy_class_id" class="form-control" 
-          style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-    ${createSelectOptions(lookupData.policy_classes || [])}
-  </select>
-             <div style="display:flex; gap:8px;">
-    <div  id="addPolicyClassBtn" 
-            style="flex:1; height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
-      
-    </div>
-    <div id="addNominclatureBtn" 
-            style="flex:1;  height:1px; font-size:12px; background:#f3742a; color:#fff; border:none; border-radius:3px; cursor:pointer;">
-      
-    </div>
-  </div>
+  <input type="text" name="policy_class" id="policy_class" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
 </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insurer</label>
-            <select name="insurer_id" id="insurer_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.insurers || [])}
-            </select>
+            <input type="text" name="insurer" id="insurer" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Insured Asset / Destination</label>
@@ -1003,27 +985,19 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Business Type</label>
-            <select name="business_type_id" id="business_type_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.business_types || [])}
-            </select>
+            <input type="text" name="business_type" id="business_type" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Agency</label>
-            <select name="agency_id" id="agency_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.agencies || [])}
-            </select>
+            <input type="text" name="agency" id="agency" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Agent</label>
-            <select name="agent" id="agent" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.agents || [])}
-            </select>
+            <input type="text" name="agent" id="agent" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Source</label>
-            <select name="source_id" id="source_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.sources || [])}
-            </select>
+            <input type="text" name="source" id="source" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           
           <!-- Row 3 -->
@@ -1037,9 +1011,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
          <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Delivery Channel</label>
-            <select name="channel_id" id="channel_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.channels || [])}
-            </select>
+            <input type="text" name="channel" id="channel" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input" style="grid-column:span 2;">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Notes</label>
@@ -1050,20 +1022,17 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
     `;
 
   // Schedule Details Section
-  const currentYear = new Date().getFullYear();
   const scheduleDetails = `
       <div style="padding:0px 24px; background:white;">
               <h4 style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#333;">Schedule Details</h4>
         <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px 12px;">
          <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Year</label>
-            <input type="text" value="${currentYear}" class="form-control" readonly style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px; background:#f5f5f5;">
+            <input type="text" name="year" id="year" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
         <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Plan</label>
-            <select name="policy_plan_id" id="policy_plan_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.policy_plans || [])}
-            </select>
+            <input type="text" name="policy_plan" id="policy_plan" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
          <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Sum Insured</label>
@@ -1075,9 +1044,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
            <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Period</label>
-            <select name="term_unit" id="term_unit" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.term_units || [])}
-            </select>
+            <input type="text" name="term_unit" id="term_unit" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Start Date *</label>
@@ -1118,9 +1085,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
         <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px 12px;">
          <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Option</label>
-            <select name="pay_plan_lookup_id" id="pay_plan_lookup_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.pay_plans || [])}
-            </select>
+            <input type="text" name="pay_plan" id="pay_plan" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
            <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">No Of Instalments</label>
@@ -1128,9 +1093,7 @@ function populateCompactAddForm(formContent, formScheduleContent, formDocumentsC
           </div>
           <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Interval</label>
-            <select name="frequency_id" id="frequency_id" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
-              ${createSelectOptions(lookupData.frequencies || [])}
-            </select>
+            <input type="text" name="frequency" id="frequency" class="form-control" style="width:100%; padding:6px; font-size:12px; border:1px solid #ddd; border-radius:3px;">
           </div>
          <div class="grey-input">
             <label style="display:block; font-size:11px; font-weight:500; margin-bottom:4px; color:#000;">Start Date</label>
