@@ -13,15 +13,13 @@
 <div class="dashboard">
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="page-title-section">
-              <h3 style="margin:0; font-size:18px; font-weight:600;">
+             <h3 style="margin:0; font-size:18px; font-weight:600;">
                   @if($filter == 'overdue')
                      Premium Overdue
                   @else
                     Debit Notes
                   @endif
               </h3>
-           </div>
       </div>
   </div>
   <!-- Main Debit Notes Table View -->
@@ -30,30 +28,48 @@
     <!-- Debit Notes Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $debitNotes->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $debitNotes->total() }}</div>
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-          <div class="filter-group">
-            <form method="GET" action="{{ route('debit-notes.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
-              <select name="status" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
-                <option value="">All Status</option>
-                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="issued" {{ request('status') == 'issued' ? 'selected' : '' }}>Issued</option>
-                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-              </select>
-              <button type="submit" class="btn btn-column" style="background:#fff; color:#000; border:1px solid #ccc;">Filter</button>
-              @if(request()->hasAny(['search', 'status']))
-                <a href="{{ route('debit-notes.index') }}" class="btn btn-back" style="background:#ccc; color:#333; border-color:#ccc;">Clear</a>
-              @endif
-            </form>
+         <div class="filter-group">
+              <label class="toggle-switch">
+                <input type="checkbox" id="filterToggle" {{ (request()->get('filter') == "overdue"
+                   ||  request('status') == "pending"
+                    ||  request('status') == "issued"
+                      ||  request('status') == "paid"
+                     ||  request('status') == "overdue"
+                     ||  request('status') == "cancelled"
+
+                    )? 'checked' : '' }}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          @if(request()->get('filter')!= 'overdue')  
+          <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div class="filter-group">
+              <form method="GET" action="{{ route('debit-notes.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
+                <select name="status" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
+                  <option value="">All Status</option>
+                  <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                  <option value="issued" {{ request('status') == 'issued' ? 'selected' : '' }}>Issued</option>
+                  <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                  <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                  <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                </select>
+                <button type="submit" class="btn btn-column" style="background:#fff; color:#000; border:1px solid #ccc;">Filter</button>
+                @if(request()->hasAny(['search', 'status']))
+                  <a href="{{ route('debit-notes.index') }}" class="btn btn-back" style="background:#ccc; color:#333; border-color:#ccc;">Clear</a>
+                @endif
+              </form>
+            </div>
           </div>
-        </div>
+          @endif
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addDebitNoteBtn">Add</button>
+                              <button class="btn btn-close" onclick="window.history.back()">Close</button>
+
       </div>
     </div>
 

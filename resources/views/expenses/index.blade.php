@@ -17,11 +17,9 @@
 <div class="dashboard">
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="page-title-section">
-              <h3 style="margin:0; font-size:18px; font-weight:600;">
+                <h3 style="margin:0; font-size:18px; font-weight:600;">
                   Expenses
               </h3>
-           </div>
       </div>
   </div>
   <!-- Main Expenses Table View -->
@@ -30,9 +28,8 @@
     <!-- Expenses Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-      <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $expenses->total() }}</div>
-      </div>
+           <div class="records-found">Records Found - {{ $expenses->total() }}</div>
+
       <div class="action-buttons">
         @if(auth()->check() && (auth()->user()->hasPermission('expenses.create') || auth()->user()->isAdmin()))
         <button class="btn btn-add" id="addExpenseBtn">Add</button>

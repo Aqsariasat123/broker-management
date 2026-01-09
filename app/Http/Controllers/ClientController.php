@@ -395,7 +395,8 @@ class ClientController extends Controller
 
         $validated['client_name'] = trim(($validated['first_name'] ?? '') . ' ' . ($validated['other_names'] ?? '') . ' ' . ($validated['surname'] ?? ''));
         
-     
+         $validated['wa'] = $validated['wa'] ?? '0';
+
 
         // Image is optional - no validation required
 

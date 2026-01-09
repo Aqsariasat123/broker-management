@@ -39,16 +39,21 @@
     min-width: 30px;
     display: inline-block;
   }
-
-
-' +
-      '@page { margin: 1cm; size: A4 landscape; }' +
-      'html, body { margin: 0; padding: 0; background: #fff !important; }' +
-      'body { font-family: Arial, sans-serif; font-size: 10px; }' +
-      'table { width: 100%; border-collapse: collapse; page-break-inside: auto; }' +
-      'thead { display: table-header-group; }' +
-      'thead th { background-color: #000 !important; color: #fff !important; padding: 8px 5px; text-align: left; border: 1px solid #333; font-weight: normal; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
-      'tbody tr { page-break-inside: avoid; border-bottom: 1px solid #ddd; }' +
-      'tbody tr:nth-child(even) { background-color: #f8f8f8; }' +
-      'tbody td { padding: 6px 5px; border: 1px solid #ddd; white-space: nowrap; }' +
-      '
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: #f5f5f5;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+}
+.page-title-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+     justify-content:center;
+}

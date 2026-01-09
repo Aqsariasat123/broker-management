@@ -119,7 +119,7 @@ class PolicyController extends Controller
         if ($startDate && $endDate) {
             $query->whereBetween('end_date', [$startDate->toDateString(), $endDate->toDateString()]);
         }else{
-  $today = now()->toDateString();
+        $today = now()->toDateString();
         $thirtyDaysFromNow = now()->addDays(30)->toDateString();
         $query->whereDate('end_date', '>=', $today)
               ->whereDate('end_date', '<=', $thirtyDaysFromNow);
@@ -128,6 +128,13 @@ class PolicyController extends Controller
       
         $filter = $request->filter;
     }
+
+    if($request->type){
+        $filter = $request->type;
+
+    }
+
+
 
     // Filter for Due for Renewal
     if ($request->has('dfr') && $request->dfr == 'true') {
@@ -209,13 +216,28 @@ class PolicyController extends Controller
         ->paginate($perPage);
 
     // Lookup data
+
     $lookupData = \App\Helpers\LookUpHelper::getLookupData();
+        $lookupCategories = LookupCategory::with('values')->get();
+        $lookupMap = [];
+        foreach ($lookupCategories as $cat) {
+            $key = strtolower(str_replace(' ', '_', trim($cat->name)));
+            $lookupMap[$key] = $cat->values;
+        }
+        $clients = Client::orderBy('client_name')->get(['id', 'client_name']);
+
+     $insurers = $lookupMap['insurer'] ?? collect();
+        $policyClasses = $lookupMap['policy_classes'] ?? ($lookupMap['policy_classes'] ?? collect());
+        $agencies = $lookupMap['apl_agency'] ?? collect();
+        $statuses = $lookupMap['policy_status'] ?? ($lookupMap['status'] ?? collect());
+        $agents = Policy::select('agent')->whereNotNull('agent')->distinct()->orderBy('agent')->pluck('agent');
 
     // Optional: life proposal
     $lifeProposal = $request->has('life_proposal_id') ? LifeProposal::find($request->life_proposal_id) : null;
 
     // Optional: client
     $client = $request->has('client_id') ? Client::find($request->client_id) : null;
+            Log::info('Policy filter', ['filter' => $filter]);
 
     return view('policies.index', compact(
         'policies',
@@ -223,7 +245,7 @@ class PolicyController extends Controller
         'lifeProposal',
         'client',
         'policyId',
-        'filter'
+        'filter', 'insurers', 'policyClasses', 'agencies', 'statuses', 'agents','clients'
     ));
 }
 

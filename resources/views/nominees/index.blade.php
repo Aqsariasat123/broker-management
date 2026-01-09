@@ -20,18 +20,24 @@
 
 <div class="dashboard">
   <div class="container-table">
-    <!-- Nominees Card -->
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
-      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-        <div class="page-title-section">
+     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3>
             @if($policy)
               {{ $policy->policy_no }} - 
             @endif
-            Nominees
+            
+        <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Nominees</span>
+
           </h3>
-          <div class="records-found">Records Found - {{ $nominees->total() }}</div>
-        </div>
+       
+      </div>
+    </div>
+    <!-- Nominees Card -->
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
+      <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                  <div class="records-found">Records Found - {{ $nominees->total() }}</div>
+
         <div class="action-buttons">
           <button class="btn" onclick="removeSelectedNominees()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Remove</button>
           <button class="btn btn-add" onclick="openNomineeDialog()">Add</button>

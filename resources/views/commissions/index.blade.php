@@ -13,8 +13,7 @@
 <div class="dashboard">
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="page-title-section">
-              <h3 style="margin:0; font-size:18px; font-weight:600;">
+             <h3 style="margin:0; font-size:18px; font-weight:600;">
               @if($policy)
                 {{ $policy->policy_code }} - 
               @endif
@@ -22,7 +21,15 @@
                       $hasPaidStatus = request()->filled('paid_status');
                      $hasinsurer =  request()->filled('insurer');
                   @endphp
-          Commissions   @if($hasPaidStatus)
+              @if($policy)
+                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Commissions</span>
+              @else
+                 <span class="client-name" > Commissions</span>
+              @endif
+
+            
+          
+          @if($hasPaidStatus)
                - 
              <span style="color:#f3742a;">Out Standing  </span>
               @endif
@@ -31,7 +38,6 @@
              <span style="color:#f3742a;">{{request()->get('insurer')}}  </span>
               @endif
               </h3>
-           </div>
       </div>
   </div>
   <!-- Main Commissions Table View -->
@@ -39,9 +45,11 @@
   <div class="container-table">
     <!-- Commissions Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+      
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $commissions->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $commissions->total() }}</div>
         <!-- <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
             @foreach(['SACOS','Alliance','Hsavy','MUA'] as $insurerBtn)

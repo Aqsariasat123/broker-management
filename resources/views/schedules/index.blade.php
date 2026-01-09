@@ -17,7 +17,17 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
             <div class="page-title-section">
               <h3 style="margin:0; font-size:18px; font-weight:600;">
-                Schedules
+                
+                
+              @if($policy)
+                {{ $policy->policy_code }} - 
+              @endif
+              
+              @if($policy)
+                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Schedules</span>
+              @else
+                 <span class="client-name" > Schedules</span>
+              @endif
               </h3>
            </div>
       </div>
@@ -35,20 +45,7 @@
               @endphp
               <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
             </label>
-        <!-- <form method="GET" action="{{ route('schedules.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}">
-          <select name="status">
-            <option value="">All Status</option>
-            <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
-            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-          </select>
-          <button type="submit" class="btn">Filter</button>
-          @if(request()->hasAny(['search', 'status']))
-            <a href="{{ route('schedules.index') }}" class="btn">Clear</a>
-          @endif
-        </form> -->
+    
       </div>
       <div class="action-buttons">
         <!-- <button class="btn btn-add" onclick="openScheduleModal('add')">Add</button> -->

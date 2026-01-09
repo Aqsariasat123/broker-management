@@ -21,7 +21,17 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
          
-            Claims
+            
+            
+              @if($policy)
+                {{ $policy->policy_code }} - 
+              @endif
+              
+              @if($policy)
+                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Claims</span>
+              @else
+                 <span class="client-name" > Claims</span>
+              @endif
             @if(isset($client) && $client)
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
             @endif
@@ -35,8 +45,9 @@
     <!-- Claims Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $claims->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $claims->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px;">
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
             <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">

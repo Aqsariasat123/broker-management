@@ -107,7 +107,30 @@ if (editBtn) {
     }
   });
 }
+function openFilterModal() {
+  if (!filterModal) return;
+  filterModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  if (filterToggle) filterToggle.checked = true;
+}
 
+function closeFilterModal() {
+  if (!filterModal) return;
+  filterModal.classList.remove('show');
+  document.body.style.overflow = '';
+  if (filterToggle) filterToggle.checked = false;
+}
+
+// Expose to global so inline onclick handlers in Blade can call them
+window.openFilterModal = openFilterModal;
+window.closeFilterModal = closeFilterModal;
+
+if (filterToggle) {
+  filterToggle.addEventListener('change', function () {
+    if (this.checked) openFilterModal();
+    else closeFilterModal();
+  });
+}
 // Wait for DOM to be ready before attaching event listeners
 function initializeEventListeners() {
   const addPolicyBtn = document.getElementById('addPolicyBtn');
@@ -1893,7 +1916,7 @@ function handleRenewalDocumentUpload() {
 // Handle renewal form submission
 document.addEventListener('DOMContentLoaded', function () {
 
-  if(window.appConfig.currentPolicyId!=''){
+  if (window.appConfig.currentPolicyId != '') {
     currentPolicyId = window.appConfig.currentPolicyId;
     openPolicyDetails(currentPolicyId);
 

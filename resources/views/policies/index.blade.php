@@ -39,6 +39,9 @@
                 Policies  Expiring
               @elseif($filter == "birthday_today")
                 Birthdays Today
+              @elseif(request()->get('type') == "life")
+                Policies - <span style="color:#f3742a;">Life  </span>
+                
               @else
                 Policies
               @endif
@@ -52,10 +55,21 @@
     <!-- Policies Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $policies->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $policies->total() }}</div>
+
+         @if($filter != "expiring")
+          <div class="filter-group">
+              <label class="toggle-switch">
+                <input type="checkbox" id="filterToggle" {{ (request()->get('follow_up') == 'true' || request()->get('dfr') == 'true' || request()->get('filter') == 'overdue' ) ? 'checked' : '' }}>
+                <span class="toggle-slider"></span>
+              </label>
+              <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
+            </div>
+         @endif
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-             @if($filter != "expiring")
+             @if($filter != "expiring" && $filter != "life")
                 <div class="filter-group">
                   @if(request()->get('dfr') == 'true')
                     <button class="btn btn-list-all" id="listAllBtn">List ALL</button>
@@ -70,6 +84,8 @@
      @if($filter != "expiring")
         <button type="button" class="btn btn-add" id="addPolicyBtn">Add</button>
       @endif
+                      <button class="btn btn-close" onclick="window.history.back()">Close</button>
+
       </div>
     </div>
 
@@ -320,7 +336,7 @@
         <div id="documentsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
             <h4 style="margin:0; font-size:12px; font-weight:600; color:#333;">Documents</h4>
-            <button class="btn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Add Document</button>
+            <button class="btn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;" onclick="openPolicyDocumentUploadModal()">Add Document</button>
           </div>
           <div id="documentsContent" style="display:flex; gap:10px; flex-wrap:wrap; padding:10px;">
             <!-- Documents will be loaded via JavaScript -->
@@ -853,7 +869,143 @@
       </form>
     </div>
   </div>
+<div class="modal" id="filterModal">
+  <div class="modal-content" style="max-width:800px; max-height:90vh; overflow-y:auto;">
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #ddd; background:#fff;">
+      <h4 id="filterModalTitle" style="margin:0; font-size:18px; font-weight:bold;">Filters</h4>
+      <div style="display:flex; gap:10px;">
+        <button type="submit" form="filterForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Apply</button>
+        <button type="button" class="btn-cancel" onclick="closeFilterModal()" style="background:#6c757d; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Close</button>
+      </div>
+    </div>
 
+    <form id="filterForm" method="GET" action="{{ route('policies.index') }}">
+
+      <div class="modal-body" style="padding:20px;">
+        <!-- New Filter Fields -->
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="record_lines" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Set Record Lines</label>
+            <input type="number" id="record_lines" name="record_lines" value="{{ request('record_lines', 15) }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="search_term" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Search Term</label>
+            <input type="text" id="search_term" name="search_term" value="{{ request('search_term') }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="client_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Client</label>
+            <select id="client_id" name="client_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              @if(isset($clients))
+                @foreach($clients as $c)
+                  <option value="{{ $c->id }}" {{ request('client_id') == $c->id ? 'selected' : '' }}>{{ $c->client_name }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="filter_policy_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Policy Number</label>
+            <select id="filter_policy_id" name="policy_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              @if(isset($policies))
+                @foreach($policies as $p)
+                  <option value="{{ $p->id }}" data-client-id="{{ $p->client_id }}" {{ request('policy_id') == $p->id ? 'selected' : '' }}>{{ $p->policy_no }} - {{ $p->client->client_name ?? '' }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="insurer_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Insurer <span style="color:#dc3545; font-weight:700;">•</span></label>
+            <select id="insurer_id" name="insurer_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              @if(isset($insurers))
+                @foreach($insurers as $ins)
+                  <option value="{{ $ins->id }}" {{ request('insurer_id') == $ins->id ? 'selected' : '' }}>{{ $ins->name }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="policy_class_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Insurance Class</label>
+            <select id="policy_class_id" name="policy_class_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              @if(isset($policyClasses))
+                @foreach($policyClasses as $pc)
+                  <option value="{{ $pc->id }}" {{ request('policy_class_id', 'Motor') == $pc->id ? 'selected' : '' }}>{{ $pc->name }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="agency_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Agency</label>
+            <select id="agency_id" name="agency_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+=                @foreach($agencies as $a)
+                  <option value="{{ $a->id }}" {{ request('agency_id') == $a->id ? 'selected' : '' }}>{{ $a->name }}</option>
+                @endforeach
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="agent" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Agent</label>
+            <select id="agent" name="agent" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              @if(isset($agents))
+                @foreach($agents as $ag)
+                  <option value="{{ $ag }}" {{ request('agent') == $ag ? 'selected' : '' }}>{{ $ag }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="policy_status_id" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Status</label>
+            <select id="policy_status_id" name="policy_status_id" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+              <option value="">All</option>
+              <option value="draft" {{ request('policy_status_id')=='draft' ? 'selected' : '' }}>Draft</option>
+              <option value="active" {{ request('policy_status_id')=='active' ? 'selected' : '' }}>Active</option>
+              <option value="expired" {{ request('policy_status_id')=='expired' ? 'selected' : '' }}>Expired</option>
+              <option value="cancelled" {{ request('policy_status_id')=='cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="from_start_date" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">From Start Date</label>
+            <input type="date" id="from_start_date" name="from_start_date" value="{{ request('from_start_date') }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="from_end_date" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">From End Date</label>
+            <input type="date" id="from_end_date" name="from_end_date" value="{{ request('from_end_date') }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="premium_unpaid" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Premium Unpaid</label>
+            <input type="number" id="premium_unpaid" name="premium_unpaid" value="{{ request('premium_unpaid') }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+        </div>
+
+        <div class="form-row" style="display:flex; gap:15px; margin-bottom:15px;">
+          <div class="form-group" style="flex:1;">
+            <label for="commission_unpaid" style="display:block; margin-bottom:5px; font-size:13px; font-weight:500;">Commission Unpaid</label>
+            <input type="number" id="commission_unpaid" name="commission_unpaid" value="{{ request('commission_unpaid') }}" class="form-control" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:2px; font-size:13px;">
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
 @include('partials.column-selection-modal', [
   'selectedColumns' => $selectedColumns,
   'columnDefinitions' => $columnDefinitions,

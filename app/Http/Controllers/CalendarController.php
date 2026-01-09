@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Task;
 use App\Models\Policy;
@@ -17,224 +18,224 @@ class CalendarController extends Controller
         return view('calender.index');
     }
 
-    public function getEvents(Request $request)
+   public function getEvents(Request $request)
     {
-        $year = $request->input('year', date('Y'));
-        $month = $request->input('month', date('n'));
-        $filter = $request->input('filter', 'all');
+        $year      = (int) $request->input('year', date('Y'));
+        $month     = (int) $request->input('month', date('n'));
+        $filter    = $request->input('filter', 'all');
         $dateRange = $request->input('date_range', 'month');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Base Date Range
+        |--------------------------------------------------------------------------
+        */
         switch ($dateRange) {
             case 'today':
                 $startDate = Carbon::today();
-                $endDate = Carbon::today();
+                $endDate   = Carbon::today();
                 break;
+
             case 'week':
                 $startDate = Carbon::now()->startOfWeek(); // Monday
-                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                $endDate   = Carbon::now()->endOfWeek();   // Sunday
                 break;
+
             case 'month':
                 $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                $endDate   = Carbon::create($year, $month, 1)->endOfMonth();
                 break;
+
             case 'quarter':
-                $quarter = floor(($month - 1) / 3) + 1;
+                $quarter   = floor(($month - 1) / 3) + 1;
                 $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
-                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                $endDate   = $startDate->copy()->addMonths(3)->subDay();
                 break;
+
             case 'year':
                 $startDate = Carbon::create($year)->startOfYear();
-                $endDate = Carbon::create($year)->endOfYear();
+                $endDate   = Carbon::create($year)->endOfYear();
                 break;
+
             default:
+                // Handles: year-2025
                 if (str_starts_with($dateRange, 'year-')) {
-                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $yearOnly  = (int) str_replace('year-', '', $dateRange);
                     $startDate = Carbon::create($yearOnly)->startOfYear();
-                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                    $endDate   = Carbon::create($yearOnly)->endOfYear();
                 } else {
                     $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                    $endDate   = Carbon::create($year, $month, 1)->endOfMonth();
                 }
                 break;
-       }
+        }
 
-        // Include previous and next month days that are visible in calendar
-        // $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        // $endDate = $startDate->copy()->endOfMonth();
-        
-        // Get first day of week (Monday = 0)
-        $firstDayOfWeek = $startDate->dayOfWeek; // 0 = Sunday, 1 = Monday, etc.
-        $firstDayOfWeek = $firstDayOfWeek === 0 ? 6 : $firstDayOfWeek - 1; // Convert to Monday = 0
-        
-        // Get last day of week (Sunday = 6)
-        $lastDayOfWeek = $endDate->dayOfWeek;
-        $lastDayOfWeek = $lastDayOfWeek === 0 ? 6 : $lastDayOfWeek - 1;
-        
-        // Extend start date to include previous month days
-        $viewStartDate = $startDate->copy()->subDays($firstDayOfWeek);
-        // Extend end date to include next month days (to fill 6 weeks = 42 days)
-        $viewEndDate = $viewStartDate->copy()->addDays(41);
+        /*
+        |--------------------------------------------------------------------------
+        | Extend Range to Fill Calendar Grid (6 weeks / 42 days)
+        |--------------------------------------------------------------------------
+        */
+        // Convert Sunday(0) → Monday(0)
+        $firstDayOffset = $startDate->dayOfWeek === 0
+            ? 6
+            : $startDate->dayOfWeek - 1;
+
+        $viewStartDate = $startDate->copy()->subDays($firstDayOffset)->startOfDay();
+        $viewEndDate   = $viewStartDate->copy()->addDays(41)->endOfDay();
+
+        Log::info('Calendar view range', [
+            'viewStartDate' => $viewStartDate->toDateTimeString(),
+            'viewEndDate'   => $viewEndDate->toDateTimeString(),
+        ]);
 
         $events = [];
 
-        // Tasks
+        /*
+        |--------------------------------------------------------------------------
+        | TASKS
+        |--------------------------------------------------------------------------
+        */
         if ($filter === 'all' || $filter === 'tasks') {
-            $tasks = Task::whereBetween('due_date', [$viewStartDate, $viewEndDate])
-                ->where('task_status', '!=', 'Completed')
+            $tasks = Task::where('task_status', '!=', 'Completed')
+                ->whereDate('due_date', '>=', $viewStartDate->toDateString())
+                ->whereDate('due_date', '<=', $viewEndDate->toDateString())
                 ->get();
-            
+
+
             foreach ($tasks as $task) {
-                $dateKey = $task->due_date->format('Y-m-d');
-                if (!isset($events[$dateKey])) {
-                    $events[$dateKey] = [];
-                }
+                if (!$task->due_date) continue;
+
+                $dateKey = Carbon::parse($task->due_date)->format('Y-m-d');
+
                 $events[$dateKey][] = [
-                    'text' => $task->item ?: $task->description,
-                    'type' => 'task',
-                    'id' => $task->id,
+                    'text'     => $task->item ?: $task->description,
+                    'type'     => 'task',
+                    'id'       => $task->id,
                     'category' => 'task',
-                    'class' => 'task'
+                    'class'    => 'task',
                 ];
             }
         }
 
-        // Follow Ups (from Contacts)
+        /*
+        |--------------------------------------------------------------------------
+        | FOLLOW UPS
+        |--------------------------------------------------------------------------
+        */
         if ($filter === 'all' || $filter === 'follow-ups') {
             $followUps = Contact::whereNotNull('next_follow_up')
-                ->whereBetween('next_follow_up', [$viewStartDate, $viewEndDate])
+                ->whereDate('next_follow_up', '>=', $viewStartDate->toDateString())
+                ->whereDate('next_follow_up', '<=', $viewEndDate->toDateString())
                 ->get();
-            
+
             foreach ($followUps as $contact) {
-                $dateKey = $contact->next_follow_up->format('Y-m-d');
-                if (!isset($events[$dateKey])) {
-                    $events[$dateKey] = [];
-                }
+                $dateKey = Carbon::parse($contact->next_follow_up)->format('Y-m-d');
+
                 $events[$dateKey][] = [
-                    'text' => $contact->contact_name,
-                    'type' => 'follow-up',
-                    'id' => $contact->id,
+                    'text'     => $contact->contact_name,
+                    'type'     => 'follow-up',
+                    'id'       => $contact->id,
                     'category' => 'follow-up',
-                    'class' => 'follow-up'
+                    'class'    => 'follow-up',
                 ];
             }
         }
 
-        // Renewals (Policies due for renewal)
+        /*
+        |--------------------------------------------------------------------------
+        | RENEWALS
+        |--------------------------------------------------------------------------
+        */
         if ($filter === 'all' || $filter === 'renewals') {
             $renewals = Policy::whereNotNull('end_date')
-                ->whereBetween('end_date', [$viewStartDate, $viewEndDate])
+                ->whereDate('end_date', '>=', $viewStartDate->toDateString())
+                ->whereDate('end_date', '<=', $viewEndDate->toDateString())
                 ->where('renewable', true)
                 ->with('client')
                 ->get();
-            
+
             foreach ($renewals as $policy) {
-                $dateKey = $policy->end_date->format('Y-m-d');
-                if (!isset($events[$dateKey])) {
-                    $events[$dateKey] = [];
-                }
-                $clientName = $policy->client ? $policy->client->client_name : ($policy->client_name ?? 'Unknown');
+                $dateKey = Carbon::parse($policy->end_date)->format('Y-m-d');
+
                 $events[$dateKey][] = [
-                    'text' => $clientName,
-                    'type' => 'renewal',
-                    'id' => $policy->id,
+                    'text'     => optional($policy->client)->client_name ?? 'Unknown',
+                    'type'     => 'renewal',
+                    'id'       => $policy->id,
                     'category' => 'renewal',
-                    'class' => 'renewal'
+                    'class'    => 'renewal',
                 ];
             }
         }
 
-        // Instalments (Payment Plans)
+        /*
+        |--------------------------------------------------------------------------
+        | INSTALMENTS
+        |--------------------------------------------------------------------------
+        */
         if ($filter === 'all' || $filter === 'instalments') {
-            $instalments = PaymentPlan::whereBetween('due_date', [$viewStartDate, $viewEndDate])
-                ->where('status', '!=', 'paid')
+            $instalments = PaymentPlan::where('status', '!=', 'paid')
+                ->whereDate('due_date', '>=', $viewStartDate->toDateString())
+                ->whereDate('due_date', '<=', $viewEndDate->toDateString())
                 ->with('schedule.policy.client')
                 ->get();
-            
+
             foreach ($instalments as $plan) {
-                $dateKey = $plan->due_date->format('Y-m-d');
-                if (!isset($events[$dateKey])) {
-                    $events[$dateKey] = [];
-                }
-                $clientName = 'Unknown';
-                if ($plan->schedule && $plan->schedule->policy && $plan->schedule->policy->client) {
-                    $clientName = $plan->schedule->policy->client->client_name;
-                }
+                $dateKey = Carbon::parse($plan->due_date)->format('Y-m-d');
+
+                $clientName = optional($plan->schedule?->policy?->client)->client_name ?? 'Unknown';
+
                 $events[$dateKey][] = [
-                    'text' => $clientName . ' - ' . ($plan->installment_label ?? 'Instalment'),
-                    'type' => 'instalment',
-                    'id' => $plan->id,
+                    'text'     => $clientName . ' - ' . ($plan->installment_label ?? 'Instalment'),
+                    'type'     => 'instalment',
+                    'id'       => $plan->id,
                     'category' => 'instalment',
-                    'class' => 'instalment'
+                    'class'    => 'instalment',
                 ];
             }
         }
 
-        // Birthdays (from Clients and Contacts)
+        /*
+        |--------------------------------------------------------------------------
+        | BIRTHDAYS (Clients + Contacts)
+        |--------------------------------------------------------------------------
+        */
         if ($filter === 'all' || $filter === 'birthdays') {
-            // Get birthdays from Clients
-            $clientBirthdays = Client::whereNotNull('dob_dor')->get();
-            
-            foreach ($clientBirthdays as $client) {
-                if (!$client->dob_dor) continue;
-                
-                // Check each year that might be visible in the calendar view
-                $checkYear = $viewStartDate->year;
-                $birthdayThisYear = Carbon::create($checkYear, $client->dob_dor->month, $client->dob_dor->day);
-                
-                // If birthday is before view start, check next year
-                if ($birthdayThisYear->lt($viewStartDate)) {
-                    $birthdayThisYear->addYear();
-                }
-                
-                // If birthday falls within view range, add it
-                if ($birthdayThisYear->between($viewStartDate, $viewEndDate)) {
-                    $dateKey = $birthdayThisYear->format('Y-m-d');
-                    if (!isset($events[$dateKey])) {
-                        $events[$dateKey] = [];
-                    }
-                    $events[$dateKey][] = [
-                        'text' => $client->client_name,
-                        'type' => 'birthday',
-                        'id' => $client->id,
+
+            foreach (Client::whereNotNull('dob_dor')->get() as $client) {
+                $birthday = Carbon::create($viewStartDate->year, $client->dob_dor->month, $client->dob_dor->day);
+                if ($birthday->lt($viewStartDate)) $birthday->addYear();
+
+                if ($birthday->between($viewStartDate, $viewEndDate)) {
+                    $events[$birthday->format('Y-m-d')][] = [
+                        'text'     => $client->client_name,
+                        'type'     => 'birthday',
+                        'id'       => $client->id,
                         'category' => 'birthday',
-                        'class' => 'birthday'
+                        'class'    => 'birthday',
                     ];
                 }
             }
 
-            // Get birthdays from Contacts
-            $contactBirthdays = Contact::whereNotNull('dob')->get();
-            
-            foreach ($contactBirthdays as $contact) {
-                if (!$contact->dob) continue;
-                
-                // Check each year that might be visible in the calendar view
-                $checkYear = $viewStartDate->year;
-                $birthdayThisYear = Carbon::create($checkYear, $contact->dob->month, $contact->dob->day);
-                
-                // If birthday is before view start, check next year
-                if ($birthdayThisYear->lt($viewStartDate)) {
-                    $birthdayThisYear->addYear();
-                }
-                
-                // If birthday falls within view range, add it
-                if ($birthdayThisYear->between($viewStartDate, $viewEndDate)) {
-                    $dateKey = $birthdayThisYear->format('Y-m-d');
-                    if (!isset($events[$dateKey])) {
-                        $events[$dateKey] = [];
-                    }
-                    $events[$dateKey][] = [
-                        'text' => $contact->contact_name,
-                        'type' => 'birthday',
-                        'id' => $contact->id,
+            foreach (Contact::whereNotNull('dob')->get() as $contact) {
+                $birthday = Carbon::create($viewStartDate->year, $contact->dob->month, $contact->dob->day);
+                if ($birthday->lt($viewStartDate)) $birthday->addYear();
+
+                if ($birthday->between($viewStartDate, $viewEndDate)) {
+                    $events[$birthday->format('Y-m-d')][] = [
+                        'text'     => $contact->contact_name,
+                        'type'     => 'birthday',
+                        'id'       => $contact->id,
                         'category' => 'birthday',
-                        'class' => 'birthday'
+                        'class'    => 'birthday',
                     ];
                 }
             }
         }
+
+        Log::info('Final calendar events count', ['days' => count($events)]);
 
         return response()->json($events);
     }
+
 }
 

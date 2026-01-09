@@ -7,10 +7,8 @@
   <div class="container-table">
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-        <div class="page-title-section">
-          <h3>Lookup Categories</h3>
+         <h3>Lookup Categories</h3>
           <div class="records-found">Records Found - {{ $categories->total() }}</div>
-        </div>
         <div class="action-buttons">
           <button class="btn btn-add" onclick="openCategoryDialog()">Add</button>
           <a href="{{ route('dashboard') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
@@ -127,7 +125,9 @@
       <h3 id="categoryModalTitle" style="margin:0; font-size:18px; font-weight:600;">Add Category</h3>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn-save" onclick="saveCategory()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Save</button>
-        <button type="button" class="modal-close" onclick="closeCategoryDialog()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#666; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">×</button>
+        <button type="button" class="modal-close" onclick="closeCategoryDialog()" style="background:none; border:none; cursor:pointer; color:#666; padding:0;display:flex; align-items:center; justify-content:center;">Close</button>
+        <button type="button" class="btn-delete"  id="deleteValueBtn" onclick="deleteCategory()" style="background:red; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Delete</button>
+
       </div>
     </div>
     <form id="categoryForm" style="margin:0;">
@@ -154,6 +154,8 @@
 <script>
   // Initialize data from Blade
   const lookupCategoriesIndexRoute = '{{ route("lookup-categories.index") }}';
+      const deleteUrlTemplate = "{{ route('lookup-categories.destroy', ':id') }}";
+
 </script>
 <script src="{{ asset('js/lookup-categories-index.js') }}"></script>
 @endsection

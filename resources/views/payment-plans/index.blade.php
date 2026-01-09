@@ -25,8 +25,9 @@
     <!-- Payment Plans Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $paymentPlans->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $paymentPlans->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group">
             <form method="GET" action="{{ route('payment-plans.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -50,6 +51,8 @@
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addPaymentPlanBtn">Add</button>
+        <button class="btn btn-close" onclick="window.history.back()">Close</button>
+
       </div>
     </div>
 
@@ -82,7 +85,7 @@
               @foreach($selectedColumns as $col)
                 @if($col == 'installment_label')
                   <td data-column="installment_label">
-                {{ $plan->installment_label ?? 'Instalment #' . $plan->id }}               
+                {{ $plan->installment_label ?? 'Installment #' . $plan->id }}               
                   </td>
                 @elseif($col == 'policy_no')
                   <td data-column="policy_no">{{ $plan->schedule->policy->policy_no ?? '-' }}</td>

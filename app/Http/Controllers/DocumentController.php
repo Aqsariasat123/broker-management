@@ -9,6 +9,7 @@ class DocumentController extends Controller
 {
     public function index(Request $request)
     {
+        $policy= null;
 
           // Get client information if filtering by client_id
         $client = null;
@@ -48,7 +49,7 @@ class DocumentController extends Controller
         
       
         
-        return view('documents.index', compact('documents', 'selectedColumns', 'client'));
+        return view('documents.index', compact('documents', 'selectedColumns', 'client','policy'));
     }
 
     public function store(Request $request)

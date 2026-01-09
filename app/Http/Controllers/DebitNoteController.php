@@ -8,6 +8,7 @@ use App\Models\LookupValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class DebitNoteController extends Controller
 {
@@ -15,8 +16,50 @@ class DebitNoteController extends Controller
     {
         $filter = null;
 
+        
+
         $query = DebitNote::with(['paymentPlan.schedule.policy.client']);
 
+         $year      = (int) $request->input('year', date('Y'));
+        $month     = (int) $request->input('month', date('n'));
+         $dateRange = $request->input('date_range', 'month');
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek(); // Monday
+                $endDate = Carbon::now()->endOfWeek(); // Sunday
+                break;
+            case 'month':
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                break;
+            case 'quarter':
+                $quarter = floor(($month - 1) / 3) + 1;
+                $startDate = Carbon::create($year)->firstDayOfQuarter()->addMonths(3 * ($quarter - 1));
+                $endDate = $startDate->copy()->addMonths(3)->subDay();
+                break;
+            case 'year':
+                $startDate = Carbon::create($year)->startOfYear();
+                $endDate = Carbon::create($year)->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $yearOnly = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($yearOnly)->startOfYear();
+                    $endDate = Carbon::create($yearOnly)->endOfYear();
+                } else {
+                    $startDate = Carbon::create($year, $month, 1)->startOfMonth();
+                    $endDate = Carbon::create($year, $month, 1)->endOfMonth();
+                }
+                break;
+       }
+        if ($startDate && $endDate) {
+          $query->whereHas('paymentPlan', fn($q) => $q->whereBetween('due_date', [$startDate, $endDate]));
+        }
         // Filter by status
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);

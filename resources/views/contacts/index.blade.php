@@ -20,44 +20,47 @@
     
     <div class="container-table">
       <!-- To Follow Up Card -->
-      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
+      <div style=" border-radius:4px; overflow:hidden; margin-bottom:15px;">
         <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0; padding:15px 20px;">
-          <div class="page-title-section">
-                 <h3>
+           <h3>
                     @if($statusfilter == 'open')
                         Open Leads
                     @else 
                   Contacts{{ request()->has('follow_up') && request()->follow_up ? ' - To Follow Up' : '' }}
                     @endif
             </h3>
-          </div>
         </div>
       </div>
 
       <!-- Contacts Card -->
       <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
           <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+              <div class="records-found">Records Found - {{ $contacts->total() }}</div>
+
               <div class="page-title-section">
                 @if(request()->has('follow_up') && request()->follow_up)
-                  <div class="records-found">Records Found - {{ $contacts->total() }}</div>
                   <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
                     <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
                       <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
                         <span style="font-size:13px;">Filter</span>
                         <input type="checkbox" id="filterToggle" checked>
                       </label>
+                       @if(!request()->has('status') && request()->status != 'open')
                       <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+                      @endif
                     </div>
                   </div>
                 @else
-                  <div class="records-found">Records Found - {{ $contacts->total() }}</div>
                   <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
                     <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
                       <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
                         <span style="font-size:13px;">Filter</span>
                         <input type="checkbox" id="filterToggle">
                       </label>
+                       @if(!request()->has('status') && request()->status != 'open')
                       <button class="btn btn-follow-up" id="followUpBtn" type="button" style="background:#2d2d2d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
+                                        @endif
+
                     </div>
                   </div>
                 @endif
@@ -341,8 +344,8 @@
                 <div class="client-page-nav">
                        
                 
-                <button class="contact-tab active" data-tab="life-proposals-view" data-url="{{ route('life-proposals.index') }}">View</button>
-                <button class="contact-tab" data-tab="life-proposals-add" data-url="{{ route('life-proposals.index') }}">Add</button>
+                <button class="contact-tab active" data-tab="life-proposals-view" data-url="{{ route('life-proposals.index') }}">View Proposals</button>
+                <button class="contact-tab" data-tab="life-proposals-add" data-url="{{ route('life-proposals.index') }}">Add Proposal</button>
                 <button class="contact-tab" data-tab="life-proposals-follow-up" data-url="{{ route('life-proposals.index') }}">Follow Up</button>
 
                 </div>
@@ -364,6 +367,13 @@
                   onclick="deleteContact()">
                   Delete
                 </button>
+                <button
+                  class="btn"
+                  id="closeContactFromPageBtn"
+                  style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
+                  onclick="closeContactPageView()">
+                  Close
+                </button>
                 </div>
               </div>
             </div>
@@ -375,13 +385,16 @@
 
         <!-- Contact Schedule Card - Separate -->
         <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;justify-content: space-between; ">
-               <button class="contact-bottom-tab active" data-tab="schedules" data-url="{{ route('schedules.index') }}">Not Contacted</button>
-                <button class="contact-bottom-tab" data-tab="payments" data-url="{{ route('payments.index') }}">In Discussion</button>
-                <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Qualified</button>
-                <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Offer Made</button>
-                <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Converted</button>
-                <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Keep In View</button>
-                <button class="contact-bottom-tab" data-tab="vehicles" data-url="{{ route('vehicles.index') }}">Archived</button>
+             <div class="contact-bottom-tabs">
+                @foreach($lookupData['contact_statuses'] as $status)
+                    <button 
+                        class="contact-bottom-tab" 
+                        data-tab="{{ $status['id'] }}" 
+                        data-url="{{ route('schedules.index') }}">
+                        {{ $status['name'] }}
+                    </button>
+                @endforeach
+            </div>
           <div id="contactScheduleContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; padding:0;">
             <!-- Content will be loaded via JavaScript -->
           </div>
@@ -604,7 +617,7 @@
             </div>
             <div>
               <label for="savings_budget" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Savings Budget</label>
-              <input id="savings_budget" name="savings_budget" type="number" step="0.01" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+              <input id="savings_budget" name="savings_budget" type="number" step="1" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
             </div>
             <div>
               <label for="children" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Children</label>

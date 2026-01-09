@@ -37,13 +37,10 @@
 
     <!-- Tasks Today -->
     <a href="{{ route('tasks.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-green">
-      <span class="icon">
-          <img src="{{ asset('asset/alarm-clock.png') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-clipboard-check" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['tasks_today'] ?? 0 }}</span>
         <span>Tasks</span>
       </div>
@@ -51,13 +48,10 @@
 
     <!-- Policies Expiring -->
     <a href="{{ route('policies.index', ['filter' => 'expiring', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-red">
-            <span class="icon">
-          <img src="{{ asset('asset/exlimation_sign.png') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-hourglass-end" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['policies_expiring'] ?? 0 }}</span>
         <span>Policies Expiring</span>
       </div>
@@ -65,13 +59,10 @@
 
     <!-- Instalments Overdue -->
     <a href="{{ route('debit-notes.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-pink">
-        <span class="icon">
-          <img src="{{ asset('asset/dollar.png') }}" 
-              alt="Time" 
-              width="60" 
-              height="60">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-credit-card" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['instalments_overdue'] ?? 0 }}</span>
         <span>Instalments Overdue</span>
       </div>
@@ -79,13 +70,10 @@
 
     <!-- IDs Expired -->
     <a href="{{ route('clients.index', ['filter' => 'ids_expired', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-           <span class="icon">
-          <img src="{{ asset('asset/user.png') }}" 
-              alt="Time" 
-              width="30" 
-              height="30">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-id-card" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['ids_expired'] ?? 0 }}</span>
         <span>IDs Expired</span>
       </div>
@@ -93,13 +81,10 @@
 
     <!-- General Policies -->
     <a href="{{ route('policies.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-     <span class="icon">
-          <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-file-shield" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['general_policies'] ?? 0 }}</span>
         <span>General Policies</span>
       </div>
@@ -107,13 +92,10 @@
 
     <!-- Gen-Com Outstanding -->
     <a href="{{ route('payment-plans.index', ['filter' => 'outstanding', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-      <span class="icon">
-          <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #eab308, #ca8a04); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-coins" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ number_format($stats['gen_com_outstanding'] ?? 0,2) }}</span>
         <span>Gen-Com Outstanding</span>
       </div>
@@ -121,13 +103,10 @@
 
     <!-- Open Leads -->
     <a href="{{ route('contacts.index', ['status' => 'open', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-              <span class="icon">
-          <img src="{{ asset('asset/user.png') }}" 
-              alt="Time" 
-              width="30" 
-              height="30">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-user-plus" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['open_leads'] ?? 0 }}</span>
         <span>Open Leads</span>
       </div>
@@ -135,8 +114,10 @@
 
     <!-- Follow Ups Today -->
     <a href="{{ route('contacts.index', ['follow_up' => '1', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-red">
-        <span class="icon">📅</span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-phone" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['follow_ups_today'] ?? 0 }}</span>
         <span>Follow Ups</span>
       </div>
@@ -144,13 +125,10 @@
 
     <!-- Proposals Pending -->
     <a href="{{ route('life-proposals.index', ['status' => 'pending', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-    <span class="icon">
-          <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-file-circle-question" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['proposals_pending'] ?? 0 }}</span>
         <span>Proposals Pending</span>
       </div>
@@ -158,13 +136,10 @@
 
     <!-- Proposals Processing -->
     <a href="{{ route('life-proposals.index', ['status' => 'processing', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-       <span class="icon">
-          <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-spinner" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['proposals_processing'] ?? 0 }}</span>
         <span>Proposals Processing</span>
       </div>
@@ -172,13 +147,10 @@
 
     <!-- Life Policies -->
     <a href="{{ route('policies.index', ['type' => 'life', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-black">
-      <span class="icon">
-          <img src="{{ asset('asset/arrow-expand.svg') }}" 
-              alt="Time" 
-              width="50" 
-              height="50">
-      </span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-heart-pulse" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['life_policies'] ?? 0 }}</span>
         <span>Life Policies</span>
       </div>
@@ -186,10 +158,12 @@
 
     <!-- Birthdays Today -->
     <a href="{{ route('clients.index', ['filter' => 'birthday_today', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
-      <div class="card icon-red">
-        <span class="icon">📅</span>
+      <div class="card">
+        <span class="icon" style="background: linear-gradient(135deg, #a855f7, #9333ea); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-cake-candles" style="font-size: 24px;"></i>
+        </span>
         <span class="value">{{ $stats['birthdays_today'] ?? 0 }}</span>
-        <span>Birthdays </span>
+        <span>Birthdays</span>
       </div>
     </a>
 

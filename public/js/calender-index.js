@@ -1,21 +1,19 @@
 // ---------------------------------
-// 1. URL PARAMS & INITIAL STATE
+// 1. INITIAL STATE & URL PARAMS
 // ---------------------------------
 const urlParams = new URLSearchParams(window.location.search);
 const today = new Date();
 
-// Filter
+// Filter & Date Range
 let currentFilter = urlParams.get('filter') || 'all';
-
-// Date Range
 const dateRange = urlParams.get('date_range') || 'month';
 
 // Calendar state
 let currentYear = today.getFullYear();
 let currentMonth = today.getMonth(); // 0-indexed
 
-// Lock navigation for fixed ranges (today, week, month)
-const isFixedRange = ['today', 'week', 'month'].includes(dateRange);
+// Lock navigation only for 'today' and 'week'
+const isFixedRange = ['today', 'week'].includes(dateRange);
 
 // ---------------------------------
 // 2. DATE RANGE HANDLING
@@ -86,8 +84,8 @@ function generateCalendar() {
     calendarBody.innerHTML = '';
 
     const firstDay = new Date(currentYear, currentMonth, 1);
-    let startDay = firstDay.getDay(); // Sunday = 0
-    startDay = startDay === 0 ? 6 : startDay - 1; // Convert Monday = 0
+    let startDay = firstDay.getDay(); // Sunday=0
+    startDay = startDay === 0 ? 6 : startDay - 1; // Monday=0
 
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
@@ -109,37 +107,40 @@ function generateCalendar() {
             let dateKey;
 
             if (week === 0 && day < startDay) {
+                // Previous month
                 cell.classList.add('outside-month');
                 dayNumber.classList.add('outside');
                 dayNumber.textContent = prevMonthDay++;
                 dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNumber.textContent).padStart(2, '0')}`;
-            }
-            else if (dayCounter > daysInMonth) {
+            } else if (dayCounter > daysInMonth) {
+                // Next month
                 cell.classList.add('outside-month');
                 dayNumber.classList.add('outside');
                 dayNumber.textContent = nextMonthDay++;
                 const nextMonth = (currentMonth + 1) % 12;
                 const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
                 dateKey = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(dayNumber.textContent).padStart(2, '0')}`;
-            }
-            else {
+            } else {
+                // Current month
                 dayNumber.textContent = dayCounter;
                 dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
-
-                // Add events for this day
-                const events = eventsData[dateKey] || [];
-                events.forEach(event => {
-                    const eventDiv = document.createElement('div');
-                    eventDiv.className = `event ${event.class || event.type}`;
-                    eventDiv.textContent = event.text;
-                    eventDiv.title = event.text;
-                    cell.appendChild(eventDiv);
-                });
 
                 dayCounter++;
             }
 
+            // Append day number first
             cell.appendChild(dayNumber);
+
+            // Add events for this day
+            const events = eventsData[dateKey] || [];
+            events.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `event ${event.class || event.type}`;
+                eventDiv.textContent = event.text;
+                eventDiv.title = event.text;
+                cell.appendChild(eventDiv);
+            });
+
             row.appendChild(cell);
         }
 
@@ -155,13 +156,11 @@ document.getElementById('year-prev').onclick = () => {
     currentYear--;
     updateDisplay();
 };
-
 document.getElementById('year-next').onclick = () => {
     if (isFixedRange) return;
     currentYear++;
     updateDisplay();
 };
-
 document.getElementById('month-prev').onclick = () => {
     if (isFixedRange) return;
     currentMonth--;
@@ -171,7 +170,6 @@ document.getElementById('month-prev').onclick = () => {
     }
     updateDisplay();
 };
-
 document.getElementById('month-next').onclick = () => {
     if (isFixedRange) return;
     currentMonth++;
@@ -181,10 +179,27 @@ document.getElementById('month-next').onclick = () => {
     }
     updateDisplay();
 };
-
 document.getElementById('today-btn').onclick = () => {
     currentYear = today.getFullYear();
     currentMonth = today.getMonth();
+    updateDisplay();
+};
+document.getElementById('prev-btn').onclick = () => {
+    if (isFixedRange) return;
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    updateDisplay();
+};
+document.getElementById('next-btn').onclick = () => {
+    if (isFixedRange) return;
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
     updateDisplay();
 };
 

@@ -31,8 +31,8 @@
     <!-- Tasks Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+      <div class="records-found">Records Found - {{ $tasks->total() }}</div>
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $tasks->total() }}</div>
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
             <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
@@ -238,13 +238,10 @@
               <label for="item" style="display: block; margin-bottom: 5px; font-weight: 500;">Item</label>
               <input type="text" class="form-control" id="item" name="item" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
             </div>
-            <div class="form-group">
-              <label for="description" style="visibility:hidden">Description</label>
+            <div class="form-group" style="display:none;">
+              <label for="description" >Description</label>
               <input type="hidden" id="description" name="description" value="">
             </div>
-          </div>
-
-          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
             <div class="form-group">
               <label for="name" style="display: block; margin-bottom: 5px; font-weight: 500;">Name</label>
               <select class="form-control" id="name" name="name" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
@@ -261,17 +258,20 @@
                 </optgroup>
               </select>
             </div>
-            <div class="form-group">
-              <label for="contact_no" style="display: block; margin-bottom: 5px; font-weight: 500;">Contact No.</label>
-              <input type="text" class="form-control" id="contact_no" name="contact_no" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
-            </div>
-            <div class="form-group">
-              <label for="assignee_small" style="visibility:hidden">placeholder</label>
-              <input type="hidden" id="assignee_small" name="assignee_small">
-            </div>
+           
           </div>
 
+        
+
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+               <div class="form-group">
+              <label for="contact_no" style="display: block; margin-bottom: 5px; font-weight: 500;">Contact No.</label>
+              <input type="number" class="form-control" id="contact_no" name="contact_no" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
+            </div>
+            <div class="form-group"  style="display:none;">
+              <label for="assignee_small">placeholder</label>
+              <input type="hidden" id="assignee_small" name="assignee_small">
+            </div>
             <div class="form-group">
               <label for="due_date" style="display: block; margin-bottom: 5px; font-weight: 500;">Due Date</label>
               <input type="date" class="form-control" id="due_date" name="due_date" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
@@ -318,26 +318,23 @@
           </div>
 
           <div style="border: 1px solid #ddd; padding: 12px; margin-bottom: 12px;">
+
             <h5 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 500;">Repeat / Frequency</h5>
             
-            <div class="form-row" style="display: grid; grid-template-columns: auto 1fr; gap: 15px; margin-bottom: 15px; align-items: center;">
+       
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
               <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="repeat" name="repeat" value="1" style="width: 18px; height: 18px; cursor: pointer;">
                 <label for="repeat" style="margin: 0; cursor: pointer;">Repeat</label>
-              </div>
-              <div class="form-group">
-                <label for="frequency" style="display: block; margin-bottom: 5px; font-weight: 500;">Frequency</label>
                 <select class="form-control" id="frequency" name="frequency" required style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">
                   <option value="">Select Frequency</option>
                   @foreach($frequencyCategories->values as $frequencyCategory)
                     <option value="{{ $frequencyCategory->id }}">{{ $frequencyCategory->name }}</option>
                   @endforeach
                 </select>
-           
               </div>
-            </div>
             
-            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
               <div class="form-group">
                 <label for="rpt_date" style="display: block; margin-bottom: 5px; font-weight: 500;">Repeat Date</label>
                 <input type="date" class="form-control" id="rpt_date" name="rpt_date" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 2px;">

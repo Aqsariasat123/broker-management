@@ -15,6 +15,9 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
+
+        $policy= null;
+
         $query = Payment::with(['debitNote.paymentPlan.schedule.policy.client']);
 
         // Filter by client_id if provided
@@ -52,7 +55,10 @@ class PaymentController extends Controller
                 $subQ->where('id', $request->policy_id);
             });
         }
-        
+        if ($request->filled('policy_id')) {
+            $policy = \App\Models\Policy::find($request->policy_id);
+           
+       }
         // Date range filter
         if ($request->has('date_from') && $request->date_from) {
             $query->whereDate('paid_on', '>=', $request->date_from);
@@ -82,7 +88,7 @@ class PaymentController extends Controller
         }
 
         Log::info('Selected payment columns: ', $payments->toArray());
-        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns', 'client'));
+        return view('payments.index', compact('payments', 'debitNotes', 'modesOfPayment', 'selectedColumns', 'client','policy'));
     }
 
     public function create(Request $request)

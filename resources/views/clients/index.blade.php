@@ -43,9 +43,10 @@
     <!-- Clients Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
+                <div class="records-found">Records Found - {{ $clients->total() }}</div>
+
       <div class="page-title-section">
-        <div class="records-found">Records Found - {{ $clients->total() }}</div>
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+        <div style="display:flex; align-items:center; gap:15px;">
           @if($filter != "ids_expired" &&  $filter != "birthday_today"  )
             <div class="filter-group">
               <label class="toggle-switch">
@@ -483,13 +484,13 @@
               <div class="detail-row" data-field-type="individual" style="display:none;">
                 <span class="detail-label">On Whatsapp</span>
                 <div class="detail-value checkbox">
-                  <input id="wa" name="wa" type="checkbox" value="1">
+                  <input id="wa" name="wa" type="checkbox" value="">
                 </div>
               </div>
               <div class="detail-row" data-field-type="business" style="display:none;">
                 <span class="detail-label">Wattsapp</span>
                 <div class="detail-value checkbox">
-                  <input id="wa_business" name="wa" type="checkbox" value="1">
+                  <input id="wa_business" name="wa" type="checkbox" value="">
                 </div>
               </div>
             

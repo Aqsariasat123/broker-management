@@ -21,7 +21,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
             Life Proposals
-            @if(isset($actionType) && $actionType === 'follow-up' && isset($contactid))
+            @if(isset(request()->follow_up) || request()->follow_up === 1 ||  isset($contactid))
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> -  To Follow Up</span>
             @endif
             

@@ -93,14 +93,9 @@ class LookupCategoryController extends Controller
     {
         $lookupCategory->delete();
 
-        if (request()->ajax()) {
-            return response()->json([
+          return response()->json([
                 'success' => true,
                 'message' => 'Category deleted successfully.'
             ]);
-        }
-
-        return redirect()->route('lookup-categories.index')
-            ->with('success', 'Category deleted successfully.');
     }
 }

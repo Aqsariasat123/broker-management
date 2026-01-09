@@ -14,22 +14,32 @@
 
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="page-title-section">
-              <h3 style="margin:0; font-size:18px; font-weight:600;">
-                  Endorsements
+           <h3 style="margin:0; font-size:18px; font-weight:600;">
+
+                 @if($policy)
+                {{ $policy->policy_code }} - 
+              @endif
+              
+              @if($policy)
+                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Endorsements</span>
+              @else
+                 <span class="client-name" > Endorsements</span>
+              @endif
+
+                  
               </h3>
-           </div>
       </div>
   </div>
   <!-- Main Endorsements Table View -->
   <div class="clients-table-view" id="endorsementsTableView">
     <div class="container-table">
+      
       <!-- Endorsements Card -->
       <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+
         <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-          <div class="page-title-section">
-            <div class="records-found">Records Found - {{ $endorsements->total() }}</div>
-          </div>
+                              <div class="records-found">Records Found - {{ $endorsements->total() }}</div>
+
           <div class="action-buttons">
             @if(auth()->check() && (auth()->user()->hasPermission('endorsements.create') || auth()->user()->isAdmin()))
             <button class="btn btn-add" id="addEndorsementBtn">Add</button>

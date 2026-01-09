@@ -145,6 +145,33 @@ async function openDebitNotePage(mode) {
     }
   }
 }
+
+const filterToggle = document.getElementById('filterToggle');
+
+if (filterToggle) {
+  const params = new URLSearchParams(window.location.search);
+
+  // Toggle ON if filter=overdue OR status exists
+  filterToggle.checked =
+    params.get('filter') === 'overdue' ||
+    ['pending', 'issued', 'paid', 'overdue', 'cancelled']
+      .includes(params.get('status'));
+
+  filterToggle.addEventListener('change', function () {
+    const u = new URL(window.location.href);
+
+    if (this.checked) {
+      // apply overdue filter
+      u.searchParams.set('filter', 'overdue');
+      window.location.href = u.toString();
+    } else {
+      // 🔥 remove ALL query params
+      window.location.href = u.origin + u.pathname;
+    }
+  });
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
   const params = new URLSearchParams(window.location.search);
   const isOverdue = params.get('filter') === 'overdue';

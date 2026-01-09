@@ -141,19 +141,14 @@ class AuthController extends Controller
 
            
             $stats = [
-                // Tasks (not completed) in selected date range
                 'tasks_today' => Task::query()
                 ->where('task_status', '!=', 'Completed')
                 ->where('due_date', '<', now()->format('Y-m-d')) // only overdue
                 ->whereBetween('due_date',[$startDate, $endDate]) // respect selected date range
                 ->count(),
-
-                // Policies expiring in selected date range
                 'policies_expiring' => Policy::query()
                     ->whereBetween('end_date', [$startDate, $endDate])
                     ->count(),
-
-                // Instalments (Unpaid) in selected date range
                 'instalments_overdue' => DebitNote::with(['paymentPlan.schedule.policy.client'])
                     ->where('status', 'Unpaid')
                     ->whereHas('paymentPlan', fn($q) => $q->whereBetween('due_date', [$startDate, $endDate]))
@@ -224,10 +219,10 @@ class AuthController extends Controller
             $incomeMonthlyData = $this->calculateMonthlyData($incomeYear);
             $expenseMonthlyData = $this->calculateMonthlyData($expenseYear);
 
-            $totalIncome = Income::whereYear('date_rcvd', $selectedYear)->sum('amount_received');
+            $totalIncome = Income::whereYear('date_received', $selectedYear)->sum('amount_received');
             $totalExpense = Expense::whereYear('date_paid', $selectedYear)->sum('amount_paid');
 
-            $incomeExpenseTotalIncome = Income::whereYear('date_rcvd', $incomeExpenseYear)->sum('amount_received');
+            $incomeExpenseTotalIncome = Income::whereYear('date_received', $incomeExpenseYear)->sum('amount_received');
             $incomeExpenseTotalExpense = Expense::whereYear('date_paid', $incomeExpenseYear)->sum('amount_paid');
 
             $yearStart = Carbon::create($selectedYear, 1, 1);
@@ -265,223 +260,13 @@ class AuthController extends Controller
 
 
 
-
-    // Dashboard
-    // public function dashboard(Request $request)
-    // {
-    //     $dateRange = $request->get('date_range', 'month');
-    //     $selectedYear = (int) $request->get('year', now()->year);
-        
-    //     // Separate year parameters for each chart
-    //     $incomeExpenseYear = (int) $request->get('incomeExpenseYear', $selectedYear);
-    //     $incomeYear = (int) $request->get('incomeYear', $selectedYear);
-    //     $expenseYear = (int) $request->get('expenseYear', $selectedYear);
-        
-    //     $today = now()->startOfDay();
-        
-    //     // If this is an AJAX request for a specific chart, return JSON
-    //     if ($request->expectsJson() || $request->wantsJson()) {
-    //         $chartType = null;
-    //         if ($request->has('incomeExpenseYear')) {
-    //             $chartType = 'incomeExpense';
-    //             $year = $incomeExpenseYear;
-    //         } elseif ($request->has('incomeYear')) {
-    //             $chartType = 'income';
-    //             $year = $incomeYear;
-    //         } elseif ($request->has('expenseYear')) {
-    //             $chartType = 'expense';
-    //             $year = $expenseYear;
-    //         }
-            
-    //         if ($chartType) {
-    //             return $this->getChartData($year, $chartType);
-    //         }
-    //     }
-        
-    //     // Set date range based on selection
-    //     switch ($dateRange) {
-    //         case 'today':
-    //             $startDate = $today;
-    //             $endDate = $today->copy()->endOfDay();
-    //             break;
-    //         case 'week':
-    //             $startDate = $today->copy()->startOfWeek();
-    //             $endDate = $today->copy()->endOfWeek();
-    //             break;
-    //         case 'quarter':
-    //             $startDate = $today->copy()->startOfQuarter();
-    //             $endDate = $today->copy()->endOfQuarter();
-    //             break;
-    //         case 'year':
-    //             $startDate = $today->copy()->startOfYear();
-    //             $endDate = $today->copy()->endOfYear();
-    //             break;
-    //         default: // month
-    //             $startDate = $today->copy()->startOfMonth();
-    //             $endDate = $today->copy()->endOfMonth();
-    //     }
-        
-    //     // Statistics Cards
-    //     $stats = [
-    //         'tasks_today' => Task::whereDate('due_date', $today)->where('task_status', '!=', 'Completed')->count(),
-    //         'policies_expiring' => Policy::whereBetween('end_date', [$today, $today->copy()->addDays(30)])->count(),
-    //         'instalments_overdue' => DebitNote::with(['paymentPlan.schedule.policy.client'])->where('status','Unpaid')->count(),
-
-    //         'ids_expired' => Client::where('status','Expired')
-    //             ->count(),
-    //         'general_policies' => Policy::count(),
-    //         'gen_com_outstanding' => PaymentPlan::where('status', '!=', 'paid')
-    //             ->sum('amount'),
-    //         'open_leads' => Contact::where('status', '!=', 'Archived')->count(),
-    //         'follow_ups_today' => Task::whereDate('due_date', $today)
-    //             ->where('task_status', '!=', 'Completed')
-    //             ->count(),
-    //        'proposals_pending' => LifeProposal::with([
-    //             'contact',
-    //             'insurer',
-    //             'policyPlan',
-    //             'frequency',
-    //             'agencies',
-    //             'stage',
-    //             'status',
-    //             'sourceOfPayment',
-    //             'medical',
-    //             'followups',
-    //         ])
-    //         ->whereHas('status', function($query) {
-    //             $query->where('name', 'Pending');
-    //         })
-    //         ->count(),
-    //        'proposals_processing' => LifeProposal::with([
-    //             'contact',
-    //             'insurer',
-    //             'policyPlan',
-    //             'frequency',
-    //             'agencies',
-    //             'stage',
-    //             'status',
-    //             'sourceOfPayment',
-    //             'medical',
-    //             'followups',
-    //         ])
-    //         ->whereHas('status', function($query) {
-    //             $query->where('name', 'Processing');
-    //         })
-    //         ->count(),
-
-    //         'life_policies' => $this->countLifePolicies(),
-    //         'birthdays_today' => Client::whereMonth('dob_dor', now()->month)
-    //             ->whereDay('dob_dor', now()->day)
-    //             ->count(),
-    //     ];
-
-    //     // Policy Status Distribution
-    //     $policyStatuses = Policy::with('policyStatus')
-    //         ->get()
-    //         ->groupBy(function($policy) {
-    //             return $policy->policy_status_name ?? 'Unknown';
-    //         })
-    //         ->map->count()
-    //         ->toArray();
-
-    //     // Upcoming Renewals (next 90 days)
-    //     $renewals = Policy::whereBetween('end_date', [$today, $today->copy()->addDays(90)])
-    //         ->where('renewable', true)
-    //         ->orderBy('end_date')
-    //         ->with('client')
-    //         ->get()
-    //         ->groupBy(function($policy) use ($today) {
-    //             $daysUntil = $today->diffInDays($policy->end_date);
-    //             if ($daysUntil <= 7) return 'This Week';
-    //             if ($daysUntil <= 30) return 'This Month';
-    //             if ($daysUntil <= 60) return 'Next Month';
-    //             return 'Later';
-    //         })
-    //         ->map->count()
-    //         ->toArray();
-
-    //     // Payment Statistics
-    //     $paymentStats = [
-    //         'overdue' => PaymentPlan::where('due_date', '<', $today)
-    //             ->where('status', '!=', 'paid')
-    //             ->sum('amount'),
-    //         'upcoming_7_days' => PaymentPlan::whereBetween('due_date', [$today, $today->copy()->addDays(7)])
-    //             ->where('status', '!=', 'paid')
-    //             ->sum('amount'),
-    //         'upcoming_30_days' => PaymentPlan::whereBetween('due_date', [$today, $today->copy()->addDays(30)])
-    //             ->where('status', '!=', 'paid')
-    //             ->sum('amount'),
-    //         'paid_this_month' => Payment::whereMonth('paid_on', now()->month)
-    //             ->whereYear('paid_on', now()->year)
-    //             ->sum('amount'),
-    //     ];
-
-    //     // Monthly Income/Expense Data for Income v/s Expense chart
-    //     $incomeExpenseMonthlyData = $this->calculateMonthlyData($incomeExpenseYear);
-    //     $incomeExpenseTotalIncome = Income::whereYear('date_rcvd', $incomeExpenseYear)->sum('amount_received');
-    //     $incomeExpenseTotalExpense = Expense::whereYear('date_paid', $incomeExpenseYear)->sum('amount_paid');
-    //     $incomeExpenseYearStart = Carbon::create($incomeExpenseYear, 1, 1);
-    //     $incomeExpenseYearEnd = Carbon::create($incomeExpenseYear, 12, 31);
-        
-    //     // Monthly Income Data for Income chart
-    //     $incomeMonthlyData = $this->calculateMonthlyData($incomeYear);
-        
-    //     // Monthly Expense Data for Expense chart
-    //     $expenseMonthlyData = $this->calculateMonthlyData($expenseYear);
-        
-    //     // Legacy monthlyData for backward compatibility (uses selectedYear)
-    //     $monthlyData = $this->calculateMonthlyData($selectedYear);
-    //     $totalIncome = Income::whereYear('date_rcvd', $selectedYear)->sum('amount_received');
-    //     $totalExpense = Expense::whereYear('date_paid', $selectedYear)->sum('amount_paid');
-    //     $yearStart = Carbon::create($selectedYear, 1, 1);
-    //     $yearEnd = Carbon::create($selectedYear, 12, 31);
-
-    //     // Recent Activities
-    //     $recentPolicies = Policy::with('client')
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(5)
-    //         ->get();
-
-    //     $recentPayments = Payment::with(['debitNote.paymentPlan.schedule.policy.client'])
-    //         ->orderBy('paid_on', 'desc')
-    //         ->limit(5)
-    //         ->get();
-
-    //     return view('dashboard', compact(
-    //         'stats',
-    //         'policyStatuses',
-    //         'renewals',
-    //         'paymentStats',
-    //         'monthlyData',
-    //         'recentPolicies',
-    //         'recentPayments',
-    //         'dateRange',
-    //         'selectedYear',
-    //         'totalIncome',
-    //         'totalExpense',
-    //         'yearStart',
-    //         'yearEnd',
-    //         'incomeExpenseYear',
-    //         'incomeExpenseMonthlyData',
-    //         'incomeExpenseTotalIncome',
-    //         'incomeExpenseTotalExpense',
-    //         'incomeExpenseYearStart',
-    //         'incomeExpenseYearEnd',
-    //         'incomeYear',
-    //         'incomeMonthlyData',
-    //         'expenseYear',
-    //         'expenseMonthlyData',
-    //         'today'
-    //     ));
-    // }
-    
     private function calculateMonthlyData($year)
     {
         $monthlyData = [];
         for ($i = 11; $i >= 0; $i--) {
             $month = Carbon::create($year, 1, 1)->addMonths($i);
-            $income = Income::whereMonth('date_rcvd', $month->month)
-                ->whereYear('date_rcvd', $month->year)
+            $income = Income::whereMonth('date_received', $month->month)
+                ->whereYear('date_received', $month->year)
                 ->sum('amount_received');
             $expense = Expense::whereMonth('date_paid', $month->month)
                 ->whereYear('date_paid', $month->year)
@@ -525,7 +310,7 @@ class AuthController extends Controller
         ];
         
         if ($chartType === 'incomeExpense') {
-            $response['totalIncome'] = Income::whereYear('date_rcvd', $year)->sum('amount_received');
+            $response['totalIncome'] = Income::whereYear('date_received', $year)->sum('amount_received');
             $response['totalExpense'] = Expense::whereYear('date_paid', $year)->sum('amount_paid');
         }
         

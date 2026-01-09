@@ -11,9 +11,9 @@ class CreateClaimsTable extends Migration
         Schema::create('claims', function (Blueprint $table) {
             $table->id();
             $table->string('claim_id')->unique();
-            $table->foreignId('policy_id')->nullable()->after('id')->constrained('policies')->nullOnDelete();
-            $table->foreignId('client_id')->nullable()->after('policy_id')->constrained('clients')->nullOnDelete();
-            $table->foreignId('vehicle_id')->nullable()->after('client_id')->constrained('vehicles')->nullOnDelete();
+            $table->foreignId('policy_id')->nullable()->constrained('policies')->nullOnDelete();
+            $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
+            $table->foreignId('vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete();
             $table->date('loss_date')->nullable();
             $table->date('claim_date')->nullable();
             $table->decimal('claim_amount', 15, 2)->nullable();

@@ -395,7 +395,7 @@ class TableConfigHelper
                 ],
                 'mandatory_columns' => ['installment_label', 'due_date', 'amount', 'status'],
                 'column_definitions' => [
-                    'installment_label' => 'Instalment Label',
+                    'installment_label' => 'Installment Label',
                     'policy_no' => 'Policy',
                     'client_name' => 'Client',
                     'due_date' => 'Due Date',

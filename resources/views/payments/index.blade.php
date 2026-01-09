@@ -16,7 +16,16 @@
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
-            Payments
+            
+              @if($policy)
+                {{ $policy->policy_code }} - 
+              @endif
+              
+              @if($policy)
+                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Payments</span>
+              @else
+                 <span class="client-name" > Payments</span>
+              @endif
             @if(isset($client) && $client)
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
             @endif
@@ -45,6 +54,8 @@
         </div>
       </div>
       <div class="action-buttons">
+                <button class="btn btn-back" onclick="window.history.back()">Back</button>
+
         <button class="btn btn-add" id="addPaymentBtn">Add</button>
         <a href="{{ route('payments.report') }}" class="btn btn-export" style="background:#fff; color:#000; border:1px solid #ccc;">Report</a>
       </div>

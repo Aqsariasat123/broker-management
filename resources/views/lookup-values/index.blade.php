@@ -7,10 +7,8 @@
   <div class="container-table">
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:15px;">
       <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0;">
-        <div class="page-title-section">
-          <h3>Lookup Values</h3>
+                 <h3>Lookup Values</h3>
           <div class="records-found">Records Found - {{ $values->total() }}</div>
-        </div>
         <div class="action-buttons">
           <button class="btn btn-add" onclick="openValueDialog()">Add</button>
           <a href="{{ route('dashboard') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
@@ -147,9 +145,11 @@
   <div class="modal-content" style="background:#fff; border-radius:6px; width:95%; max-width:600px; box-shadow:0 4px 6px rgba(0,0,0,0.1); padding:0;">
     <div class="modal-header" style="background-color:#f8f9fa; border-bottom:1px solid #dee2e6; padding:15px 20px; display:flex; align-items:center; justify-content:space-between;">
       <h3 id="valueModalTitle" style="margin:0; font-size:18px; font-weight:600;">Add Value</h3>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:12px;">
         <button type="button" class="btn-save" onclick="saveValue()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Save</button>
-        <button type="button" class="modal-close" onclick="closeValueDialog()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#666; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">×</button>
+        <button type="button" class="btn-close" onclick="closeValueDialog()" style="background:none; border:none;  cursor:pointer; color:#666; padding:0; w display:flex; align-items:center; justify-content:center;">Close</button>
+          <button type="button" class="btn-delete"  id="deleteValueBtn" onclick="deleteValue()" style="background:red; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Delete</button>
+
       </div>
     </div>
     <form id="valueForm" style="margin:0;">
@@ -202,6 +202,8 @@
   // Initialize data from Blade
   const lookupValuesIndexRoute = '{{ route("lookup-values.index") }}';
   const lookupValuesStoreRoute = '{{ route("lookup-values.store") }}';
+    const deleteUrlTemplate = "{{ route('lookup-values.destroy', ':id') }}";
+
 </script>
 <script src="{{ asset('js/lookup-values-index.js') }}"></script>
 @endsection

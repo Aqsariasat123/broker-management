@@ -172,14 +172,9 @@ class LookupValueController extends Controller
     {
         $lookupValue->delete();
 
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Lookup value deleted successfully.'
-            ]);
-        }
-
-        return redirect()->route('lookup-values.index')
-            ->with('success', 'Lookup value deleted successfully.');
+          return response()->json([
+        'success' => true,
+        'message' => 'Lookup value deleted successfully.'
+    ]);
     }
 }

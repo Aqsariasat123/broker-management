@@ -13,6 +13,8 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
+        $policy= null;
+        
         // Eager load common relations used for filtering/display
         $query = Schedule::with(['policy.client', 'policy.insurer', 'policy.policyClass', 'policy.agency']);
 
@@ -26,7 +28,10 @@ class ScheduleController extends Controller
         if ($request->filled('policy_id')) {
             $query->where('policy_id', $request->policy_id);
         }
-
+        if ($request->filled('policy_id')) {
+            $policy = \App\Models\Policy::find($request->policy_id);
+           
+       }
         // Status (support both status and status_filter param)
         $status = $request->get('status') ?? $request->get('status_filter');
         if ($status) {
@@ -165,7 +170,7 @@ class ScheduleController extends Controller
         $agents = Policy::select('agent')->whereNotNull('agent')->distinct()->orderBy('agent')->pluck('agent');
         Log::info('Lookup Map:',$agencies->toArray());
 
-        return view('schedules.index', compact('schedules', 'policies', 'clients', 'insurers', 'policyClasses', 'agencies', 'statuses', 'agents'));
+        return view('schedules.index', compact('schedules', 'policies', 'clients', 'insurers', 'policyClasses', 'agencies', 'statuses', 'agents', 'policy'));
     }
 
     public function create()

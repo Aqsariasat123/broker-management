@@ -211,7 +211,6 @@ async function openContactDetails(id) {
     if (!res.ok) throw new Error('Network error');
     const contact = await res.json();
     currentContactId = id;
-    console.log(contact);
     const contactPageName = document.getElementById('contactPageName');
     const clientsTableView = document.getElementById('clientsTableView');
     const contactPageView = document.getElementById('contactPageView');
@@ -271,14 +270,21 @@ async function openContactDetails(id) {
 
         if (tabType === 'life-proposals-view') {
           actionType = 'view';
+
+          window.location.href =
+            `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
         } else if (tabType === 'life-proposals-add') {
           actionType = 'add';
+
+          window.location.href =
+            `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
         } else if (tabType === 'life-proposals-follow-up') {
-          actionType = 'follow-up';
+          actionType = '1';
+
+          window.location.href =
+            `${baseUrl}?contact_id=${currentContactId}&follow_up=${actionType}`;
         }
 
-        window.location.href =
-          `${baseUrl}?contact_id=${currentContactId}&action=${actionType}`;
       });
     });
     // openModalWithContact('edit', contact);
@@ -395,6 +401,7 @@ function populateContactDetails(contact, type = 'view') {
   const content = document.getElementById('contactDetailsContent');
   const scheduleContent = document.getElementById('contactScheduleContent');
   const followupcontent = document.getElementById('followupcontent');
+
   if (!content || !scheduleContent || !followupcontent) return;
 
 
@@ -425,6 +432,15 @@ function populateContactDetails(contact, type = 'view') {
       `)
     .join('');
 
+  const tabs = document.querySelectorAll('.contact-bottom-tab');
+
+  tabs.forEach(tab => {
+    if (tab.dataset.tab == contact?.status) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
 
   const selectedstatusId = contact?.status ?? null;
 
@@ -495,7 +511,6 @@ function populateContactDetails(contact, type = 'view') {
   const next_follow_up = contact.acquired ? formatDateForInput(contact.next_follow_up) : '-';
 
   const dobAge = contact.dob ? calculateAge(contact.dob) : '-';
-  console.log('DOB:', dob);
   // Top Section: 4 columns
   const col1 = `
   <div class="detail-section-card">
@@ -636,12 +651,38 @@ function populateContactDetails(contact, type = 'view') {
 `;
 
   content.innerHTML = col1 + col2 + col3 + col4;
+
+  const editBtn = document.getElementById('editContactFromPageBtn');
+  const cancelBtn = document.getElementById('contactContactPageBtn');
+
+  const saveBtn = document.getElementById('saveContactFromPageBtn');
+  const deleteBtn = document.getElementById('deleteContactFromPageBtn');
+  const closebtn = document.getElementById('closeContactFromPageBtn');
+
+
+
+  if (isEdit) {
+    editBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    closebtn.style.display = 'inline-block';
+    deleteBtn.style.display = 'inline-block';
+  } else {
+    editBtn.style.display = 'inline-block';
+    cancelBtn.style.display = 'inline-block';
+    saveBtn.style.display = 'none';
+    deleteBtn.style.display = 'none';
+  }
+
+
   const followups = contact.followups || [];
+
   if (followups.length === 0) {
     followupcontent.innerHTML = '<p>No follow-ups available.</p>';
     return;
   }
-
+  console.log('isEdit:', "isEdit");
+  console.log('editBtn:', "isEdit");
   // Create table
   const table = document.createElement('table');
   table.className = 'followup-table';
@@ -681,30 +722,6 @@ function populateContactDetails(contact, type = 'view') {
   // Render inside followupcontent
   followupcontent.innerHTML = '';
   followupcontent.appendChild(table);
-
-  const editBtn = document.getElementById('editContactFromPageBtn');
-  const cancelBtn = document.getElementById('contactContactPageBtn');
-
-  const saveBtn = document.getElementById('saveContactFromPageBtn');
-  const deleteBtn = document.getElementById('deleteContactFromPageBtn');
-
-
-  console.log('isEdit:', isEdit);
-  console.log('editBtn:', editBtn);
-
-  if (isEdit) {
-    editBtn.style.display = 'none';
-    console.log('editBtn:', editBtn);
-    cancelBtn.style.display = 'none';
-    saveBtn.style.display = 'inline-block';
-    deleteBtn.style.display = 'inline-block';
-  } else {
-    editBtn.style.display = 'inline-block';
-    cancelBtn.style.display = 'inline-block';
-    saveBtn.style.display = 'none';
-    deleteBtn.style.display = 'none';
-  }
-
 
 }
 
