@@ -121,13 +121,13 @@
                     @php $value = $task->description ?? '-'; @endphp
                     @break
                 @case('name')
-                    @php 
-                        $value = $task->contact->contact_name ?? $task->client->client_name ?? '-'; 
+                    @php
+                        $value = $task->name ?? '-';
                     @endphp
                     @break
                 @case('contact_no')
-                    @php 
-                        $value = $task->contact->contact_no ?? $task->client->mobile_no ?? '-'; 
+                    @php
+                        $value = $task->contact_no ?? '-';
                     @endphp
                     @break
                 @case('due_date')
@@ -143,7 +143,7 @@
                     @php $value = $task->date_in ? $task->date_in->format('d-M-y') : ''; @endphp
                     @break
                 @case('assignee')
-                    @php $value = $task->assigneeUser->name ?? '-'; @endphp
+                    @php $value = $task->assignee ?? '-'; @endphp
                     @break
                 @case('task_status')
                     @php $value = $task->task_status ?? '-'; @endphp
