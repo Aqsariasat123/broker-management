@@ -50,7 +50,7 @@
       </div>
   </div>
   <!-- Main Policies Table View -->
-  <div class="clients-table-view" id="clientsTableView">
+  <div class="clients-table-view" id="clientsTableView" @if(isset($policyId) && $policyId) style="display:none;" @endif>
   <div class="container-table">
     <!-- Policies Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
@@ -254,7 +254,7 @@
   </div>
 
   <!-- Policy Page View (Full Page) -->
-  <div class="client-page-view" id="policyPageView" style="display:none;">
+  <div class="client-page-view" id="policyPageView" style="display:{{ (isset($policyId) && $policyId) ? 'block' : 'none' }};">
     <!-- Header Card with Policy Number -->
     <div class="client-page-header">
       <div class="client-page-title">
