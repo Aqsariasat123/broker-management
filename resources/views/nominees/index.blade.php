@@ -41,7 +41,7 @@
         <div class="action-buttons">
           <button class="btn" onclick="removeSelectedNominees()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Remove</button>
           <button class="btn btn-add" onclick="openNomineeDialog()">Add</button>
-          <a href="{{ route('policies.index') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
+          <a href="{{ $policy ? route('policies.show', $policy->id) : route('policies.index') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
         </div>
       </div>
 
