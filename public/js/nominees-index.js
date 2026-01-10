@@ -554,8 +554,15 @@
 
   function saveColumnSettings() {
     const form = document.getElementById('columnForm');
-    const checkboxes = document.querySelectorAll('#columnSelection .column-checkbox:checked');
-    const columns = Array.from(checkboxes).map(cb => cb.value);
+    // Get columns in order they appear in the DOM
+    const columnItems = document.querySelectorAll('#columnSelection .column-item-vertical');
+    const columns = [];
+    columnItems.forEach(item => {
+      const checkbox = item.querySelector('.column-checkbox');
+      if (checkbox && checkbox.checked) {
+        columns.push(checkbox.value);
+      }
+    });
     
     // Create hidden input for columns
     let columnsInput = document.getElementById('columnsInput');
@@ -592,30 +599,31 @@
     if (!columnSelection) return;
 
     if (dragInitialized) {
-      const columnItems = columnSelection.querySelectorAll('.column-item');
+      const columnItems = columnSelection.querySelectorAll('.column-item-vertical');
       columnItems.forEach(item => {
         item.setAttribute('draggable', 'true');
       });
       return;
     }
 
-    const columnItems = columnSelection.querySelectorAll('.column-item');
+    const columnItems = columnSelection.querySelectorAll('.column-item-vertical');
     columnItems.forEach(item => {
       item.setAttribute('draggable', 'true');
 
       item.addEventListener('dragstart', function(e) {
         draggedElement = this;
-        this.style.opacity = '0.5';
+        this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/html', this.innerHTML);
       });
 
       item.addEventListener('dragend', function(e) {
-        this.style.opacity = '1';
-        const items = columnSelection.querySelectorAll('.column-item');
+        this.classList.remove('dragging');
+        const items = columnSelection.querySelectorAll('.column-item-vertical');
         items.forEach(item => {
           item.classList.remove('drag-over');
         });
+        updateColumnNumbers();
       });
 
       item.addEventListener('dragover', function(e) {
@@ -642,7 +650,7 @@
         }
 
         if (draggedElement !== this) {
-          const allItems = Array.from(columnSelection.querySelectorAll('.column-item'));
+          const allItems = Array.from(columnSelection.querySelectorAll('.column-item-vertical'));
           const draggedIndex = allItems.indexOf(draggedElement);
           const targetIndex = allItems.indexOf(this);
 
@@ -655,11 +663,25 @@
 
         this.classList.remove('drag-over');
         dragOverElement = null;
+        updateColumnNumbers();
         return false;
       });
     });
 
     dragInitialized = true;
+  }
+
+  function updateColumnNumbers() {
+    const columnSelection = document.getElementById('columnSelection');
+    if (!columnSelection) return;
+
+    const items = columnSelection.querySelectorAll('.column-item-vertical');
+    items.forEach((item, index) => {
+      const numberSpan = item.querySelector('.column-number');
+      if (numberSpan) {
+        numberSpan.textContent = index + 1;
+      }
+    });
   }
 
   // Add event listeners

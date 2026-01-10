@@ -766,5 +766,5 @@
   const contactsStoreRoute = '{{ route("contacts.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>
-<script src="{{ asset('js/contacts-index.js') }}"></script>
+<script src="{{ asset('js/contacts-index.js') }}?v={{ time() }}"></script>
 @endsection
