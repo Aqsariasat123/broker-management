@@ -68,8 +68,11 @@
       </div>
       <div class="action-buttons">
         <button class="btn btn-add" id="addDebitNoteBtn">Add</button>
-                              <button class="btn btn-close" onclick="window.history.back()">Close</button>
-
+        @if(request()->has('from_calendar') && request()->from_calendar == '1')
+          <button class="btn btn-back" onclick="window.location.href='/calendar?filter=instalments'">Back</button>
+        @else
+          <button class="btn btn-close" onclick="window.history.back()">Close</button>
+        @endif
       </div>
     </div>
 

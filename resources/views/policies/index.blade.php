@@ -84,8 +84,11 @@
      @if($filter != "expiring")
         <button type="button" class="btn btn-add" id="addPolicyBtn">Add</button>
       @endif
-                      <button class="btn btn-close" onclick="window.history.back()">Close</button>
-
+        @if(request()->has('from_calendar') && request()->from_calendar == '1')
+          <button class="btn btn-back" onclick="window.location.href='/calendar?filter=renewals'">Back</button>
+        @else
+          <button class="btn btn-close" onclick="window.history.back()">Close</button>
+        @endif
       </div>
     </div>
 

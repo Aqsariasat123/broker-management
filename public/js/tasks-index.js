@@ -544,12 +544,12 @@
 
       // If coming from calendar via List button
       if (fromCalendar === '1') {
-          window.location.href = "/calender?filter=tasks&date_range=" + dateRange;
+          window.location.href = "/calendar?filter=tasks&date_range=" + dateRange;
       }
       // If coming from dashboard
       else if (referrer.includes('/dashboard')) {
           window.location.href =
-              "/calender" +
+              "/calendar" +
               `?filter=tasks&date_range=${dateRange}`;
       }
       else if (window.history.length > 1) {

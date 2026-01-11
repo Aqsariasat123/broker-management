@@ -262,16 +262,16 @@ document.querySelectorAll('.category-dropdown').forEach(dropdown => {
                 url = `/tasks?from_calendar=1&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'follow-ups':
-                url = `/contacts?from_calendar=1&follow_up=true&start_date=${startDate}&end_date=${endDate}`;
+                url = `/contacts?from_calendar=1&follow_up=1&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'renewals':
                 url = `/policies?from_calendar=1&filter=expiring&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'instalments':
-                url = `/policies?from_calendar=1&tab=instalments&start_date=${startDate}&end_date=${endDate}`;
+                url = `/debit-notes?from_calendar=1&filter=overdue&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'birthdays':
-                url = `/clients?from_calendar=1&birthdays=true&start_date=${startDate}&end_date=${endDate}`;
+                url = `/clients?from_calendar=1&filter=birthday_today&start_date=${startDate}&end_date=${endDate}`;
                 break;
         }
 
