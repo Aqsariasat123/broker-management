@@ -599,14 +599,10 @@ function populateContactDetails(contact, type = 'view') {
         <span class="detail-label">Children</span>
         <input id="children" name="children" type="number" min="0" class="detail-value" value="${contact.children || ''}" ${ro}>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">Assets</span>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-          <label>Vehicle <input type="checkbox"   class="rider-checkbox"  name="vehicle" value="1" ${contact.vehicle == '1' ? 'checked' : ''} ${dis}></label>
-          <label>Home <input type="checkbox"  class="rider-checkbox"  name="house" value="1" ${contact.house == '1' ? 'checked' : ''} ${dis}></label>
-          <label>Business <input type="checkbox"  class="rider-checkbox"  name="business" value="1" ${contact.business == '1' ? 'checked' : ''} ${dis}></label>
-          <label>Boat <input type="checkbox"  class="rider-checkbox"  name="other" value="1" ${contact.other == '1' ? 'checked' : ''} ${dis}></label>
-        </div>
+      <div class="detail-row" style="display:flex; align-items:center; gap:30px;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin:0;">Vehicle <input type="checkbox" class="asset-checkbox" name="vehicle" value="1" ${contact.vehicle == '1' ? 'checked' : ''} ${dis}></label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin:0;">House <input type="checkbox" class="asset-checkbox" name="house" value="1" ${contact.house == '1' ? 'checked' : ''} ${dis}></label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin:0;">Business <input type="checkbox" class="asset-checkbox" name="business" value="1" ${contact.business == '1' ? 'checked' : ''} ${dis}></label>
       </div>
       <div class="detail-row">
         <span class="detail-label">Other</span>

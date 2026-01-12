@@ -29,7 +29,7 @@ body {
   padding-top: 5px;
   height: 100vh;
   transition: width 0.3s ease, background 0.3s ease, color 0.3s ease;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: visible;
   position: fixed;
   left: 0;
@@ -42,7 +42,7 @@ body {
 .sidebar.collapsed {
   width: 60px;
   overflow-x: visible !important;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 /* Dark theme for sidebar */
@@ -627,7 +627,6 @@ body.dark-theme .main-content {
   overflow: visible;
   position: relative;
 }
-.ks-sidebar-menu li:hover,
 .ks-sidebar-menu li.active {
   background: #f3742a;
 }
@@ -651,14 +650,12 @@ body.dark-theme .main-content {
   box-sizing: border-box;
   font-size: 13px;
 }
-.ks-sidebar-menu li a:hover,
 .ks-sidebar-menu li.active a {
   background: #f3742a;
   color: #fff;
 }
 .ks-sidebar-menu li a:focus {
-  outline: 2px solid rgba(243,116,42,0.25);
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* Light theme section header */
@@ -673,7 +670,6 @@ body.dark-theme .ks-sidebar-section-header span {
 body.dark-theme .ks-sidebar-menu li a {
   color: #fff;
 }
-body.dark-theme .ks-sidebar-menu li a:hover,
 body.dark-theme .ks-sidebar-menu li.active a {
   background: #f3742a;
   color: #fff;

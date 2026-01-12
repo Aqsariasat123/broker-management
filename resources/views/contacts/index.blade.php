@@ -337,29 +337,10 @@
                 </div>
                 <div class="client-page-actions" id="contactHeaderActions">
                   <button class="btn btn-edit" id="editContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="if(currentContactId) openEditContract(currentContactId)">Edit</button>
-                  <button class="btn" id="contactContactPageBtn"  onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;display:none;">Cancel</button>
-                   <button
-                    class="btn"
-                    id="saveContactFromPageBtn"
-                   style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                    onclick="saveContactFromPage()">
-                    Save
-                  </button>
-                  
-                <button
-                  class="btn"
-                  id="deleteContactFromPageBtn"
-                  style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                  onclick="deleteContact()">
-                  Delete
-                </button>
-                <button
-                  class="btn"
-                  id="closeContactFromPageBtn"
-                  style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                  onclick="closeContactPageView()">
-                  Close
-                </button>
+                  <button class="btn" id="contactContactPageBtn" onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;">Cancel</button>
+                  <button class="btn" id="deleteContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="deleteContact()">Delete</button>
+                  <button class="btn" id="saveContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="saveContactFromPage()">Save</button>
+                  <button class="btn" id="closeContactFromPageBtn" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="closeContactPageView()">Cancel</button>
                 </div>
               </div>
             </div>
