@@ -71,33 +71,32 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// Open full page view for add
+// Open modal for add
 function openContactModal(mode) {
+  const modal = document.getElementById('contactModal');
+  if (!modal) return;
+
+  const title = document.getElementById('contactModalTitle');
+  const form = document.getElementById('contactForm');
+  const deleteBtn = document.getElementById('contactDeleteBtn');
+  const formMethod = document.getElementById('contactFormMethod');
+
   if (mode === 'add') {
-    // Open full page view for adding new contact
+    if (title) title.textContent = 'Add Contact';
+    if (form) {
+      form.action = contactsStoreRoute;
+      form.reset();
+    }
+    if (formMethod) formMethod.innerHTML = '';
+    if (deleteBtn) deleteBtn.style.display = 'none';
     currentContactId = null;
-    const clientsTableView = document.getElementById('clientsTableView');
-    const contactPageView = document.getElementById('contactPageView');
-    const contactPageName = document.getElementById('contactPageName');
-    const contactPageTitleEl = document.getElementById('contactPageTitle');
-    const contactDetailsPageContent = document.getElementById('contactDetailsPageContent');
-    const contactFormPageContent = document.getElementById('contactFormPageContent');
-
-    if (contactPageTitleEl) contactPageTitleEl.textContent = 'Contact - Add New';
-    if (contactPageName) contactPageName.textContent = '';
-
-    // Hide table view, show page view
-    clientsTableView.classList.add('hidden');
-    contactPageView.style.display = 'block';
-    contactPageView.classList.add('show');
-
-    // Show add form
-    populateContactDetails({}, 'add');
-    contactDetailsPageContent.style.display = 'block';
-    document.getElementById('contactDetailsContentWrapper').style.display = 'block';
-    document.getElementById('followupsContentWrapper').style.display = 'block';
-    contactFormPageContent.style.display = 'none';
+    const ageDisplay = document.getElementById('age_display');
+    if (ageDisplay) ageDisplay.value = '';
   }
+
+  document.body.style.overflow = 'hidden';
+  modal.classList.add('show');
+  setTimeout(() => setupContactFormListeners(modal), 100);
 }
 
 // Open modal with contact data for editing
@@ -125,7 +124,7 @@ function openModalWithContact(mode, contact) {
     }
     if (deleteBtn) deleteBtn.style.display = 'block';
 
-    const fields = ['type', 'contact_name', 'mobile_no', 'contact_no', 'wa', 'occupation', 'employer', 'email_address', 'address', 'location', 'dob', 'acquired', 'source', 'source_name', 'agency', 'agent', 'status', 'rank', 'savings_budget', 'children'];
+    const fields = ['type', 'contact_name', 'contact_no', 'wa', 'occupation', 'employer', 'email_address', 'address', 'location', 'dob', 'acquired', 'source', 'source_name', 'agency', 'agent', 'status', 'rank', 'savings_budget', 'children'];
     fields.forEach(id => {
       const el = form.querySelector(`#${id}`);
       if (!el) return;
@@ -248,6 +247,7 @@ async function openContactDetails(id) {
     contactPageView.classList.add('show');
     contactDetailsPageContent.style.display = 'block';
     document.getElementById('contactDetailsContentWrapper').style.display = 'block';
+    document.getElementById('contactScheduleContentWrapper').style.display = 'block';
     document.getElementById('followupsContentWrapper').style.display = 'block';
     contactFormPageContent.style.display = 'none';
 
@@ -341,11 +341,28 @@ async function openEditContract(id) {
     contactPageView.classList.add('show');
     contactDetailsPageContent.style.display = 'block';
     document.getElementById('contactDetailsContentWrapper').style.display = 'block';
+    document.getElementById('contactScheduleContentWrapper').style.display = 'block';
     document.getElementById('followupsContentWrapper').style.display = 'block';
     contactFormPageContent.style.display = 'none';
+    document.querySelectorAll('#contactPageView .contact-tab').forEach(tab => {
+      // Remove existing listeners by cloning
+      const newTab = tab.cloneNode(true);
+      tab.parentNode.replaceChild(newTab, tab);
+      // Add click listener
+
+      newTab.addEventListener('click', function (e) {
+
+        console.log(currentContactId);
+        e.preventDefault();
+        if (!currentContactId) return;
+        const baseUrl = this.getAttribute('data-url');
+        if (!baseUrl || baseUrl === '#') return;
+        window.location.href = baseUrl + '?contact_id=' + currentContactId;
+      });
+    });
   } catch (e) {
     console.error(e);
-    alert('Error loading contact data');
+    alert('Error loading policy data');
   }
 }
 
@@ -389,8 +406,7 @@ function populateContactDetails(contact, type = 'view') {
 
 
   // Get contact data
-  const isEdit = type === 'edit' || type === 'add';
-  const isAdd = type === 'add';
+  const isEdit = type === 'edit';
   const ro = isEdit ? '' : 'readonly';
   const dis = isEdit ? '' : 'disabled';
 
@@ -405,10 +421,6 @@ function populateContactDetails(contact, type = 'view') {
       `)
     .join('');
 
-  // Get selected type name for display
-  const selectedTypeName = selectedTypeId ?
-    (lookupData.contact_types.find(ct => ct.id == selectedTypeId)?.name || '[Select Type]') :
-    '[Select Type]';
 
 
   const selectedoccupation = contact?.occupation ?? null;
@@ -493,191 +505,152 @@ function populateContactDetails(contact, type = 'view') {
     .join('');
 
 
-  const dob = contact.dob ? formatDateForInput(contact.dob) : '';
-  const date_acquired = contact.acquired ? formatDateForInput(contact.acquired) : '';
-  const first_contact = contact.first_contact ? formatDateForInput(contact.first_contact) : '';
-  const next_follow_up = contact.next_follow_up ? formatDateForInput(contact.next_follow_up) : '';
+  const dob = contact.dob ? formatDateForInput(contact.dob) : '-';
+  const date_acquired = contact.acquired ? formatDateForInput(contact.acquired) : '-';
+  const first_contact = contact.acquired ? formatDateForInput(contact.first_contact) : '-';
+  const next_follow_up = contact.acquired ? formatDateForInput(contact.next_follow_up) : '-';
 
-  const dobAge = contact.dob ? calculateAge(contact.dob) : '';
-
-  // Contact Type Header Row - light gray background like Excel
-  const contactTypeHeader = `
-  <div style="background:#f5f5f5; padding:12px 15px; margin-bottom:0; border-bottom:1px solid #ddd;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-size:14px; font-weight:600;">
-        <span style="color:#000;">Contact Type - </span>
-        <select id="type" name="type" class="form-control" required style="display:inline-block; width:auto; padding:4px 8px; border:none; border-radius:2px; font-size:13px; color:#f3742a; background:transparent;" ${dis}>
-          <option value="" style="color:#f3742a;">[Select Type]</option>
+  const dobAge = contact.dob ? calculateAge(contact.dob) : '-';
+  // Top Section: 4 columns
+  const col1 = `
+  <div class="detail-section-card">
+    <div class="detail-section-header">CONTACT DETAILS</div>
+    <div class="detail-section-body">
+      <div class="detail-row">
+        <span class="detail-label">Contact Type</span>
+        <select id="type" name="type" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
+          <option value="">Select</option>
           ${contactTypeOptions}
         </select>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn" id="saveContactBtn2" onclick="saveContactFromPage()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:3px; cursor:pointer; font-size:12px;">Save</button>
-        <button type="button" class="btn" onclick="closeContactPageView()" style="background:#e0e0e0; color:#333; border:1px solid #ccc; padding:6px 20px; border-radius:3px; cursor:pointer; font-size:12px;">Cancel</button>
+      <div class="detail-row">
+        <span class="detail-label">Mobile No</span>
+        <input type="text" name="contact_no" class="detail-value" value="${contact.contact_no || ''}" ${ro}>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Email Address</span>
+        <input type="text" name="email_address" class="detail-value" value="${contact.email_address || ''}" ${ro}>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Address</span>
+        <input type="text" name="address" class="detail-value" value="${contact.address || ''}" ${ro}>
+      </div>
+       <div class="detail-row">
+        <span class="detail-label">salutation</span>
+        <select id="salutation" name="salutation" class="form-control" required style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
+          <option value="">Select</option>
+          ${salvationOptions}
+        </select>
+        
       </div>
     </div>
   </div>
-  `;
+`;
 
-  // CONTACT DETAILS - Full width with left aligned header like Excel
-  const contactDetailsSection = `
-  <div style="margin-bottom:15px; border:1px solid #ddd;">
-    <div style="background:#2d3e50; color:#fff; padding:8px 15px; font-size:12px; font-weight:500; text-align:left;">CONTACT DETAILS</div>
-    <div style="padding:15px; background:#fff;">
-      <table style="width:100%; border-collapse:collapse; border:none !important; border-spacing:0;">
-        <tr style="border:none !important; background:#fff !important;">
-          <td style="padding:5px; width:90px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Contact Name</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input type="text" id="contact_name" name="contact_name" class="form-control" value="${contact.contact_name || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-          <td style="padding:5px; width:80px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Contact No</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input type="text" name="contact_no" class="form-control" value="${contact.contact_no || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-          <td style="padding:5px; width:90px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Email Address</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input type="text" name="email_address" class="form-control" value="${contact.email_address || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-          <td style="padding:5px; width:85px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Date Of Birth</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input id="dob" name="dob" type="date" value="${dob}" class="form-control" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-        </tr>
-        <tr style="border:none !important; background:#fff !important;">
-          <td style="padding:5px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Occupation</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input type="text" id="occupation_text" name="occupation" class="form-control" value="${contact.occupation || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Employer</label></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><input type="text" id="employer_text" name="employer" class="form-control" value="${contact.employer || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-          <td style="padding:5px; border:none !important; background:#fff !important;"><label style="font-size:11px;">Address</label></td>
-          <td colspan="3" style="padding:5px; border:none !important; background:#fff !important;"><input type="text" name="address" class="form-control" value="${contact.address || ''}" ${ro} style="width:100%; padding:5px 8px; border:1px solid #ccc; font-size:11px; background:#f9f9f9;"></td>
-        </tr>
-      </table>
-    </div>
-  </div>
-  `;
-
-  // Lead / Prospect Details Label with separator line
-  const leadProspectLabel = `
-  <div style="font-size:14px; font-weight:600; margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid #ddd; color:#333;">Lead / Prospect Details</div>
-  `;
-
-  // 4 Subsections in a row - with labels on left like Excel - ALL dark navy blue headers
-  const col1 = `
-  <div style="border:1px solid #ddd; overflow:hidden;">
-    <div style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">SOURCE DETAILS</div>
-    <div style="padding:10px; background:#fff;">
-      <div style="display:grid; grid-template-columns: 80px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Date Aquired</label>
-        <input id="date_acquired" name="date_acquired" type="date" value="${date_acquired}" class="form-control" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+  const col2 = `
+  <div class="detail-section-card">
+    <div class="detail-section-header">OTHER DETAILS</div>
+    <div class="detail-section-body">
+      <div class="detail-row">
+        <span class="detail-label">Date Of Birth</span>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <input id="dob" name="dob" type="date" value="${dob}" class="form-control" style="flex:1; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${ro}>
+          <input id="age_display" type="text" value="${dobAge}" placeholder="Age" ${ro} class="form-control" style="width:70px; padding:4px 6px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; font-size:12px;">
+        </div>
       </div>
-      <div style="display:grid; grid-template-columns: 80px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Source</label>
-        <select id="source" name="source" class="form-control" ${dis} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+      <div class="detail-row">
+        <span class="detail-label">Occupation</span>
+        <select id="occupation" name="occupation" class="form-control" style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
+          <option value="">Select or Type</option>
+          ${occupationOptions}
+        </select>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Employer</span>
+        <select id="employer" name="employer" class="form-control" style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
+          <option value="">Select or Type</option>
+          ${EmployerOptions}
+        </select>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Source</span>
+        <select id="source" name="source" class="form-control" style="width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:2px; font-size:12px;" ${dis}>
           <option value="">Select</option>
           ${sourceOptions}
         </select>
       </div>
-      <div style="display:grid; grid-template-columns: 80px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Source Name</label>
-        <input type="text" name="source_name" class="form-control" value="${contact.source_name || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
-      </div>
-      <div style="display:grid; grid-template-columns: 80px 1fr; gap:5px; align-items:center;">
-        <label style="font-size:10px;">Agency</label>
-        <select id="agency" name="agency" class="form-control" ${dis} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
-          <option value="">Select</option>
-          ${agencyOptions}
-        </select>
+      <div class="detail-row">
+        <span class="detail-label">Source Name</span>
+        <input type="text" name="source_name" class="detail-value" value="${contact.source_name || ''}" ${ro} style="width:100%;">
       </div>
     </div>
   </div>
-  `;
-
-  const col2 = `
-  <div style="border:1px solid #ddd; overflow:hidden;">
-    <div style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">FAMILY DETAILS</div>
-    <div style="padding:10px; background:#fff;">
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Spouse's Name</label>
-        <input type="text" name="spouses_name" class="form-control" value="${contact.spouses_name || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
-      </div>
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:start; margin-bottom:8px;">
-        <label style="font-size:10px;">Children Details</label>
-        <input type="text" name="children_details" class="form-control" value="${contact.children_details || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
-      </div>
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center;">
-        <label style="font-size:10px;">Savings Budget</label>
-        <input id="savings_budget" name="savings_budget" type="text" class="form-control" value="${contact.savings_budget || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
-      </div>
-    </div>
-  </div>
-  `;
+`;
 
   const col3 = `
-  <div style="border:1px solid #ddd; overflow:hidden;">
-    <div style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">INSURABLE ASSETS</div>
-    <div style="padding:10px; background:#fff;">
-      <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:8px;">
-        <label style="font-size:10px; display:flex; align-items:center; gap:4px;">
-          <span>Vehicle</span><input type="checkbox" name="vehicle" value="1" ${contact.vehicle == '1' ? 'checked' : ''} ${dis} style="width:14px; height:14px;">
-        </label>
-        <label style="font-size:10px; display:flex; align-items:center; gap:4px;">
-          <span>House</span><input type="checkbox" name="house" value="1" ${contact.house == '1' ? 'checked' : ''} ${dis} style="width:14px; height:14px;">
-        </label>
-        <label style="font-size:10px; display:flex; align-items:center; gap:4px;">
-          <span>Business</span><input type="checkbox" name="business" value="1" ${contact.business == '1' ? 'checked' : ''} ${dis} style="width:14px; height:14px;">
-        </label>
+  <div class="detail-section-card">
+    <div class="detail-section-header">PROSPECT DETAILS</div>
+    <div class="detail-section-body">
+      <div class="detail-row">
+        <span class="detail-label">Savings Budget</span>
+        <input id="savings_budget" name="savings_budget" type="number" step="0.01" class="detail-value" value="${contact.savings_budget || ''}" ${ro}>
       </div>
-      <div style="display:grid; grid-template-columns: 50px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Other</label>
-        <input type="text" name="other_assets" class="form-control" value="${contact.other || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+      <div class="detail-row">
+        <span class="detail-label">Children</span>
+        <input id="children" name="children" type="number" min="0" class="detail-value" value="${contact.children || ''}" ${ro}>
       </div>
-      <div style="display:grid; grid-template-columns: 50px 1fr; gap:5px; align-items:start;">
-        <label style="font-size:10px;">Notes</label>
-        <textarea name="notes" class="form-control" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; height:40px; resize:none; background:#f9f9f9;">${contact.notes || ''}</textarea>
+      <div class="detail-row">
+        <span class="detail-label">Assets</span>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+          <label>Vehicle <input type="checkbox"   class="rider-checkbox"  name="vehicle" value="1" ${contact.vehicle == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Home <input type="checkbox"  class="rider-checkbox"  name="house" value="1" ${contact.house == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Business <input type="checkbox"  class="rider-checkbox"  name="business" value="1" ${contact.business == '1' ? 'checked' : ''} ${dis}></label>
+          <label>Boat <input type="checkbox"  class="rider-checkbox"  name="other" value="1" ${contact.other == '1' ? 'checked' : ''} ${dis}></label>
+        </div>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Other</span>
+        <input type="text" name="other" class="detail-value" value="${contact.other || ''}" ${ro}>
       </div>
     </div>
   </div>
-  `;
+`;
 
   const col4 = `
-  <div style="border:1px solid #ddd; overflow:hidden;">
-    <div style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">LEAD MANAGEMENT</div>
-    <div style="padding:10px; background:#fff;">
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Contact Stage</label>
-        <input type="text" id="status_text" name="status_text" class="form-control" value="${contact.status || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+  <div class="detail-section-card">
+    <div class="detail-section-header">LEAD STATUS</div>
+    <div class="detail-section-body">
+      <div class="detail-row">
+        <span class="detail-label">Date Acquired</span>
+        <input id="date_acquired" name="date_acquired" type="date" value="${date_acquired}" class="form-control" ${ro}>
       </div>
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">1st Contacted</label>
-        <input id="first_contact" name="first_contact" type="date" value="${first_contact}" class="form-control" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+      <div class="detail-row">
+        <span class="detail-label">Contact Status</span>
+        <select id="status" name="status" class="form-control" ${dis}>
+          <option value="">Select</option>
+          ${contactStatusOptions}
+        </select>
       </div>
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center; margin-bottom:8px;">
-        <label style="font-size:10px;">Rank</label>
-        <input type="text" id="rank_text" name="rank_text" class="form-control" value="${contact.rank || ''}" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+      <div class="detail-row">
+        <span class="detail-label">Rank</span>
+        <select id="rank" name="rank" class="form-control" ${dis}>
+          <option value="">Select</option>
+          ${contactranksOptions}
+        </select>
       </div>
-      <div style="display:grid; grid-template-columns: 90px 1fr; gap:5px; align-items:center;">
-        <label style="font-size:10px;">Next Follow Up</label>
-        <input id="next_follow_up" name="next_follow_up" type="date" value="${next_follow_up}" class="form-control" ${ro} style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f9f9f9;">
+      <div class="detail-row">
+        <span class="detail-label">1st Contact</span>
+        <input id="first_contact" name="first_contact" type="date" value="${first_contact}" class="form-control" ${ro}>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Next Follow Up</span>
+        <input id="next_follow_up" name="next_follow_up" type="date" value="${next_follow_up}" class="form-control" ${ro}>
       </div>
     </div>
   </div>
-  `;
+`;
 
-  // 4 columns grid for subsections
-  const subsectionsGrid = `
-  <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:15px;">
-    ${col1}${col2}${col3}${col4}
-  </div>
-  `;
-
-  // Status Buttons Row - all light gray like Excel
-  const statusButtons = `
-  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
-    <button type="button" class="status-btn" data-status="1" onclick="setContactStatus(1)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#fff; color:#333; font-size:11px; cursor:pointer;">Open</button>
-    <button type="button" class="status-btn" data-status="2" onclick="setContactStatus(2)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">Not Reached</button>
-    <button type="button" class="status-btn" data-status="3" onclick="setContactStatus(3)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">In Discussion</button>
-    <button type="button" class="status-btn" data-status="4" onclick="setContactStatus(4)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">Offer Made</button>
-    <button type="button" class="status-btn" data-status="5" onclick="setContactStatus(5)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">Converted</button>
-    <button type="button" class="status-btn" data-status="6" onclick="setContactStatus(6)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">Keep In View</button>
-    <button type="button" class="status-btn" data-status="7" onclick="setContactStatus(7)" style="padding:8px 25px; border:1px solid #ccc; border-radius:3px; background:#e0e0e0; color:#333; font-size:11px; cursor:pointer;">Archived</button>
-  </div>
-  `;
-
-  content.innerHTML = contactTypeHeader + contactDetailsSection + leadProspectLabel + subsectionsGrid + statusButtons;
-  content.style.display = 'block';
-  content.style.gridTemplateColumns = '1fr';
+  content.innerHTML = col1 + col2 + col3 + col4;
 
   const editBtn = document.getElementById('editContactFromPageBtn');
   const cancelBtn = document.getElementById('contactContactPageBtn');
@@ -688,22 +661,13 @@ function populateContactDetails(contact, type = 'view') {
 
 
 
-  if (isAdd) {
-    // Add mode - show Save and Close, hide Edit and Delete
-    editBtn.style.display = 'none';
-    cancelBtn.style.display = 'none';
-    saveBtn.style.display = 'inline-block';
-    closebtn.style.display = 'inline-block';
-    deleteBtn.style.display = 'none';
-  } else if (isEdit) {
-    // Edit mode - show Save, Close, Delete
+  if (isEdit) {
     editBtn.style.display = 'none';
     cancelBtn.style.display = 'none';
     saveBtn.style.display = 'inline-block';
     closebtn.style.display = 'inline-block';
     deleteBtn.style.display = 'inline-block';
   } else {
-    // View mode - show Edit and Cancel
     editBtn.style.display = 'inline-block';
     cancelBtn.style.display = 'inline-block';
     saveBtn.style.display = 'none';
@@ -713,50 +677,46 @@ function populateContactDetails(contact, type = 'view') {
 
   const followups = contact.followups || [];
 
-  // Always create table with header - dark navy blue matching Excel
+  if (followups.length === 0) {
+    followupcontent.innerHTML = '<p>No follow-ups available.</p>';
+    return;
+  }
+  console.log('isEdit:', "isEdit");
+  console.log('editBtn:', "isEdit");
+  // Create table
   const table = document.createElement('table');
   table.className = 'followup-table';
   table.style.width = '100%';
   table.style.borderCollapse = 'collapse';
 
+  // Table header
   const thead = document.createElement('thead');
   thead.innerHTML = `
-    <tr style="background:#2d3e50; color:#fff;">
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">FUID</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Follow Up Date</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Time</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Action</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Next Step</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Time</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Status</th>
-      <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Status</th>
+    <tr>
+      <th style="border:1px solid #ccc; padding:4px;">Code</th>
+      <th style="border:1px solid #ccc; padding:4px;">Follow-up Date</th>
+      <th style="border:1px solid #ccc; padding:4px;">Channel</th>
+      <th style="border:1px solid #ccc; padding:4px;">Status</th>
+      <th style="border:1px solid #ccc; padding:4px;">Summary</th>
+      <th style="border:1px solid #ccc; padding:4px;">Next Action</th>
     </tr>
   `;
   table.appendChild(thead);
 
   // Table body
   const tbody = document.createElement('tbody');
-  if (followups.length === 0) {
-    // Empty row when no follow-ups
+  followups.forEach(fu => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="8" style="border:1px solid #ddd; padding:15px; text-align:center; color:#666; font-size:12px;"></td>`;
+    tr.innerHTML = `
+      <td style="border:1px solid #ccc; padding:4px;">${fu.follow_up_code}</td>
+      <td style="border:1px solid #ccc; padding:4px;">${fu.follow_up_date ? fu.follow_up_date.substring(0, 10) : ''}</td>
+      <td style="border:1px solid #ccc; padding:4px;">${fu.channel || ''}</td>
+      <td style="border:1px solid #ccc; padding:4px;">${fu.status || ''}</td>
+      <td style="border:1px solid #ccc; padding:4px;">${fu.summary || ''}</td>
+      <td style="border:1px solid #ccc; padding:4px;">${fu.next_action || ''}</td>
+    `;
     tbody.appendChild(tr);
-  } else {
-    followups.forEach(fu => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.follow_up_code || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.follow_up_date ? fu.follow_up_date.substring(0, 10) : ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.time || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.channel || fu.action || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.next_action || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.next_time || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.status || ''}</td>
-        <td style="border:1px solid #ddd; padding:6px 8px; font-size:12px;">${fu.done_by || fu.assignee || ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+  });
   table.appendChild(tbody);
 
   // Render inside followupcontent
@@ -767,12 +727,17 @@ function populateContactDetails(contact, type = 'view') {
 
 // Save contact details
 async function saveContactFromPage() {
+  if (!currentContactId) {
+    alert('No contact selected');
+    return;
+  }
+
   try {
     // Gather values from the form fields
     const contactData = {
-      contact_name: document.getElementById('contact_name')?.value || '',
+      contact_name: document.getElementById('contactPageName')?.textContent || '',
+      salutation: document.getElementById('salutation')?.value || '',
       type: document.getElementById('type')?.value || '',
-      mobile_no: document.querySelector('#contactDetailsContent input[name="mobile_no"]')?.value || '',
       contact_no: document.querySelector('#contactDetailsContent input[name="contact_no"]')?.value || '',
       email_address: document.querySelector('#contactDetailsContent input[name="email_address"]')?.value || '',
       address: document.querySelector('#contactDetailsContent input[name="address"]')?.value || '',
@@ -786,23 +751,20 @@ async function saveContactFromPage() {
       vehicle: document.querySelector('input[name="vehicle"]')?.checked ? "1" : "0",
       house: document.querySelector('input[name="house"]')?.checked ? "1" : "0",
       business: document.querySelector('input[name="business"]')?.checked ? "1" : "0",
+      other: document.querySelector('input[name="other"]')?.checked ? "1" : "0",
       other: document.querySelector('#contactDetailsContent input[name="other"]')?.value || '',
       status: document.getElementById('status')?.value || '',
       rank: document.getElementById('rank')?.value || '',
       first_contact: document.getElementById('first_contact')?.value || '',
       next_follow_up: document.getElementById('next_follow_up')?.value || '',
-      acquired: document.getElementById('date_acquired')?.value || ''
+      date_acquired: document.getElementById('date_acquired')?.value || ''
     };
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    console.log(currentContactId); // should be 6, 12, etc.
 
-    // Determine if this is add or edit
-    const isAdd = !currentContactId;
-    const url = isAdd ? '/contacts' : `/contacts/${currentContactId}`;
-    const method = isAdd ? 'POST' : 'PUT';
-
-    const res = await fetch(url, {
-      method: method,
+    const res = await fetch(`/contacts/${currentContactId}`, {
+      method: 'PUT', // Assuming Laravel / RESTful update
       headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
@@ -815,8 +777,11 @@ async function saveContactFromPage() {
     if (!res.ok) throw new Error('Failed to save contact');
 
     const data = await res.json();
-    alert(isAdd ? 'Contact created successfully!' : 'Contact saved successfully!');
+    alert('Contact saved successfully!');
+    // Re-populate in view mode
+
     location.reload();
+    // populateContactDetails(data, 'view');
   } catch (e) {
     console.error(e);
     alert('Error saving contact. Please try again.');
@@ -845,36 +810,6 @@ function deleteContact() {
   const method = document.createElement('input'); method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE'; form.appendChild(method);
   document.body.appendChild(form);
   form.submit();
-}
-
-// Follow Up modal functions
-function openAddFollowUpModal() {
-  if (!currentContactId) {
-    alert('Please select a contact first');
-    return;
-  }
-  const modal = document.getElementById('followUpModal');
-  const form = document.getElementById('followUpForm');
-  if (modal && form) {
-    // Set the form action to the correct route
-    form.action = `/contacts/${currentContactId}/followup`;
-    // Reset form
-    form.reset();
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('follow_up_date').value = today;
-    // Show modal
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function closeFollowUpModal() {
-  const modal = document.getElementById('followUpModal');
-  if (modal) {
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
-  }
 }
 
 // Column modal functions
@@ -911,7 +846,7 @@ function deselectAllColumns() {
 function saveColumnSettings() {
 
   // Get order from DOM - this preserves the drag and drop order
-  const items = Array.from(document.querySelectorAll('#columnSelection .column-item, #columnSelection .column-item-vertical'));
+  const items = Array.from(document.querySelectorAll('#columnSelection .column-item'));
   const order = items.map(item => item.dataset.column);
   const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n => n.value);
 
@@ -951,7 +886,7 @@ function initDragAndDrop() {
   if (!columnSelection) return;
 
   // Make all column items draggable
-  const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
+  const columnItems = columnSelection.querySelectorAll('.column-item');
 
   columnItems.forEach(item => {
     // Skip if already initialized
@@ -1066,27 +1001,9 @@ function initDragAndDrop() {
   });
 }
 
-// Set contact status from button click
-function setContactStatus(statusId) {
-  const statusSelect = document.getElementById('status');
-  if (statusSelect) {
-    statusSelect.value = statusId;
-  }
-  // Update button styles
-  document.querySelectorAll('.status-btn').forEach(btn => {
-    if (btn.dataset.status == statusId) {
-      btn.style.background = '#2d5a6b';
-      btn.style.color = '#fff';
-    } else {
-      btn.style.background = '#f5f5f5';
-      btn.style.color = '#333';
-    }
-  });
-}
-
 // close modals on ESC and clicking backdrop
 document.addEventListener('DOMContentLoaded', function () {
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); closeFollowUpModal(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); } });
   document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
   });

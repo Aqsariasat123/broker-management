@@ -1,56 +1,4 @@
 
-    /* Toggle Switch Styling - Pill shape */
-    .toggle-wrap {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .toggle-wrap input[type="checkbox"] {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      position: absolute;
-    }
-
-    /* The pill background */
-    .toggle-wrap .toggle-bg {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: 0.3s;
-      border-radius: 24px;
-    }
-
-    /* The circle */
-    .toggle-wrap .toggle-circle {
-      position: absolute;
-      cursor: pointer;
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
-
-    /* When checked - green background */
-    .toggle-wrap input:checked ~ .toggle-bg {
-      background-color: #28a745 !important;
-    }
-
-    /* When checked - move circle to right */
-    .toggle-wrap input:checked ~ .toggle-circle {
-      left: 23px;
-    }
-
     * { box-sizing: border-box; }
     .dashboard { padding-left:0 !important; }
     body { font-family: Arial, sans-serif; color: #000; margin: 0; background: #f5f5f5; }
@@ -84,7 +32,7 @@
     .toggle-slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background-color:white; transition:.4s; border-radius:50%; }
     .toggle-switch input:checked + .toggle-slider { background-color:#4CAF50; }
     .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
-    .table-responsive { width: 100%; border: none; background: #fff; margin-bottom:0; overflow-x: auto; padding: 0 20px; padding-bottom: 15px; }
+    .table-responsive { width: 100%; border: none; background: #fff; margin-bottom:0; overflow-x: auto; padding: 0 20px; }
     .table-responsive.no-scroll { overflow: visible; }
     .footer { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; gap:10px; border-top:1px solid #ddd; flex-wrap:wrap; margin-top:0; background:#f5f5f5; }
     .footer-left { display:flex; gap:10px; }
@@ -162,49 +110,15 @@
     /* Drag and drop styles */
     .column-item.dragging { opacity:0.5; background:#e3f2fd; border-color:#2196F3; }
     .column-item.drag-over { border-top:2px solid #2196F3; }
-    /* Toggle Switch Styling */
-    #filterToggle {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      width: 50px;
-      height: 24px;
-      background-color: #ccc;
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      outline: none;
-    }
-    
-    #filterToggle:checked {
-      background-color: #28a745;
-    }
-    
-    #filterToggle::before {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background-color: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.3s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    #filterToggle:checked::before {
-      left: 28px;
-    }
     @media (max-width: 768px) { .form-row .form-group { flex: 0 0 calc((100% - 20px) / 2); } }
     /* Checkbox styling to match clients page */
     .checkbox-cell { text-align:center; }
     .checkbox-cell input[type="checkbox"],
-    input[type="checkbox"].checkbox-style {
-      width:18px;
-      height:18px;
-      cursor:pointer;
+    input[type="checkbox"].checkbox-style { 
+      width:18px; 
+      height:18px; 
+      cursor:pointer; 
+      accent-color:#f3742a; 
       border-radius:3px;
       appearance:none;
       -webkit-appearance:none;
@@ -309,11 +223,12 @@
     text-transform: uppercase;
     line-height: 1.6;
   }
-   .rider-checkbox {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      margin: 0;
+   .rider-checkbox { 
+      width: 18px; 
+      height: 18px; 
+      cursor: pointer; 
+      margin: 0; 
+      accent-color: #f3742a; 
       border-radius: 3px;
       appearance: none;
       -webkit-appearance: none;
@@ -340,21 +255,4 @@
     .rider-checkbox:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-    }
-
-    /* Contact Details Content - prevent overflow/scrollbar */
-    #contactDetailsContent {
-      overflow: visible !important;
-    }
-    #contactDetailsContentWrapper {
-      overflow: visible !important;
-    }
-    .client-page-view {
-      overflow: visible !important;
-    }
-    .client-page-body {
-      overflow: visible !important;
-    }
-    .client-page-content {
-      overflow: visible !important;
     }

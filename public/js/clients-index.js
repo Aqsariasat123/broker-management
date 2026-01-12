@@ -12,8 +12,6 @@ const BUSINESS_TYPES = ['Business', 'Company', 'Organization'];
 let pendingDocuments = [];
 // Pending photo for add mode (will be uploaded after client is created)
 let pendingPhoto = null;
-// Store original page title HTML for restoration
-let originalPageTitleHTML = null;
 
 const PASSPORT_PHOTO_DIMENSIONS = {
   minWidth: 350,
@@ -24,20 +22,6 @@ const PASSPORT_PHOTO_DIMENSIONS = {
   rectRatio: 0.78,
   tolerance: 0.15
 };
-
-// Helper: Update client type label in modal header and full page form
-function updateClientTypeLabel() {
-  const clientTypeSelect = document.getElementById('client_type');
-  const clientTypeLabel = document.getElementById('clientTypeLabel');
-  const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
-  const value = clientTypeSelect?.value || 'Select Client Type';
-  if (clientTypeLabel) {
-    clientTypeLabel.textContent = value;
-  }
-  if (clientTypeLabelPage) {
-    clientTypeLabelPage.textContent = value;
-  }
-}
 
 // Helper: Remove display:none from inline style
 function removeDisplayNone(element) {
@@ -350,16 +334,6 @@ function handleClientTypeChange(eventTarget = null) {
   const isIndividual = isIndividualType(selectedType);
   const isBusiness = isBusinessType(selectedType);
 
-  // Sync with header Client Type dropdown and text
-  const headerClientTypeSelect = document.getElementById('headerClientTypeSelect');
-  const headerClientTypeText = document.getElementById('headerClientTypeText');
-  if (headerClientTypeSelect && headerClientTypeSelect.value !== selectedType) {
-    headerClientTypeSelect.value = selectedType;
-  }
-  if (headerClientTypeText) {
-    headerClientTypeText.textContent = selectedType ? `[${selectedType}]` : '[Select Client Type]';
-  }
-
   // Find form container - check both modal and page view
   let formContainer = clientTypeSelect.closest('form') ||
     clientTypeSelect.closest('.modal-body') ||
@@ -639,25 +613,6 @@ window.closeNotification = closeNotification;
 document.getElementById('addClientBtn')?.addEventListener('click', () => openClientModal('add'));
 document.getElementById('columnBtn')?.addEventListener('click', () => openColumnModal());
 
-// Update header Client Type text when dropdown changes
-function updateHeaderClientTypeText(selectEl) {
-  const textEl = document.getElementById('headerClientTypeText');
-  if (textEl) {
-    textEl.textContent = selectEl.value ? `[${selectEl.value}]` : '[Select Client Type]';
-  }
-  // Sync with form dropdown
-  const formClientType = document.querySelector('#clientFormPageContent #client_type');
-  if (formClientType) {
-    formClientType.value = selectEl.value;
-    handleClientTypeChange(formClientType);
-  }
-}
-
-// Sync header Client Type dropdown with form dropdown
-document.getElementById('headerClientTypeSelect')?.addEventListener('change', function() {
-  updateHeaderClientTypeText(this);
-});
-
 function handleFilterToggle(e) {
   const filtersVisible = e.target.checked;
   const columnFilters = document.querySelectorAll('.column-filter');
@@ -751,8 +706,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   }
-
-  });
+});
 
 // Radio button selection highlighting
 function handleRadioSelection(e) {
@@ -836,12 +790,12 @@ async function openEditClient(id) {
     populateClientEditForm(client, formContainer);
 
     // Set page title (only if elements exist)
-    const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || client.business_name || 'Unknown';
+    const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
     const clientPageTitle = document.getElementById('clientPageTitle');
     const clientPageName = document.getElementById('clientPageName');
     const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
-    if (clientPageTitle) clientPageTitle.innerHTML = `Client - <span style="color:#f3742a;">${clientName}</span> - Edit`;
-    if (clientPageName) clientPageName.textContent = '';
+    if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
+    if (clientPageName) clientPageName.textContent = clientName;
     if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
 
     // Set up documents section
@@ -873,28 +827,23 @@ async function openEditClient(id) {
     document.getElementById('clientFormPageContent').style.display = 'block';
 
     // Setup nav tab listeners for page view
-    setupNavTabListeners();
+    document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+      // Remove existing listeners by cloning
+      const newTab = tab.cloneNode(true);
+      tab.parentNode.replaceChild(newTab, tab);
+      // Add click listener
+      newTab.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!currentClientId) return;
+        const baseUrl = this.getAttribute('data-url');
+        if (!baseUrl || baseUrl === '#') return;
+        window.location.href = baseUrl + '?client_id=' + currentClientId;
+      });
+    });
   } catch (e) {
     console.error(e);
     alert('Error loading client data: ' + e.message);
   }
-}
-
-// Setup nav tab listeners for page view
-function setupNavTabListeners() {
-  document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
-    // Remove existing listeners by cloning
-    const newTab = tab.cloneNode(true);
-    tab.parentNode.replaceChild(newTab, tab);
-    // Add click listener
-    newTab.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (!currentClientId) return;
-      const baseUrl = this.getAttribute('data-url');
-      if (!baseUrl || baseUrl === '#') return;
-      window.location.href = baseUrl + '?client_id=' + currentClientId;
-    });
-  });
 }
 
 // Open client details modal
@@ -932,7 +881,19 @@ async function openClientDetailsModal(clientId) {
     updateBOsButtonVisibility(client);
 
     // Setup nav tab listeners for page view
-    setupNavTabListeners();
+    document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
+      // Remove existing listeners by cloning
+      const newTab = tab.cloneNode(true);
+      tab.parentNode.replaceChild(newTab, tab);
+      // Add click listener
+      newTab.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!currentClientId) return;
+        const baseUrl = this.getAttribute('data-url');
+        if (!baseUrl || baseUrl === '#') return;
+        window.location.href = baseUrl + '?client_id=' + currentClientId;
+      });
+    });
   } catch (e) {
     console.error(e);
     alert('Error loading client details: ' + e.message);
@@ -1300,156 +1261,234 @@ function populateClientDetailsModal(client) {
     return;
   }
 
-  // Update page title with client name
-  const pageTitle = document.getElementById('clientPageTitle');
-  if (pageTitle) {
-    const clientName = client.first_name && client.surname
-      ? `${client.first_name} ${client.surname}`
-      : (client.business_name || client.client_name || 'Client');
-    pageTitle.innerHTML = `Client - <span style="color:#f3742a;">${clientName}</span>`;
-  }
-
   const dob = client.dob_dor ? formatDate(client.dob_dor) : '-';
   const dobAge = client.dob_dor ? calculateAge(client.dob_dor) : '-';
   const idExpiry = client.id_expiry_date ? formatDate(client.id_expiry_date) : '-';
   const idExpiryDays = client.id_expiry_date ? calculateDaysUntilExpiry(client.id_expiry_date) : '-';
   const signedUp = client.signed_up ? formatDate(client.signed_up) : '-';
-  const signedUpYears = client.signed_up ? calculateAge(client.signed_up) : '-';
   const photoUrl = client.image ? (client.image.startsWith('http') ? client.image : `/storage/${client.image}`) : '';
 
   const clientType = (client.client_type || '').trim().toLowerCase();
   const isIndividual = clientType === 'individual';
   const isBusinessLike = ['business', 'company', 'organization'].includes(clientType);
 
-  // Build 8 sections - CSS will handle 4-column grid layout
-  const html = `
-    <!-- CUSTOMER DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">CUSTOMER DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Client Type</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.client_type || 'Individual'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">DOB/DOR</label></td><td><div style="display:flex; gap:5px;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${dob}</div><div style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#fff;">${dobAge}</div></div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">NIN/BCRN</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.nin_bcrn || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">ID Expiry Date</label></td><td><div style="display:flex; gap:5px;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${idExpiry}</div><div style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#fff;">${idExpiryDays}</div></div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Client Status</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.status || 'Active'}</div></td></tr>
-        </table>
-      </div>
-    </div>
+  // Helper to conditionally hide rows
+  const hideForBusiness = isBusinessLike ? 'style="display:none;"' : '';
+  const hideForIndividual = isIndividual ? 'style="display:none;"' : '';
 
-    <!-- CONTACT DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">CONTACT DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Mobile No</label></td><td><div style="display:flex; gap:5px; align-items:center;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.mobile_no || '-'}</div><input type="checkbox" ${client.wa == "1" ? 'checked' : ''} disabled style="width:18px; height:18px;"></div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Contact No</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.contact_no || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Home No</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.home_no || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Email Address</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.email_address || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Contact Person</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.contact_person || '-'}</div></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- ADDRESS DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">ADDRESS DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">District</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.districts?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Address</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.location || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Island</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.islands?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Country</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.countries?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">P.O. Box No</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.po_box_no || '-'}</div></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- REGISTRATION DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">REGISTRATION DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Sign Up Date</label></td><td><div style="display:flex; gap:5px;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${signedUp}</div><div style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#fff;">${signedUpYears}</div></div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Source</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.sources?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Source Name</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.source_name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">PC Channel</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.pc_channel || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Agency</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.agencies?.name || '-'}</div></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- INDIVIDUAL DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">INDIVIDUAL DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <div style="display:flex; gap:8px; margin-bottom:4px;">
-          <div style="flex:1; min-width:0;">
-            <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-              <tr><td style="padding:4px 0; width:70px;"><label style="font-size:10px;">Salutation</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.salutations?.name || '-'}</div></td></tr>
-              <tr><td style="padding:4px 0;"><label style="font-size:10px;">First Name</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.first_name || '-'}</div></td></tr>
-            </table>
+  // Column 1: CUSTOMER DETAILS
+  const col1 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">CUSTOMER DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Client Type</span>
+              <div class="detail-value">${isBusinessLike ? 'Business' : 'Individual'}</div>
           </div>
-          <div style="width:55px; flex-shrink:0;">
-            ${photoUrl ? `<img src="${photoUrl}" alt="Photo" style="width:55px; height:55px; object-fit:cover; border:1px solid #ccc; cursor:pointer;" onclick="previewClientPhotoModal('${photoUrl}')">` : `<div style="width:55px; height:55px; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; background:#fff;"><span style="font-size:8px; color:#999;">Photo</span></div>`}
+            <div class="detail-row" ${hideForBusiness}>
+            <span class="detail-label">DOB/DOR</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${dob}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${dobAge}</div>
+            </div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+            <span class="detail-label">NIN/BCRN</span>
+            <div class="detail-value">${client.nin_bcrn || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+            <span class="detail-label">ID Expiry Date</span>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${idExpiry}</div>
+              <div class="detail-value" style="width:50px; text-align:center; flex-shrink:0;">${idExpiryDays}</div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Client Status</span>
+              <div class="detail-value">
+                ${client.status ? `<span class="badge-status" style="background:${client.status === 'Active' ? '#28a745' : '#6c757d'};">${client.status}</span>` : '-'}
+              </div>
+            </div>
           </div>
         </div>
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:70px;"><label style="font-size:10px;">Other Names</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.other_names || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Surname</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.surname || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Passport No</label></td><td><div style="display:flex; gap:5px;"><div style="width:45px; padding:4px 6px; border:1px solid #ccc; font-size:10px; text-align:center; background:#fff;">SEY</div><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.passport_no || '-'}</div></div></td></tr>
-        </table>
       </div>
-    </div>
+    `;
 
-    <!-- INCOME DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">INCOME DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:90px;"><label style="font-size:10px;">Occupation</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.occupations?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Income Source</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.income_sources?.name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Employer</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.employer || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Monthly Income</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.monthly_income || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Savings Budget</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.savings_budget || '-'}</div></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- FAMILY DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">FAMILY DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:90px;"><label style="font-size:10px;">Married</label></td><td><input type="checkbox" ${client.married ? 'checked' : ''} disabled style="width:18px; height:18px;"></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Spouse's Name</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.spouses_name || '-'}</div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Children</label></td><td><div style="display:flex; gap:5px; align-items:center;"><input type="checkbox" ${client.children > 0 ? 'checked' : ''} disabled style="width:18px; height:18px;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.children || '-'}</div></div></td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">Details</label></td><td><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff; min-height:50px;">${client.children_details || '-'}</div></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- OTHER DETAILS -->
-    <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-      <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">OTHER DETAILS</div>
-      <div class="detail-section-body" style="padding:10px;">
-        <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-          <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">PEP</label></td><td><input type="checkbox" ${client.pep ? 'checked' : ''} disabled style="width:18px; height:18px;"></td></tr>
-          <tr><td colspan="2" style="padding:4px 0;"><div style="padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${client.pep_comment || '-'}</div></td></tr>
-          <tr><td colspan="2" style="padding:8px 0 4px 0;">
-            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-              <label style="font-size:10px; display:flex; align-items:center; gap:4px;">Vehicle <input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled style="width:16px; height:16px;"></label>
-              <label style="font-size:10px; display:flex; align-items:center; gap:4px;">House <input type="checkbox" ${client.has_house ? 'checked' : ''} disabled style="width:16px; height:16px;"></label>
-              <label style="font-size:10px; display:flex; align-items:center; gap:4px;">Business <input type="checkbox" ${client.has_business ? 'checked' : ''} disabled style="width:16px; height:16px;"></label>
+  // Column 2: CONTACT DETAILS
+  const col2 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">CONTACT DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">Mobile No</span>
+            <div class="detail-value">${client.mobile_no || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">On Whatsapp</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.wa == "1" ? 'checked' : ''} disabled>
+              </div>
             </div>
-          </td></tr>
-          <tr><td style="padding:4px 0;"><label style="font-size:10px;">ID Expiry Date</label></td><td><div style="display:flex; gap:5px;"><div style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#fff;">${idExpiry}</div><div style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#fff;">${idExpiryDays}</div></div></td></tr>
-        </table>
+          <div class="detail-row" style="${client.wa == "1" ? 'display:none;' : ''}" >
+            <span class="detail-label">Alternate No</span>
+            <div class="detail-value">${client.alternate_no || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email Address</span>
+            <div class="detail-value">${client.email_address || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact Person</span>
+            <div class="detail-value">${client.contact_person || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForIndividual}>
+            <span class="detail-label">Designation</span>
+            <div class="detail-value">${client.designation || '-'}</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  content.innerHTML = html;
+  // Column 3: ADDRESS DETAILS
+  const col3 = `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">ADDRESS DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row">
+            <span class="detail-label">District</span>
+            <div class="detail-value">${client.districts?.name || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Address</span>
+            <div class="detail-value">${client.location || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Island</span>
+            <div class="detail-value">${client.islands?.name || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+            <span class="detail-label">Country</span>
+            <div class="detail-value">${client.countries?.name || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+            <span class="detail-label">P.O. Box No</span>
+            <div class="detail-value">${client.po_box_no || '-'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // Column 7: OTHER DETAILS
+  const col7 = hideForBusiness ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">OTHER DETAILS</div>
+        <div class="detail-section-body">
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Married</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.married ? 'checked' : ''} disabled>
+          </div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Spouse's Name</span>
+              <div class="detail-value">${client.spouses_name || '-'}</div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">PEP</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
+          </div>
+          </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">PEP Details</span>
+              <div class="detail-value" style="min-height:40px; white-space:pre-wrap;">${client.pep_comment || '-'}</div>
+            </div>
+            <div class="detail-row" ${hideForBusiness}>
+              <span class="detail-label">Notes</span>
+              <textarea class="detail-value" style="min-height:40px; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // The remaining cards only for Individual
+  const col4 = isIndividual ? '' : /* Registration Details */ `<div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="detail-section">
+        <div class="detail-section-header">REGISTRATION DETAILS</div>
+        <div class="detail-section-body">
+          <div class="detail-row"><span class="detail-label">Sign Up Date</span><div class="detail-value">${signedUp}</div></div>
+          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agencies.name || 'Keystone'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agents.name || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.sources.name || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source Name</span><div class="detail-value">${client.source_name || '-'}</div></div>
+        </div>
+      </div>
+    </div>`;
+
+  const col5 = !isIndividual ? '' : /* Individual Details with photo */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL DETAILS</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Salutation</span><div class="detail-value">${client.salutations?.name || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">First Name</span><div class="detail-value">${client.first_name || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Other Names</span><div class="detail-value">${client.other_names || '-'}</div></div>
+                <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Surname</span><div class="detail-value">${client.surname || '-'}</div></div>
+              </div>
+              ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}')"></div>`
+      : `<div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>`}
+            </div>
+            <div class="detail-row"><span class="detail-label">Passport No</span><div class="detail-value">${client.passport_no || '-'}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  const col6 = !isIndividual ? '' : /* Income Details */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL INCOME DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row"><span class="detail-label">Occupation</span><div class="detail-value">${client.occupations?.name || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Income Source</span><div class="detail-value">${client.income_sources?.name || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Employer</span><div class="detail-value">${client.employer || '-'}</div></div>
+            <div class="detail-row"><span class="detail-label">Monthly Income</span><div class="detail-value">${client.monthly_income || '-'}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  const col8 = !isIndividual ? '' : /* Insurable Details */ `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL INSURABLES</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Vehicle</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Home</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_house ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Business</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_business ? 'checked' : ''} disabled></div></div>
+              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Boat</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled></div></div>
+            </div>
+            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
+              <label style="font-size:10px; color:#555;">Notes</label>
+              <textarea class="detail-value" style="min-height:40px; width:100%; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // Assemble HTML
+  content.innerHTML = col1 + col2 + col3 + col7 + col4 + col5 + col6 + col8;
 
   // Documents
   const documentsList = document.getElementById('clientDocumentsList');
@@ -1539,149 +1578,313 @@ function populateClientEditForm(client, formContainer) {
 
   // Column 1: CUSTOMER DETAILS
   const col1 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">CUSTOMER DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Client Type</label></td><td><select name="client_type" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;">${createclientTypeSelectOptions(clientTypes, client.client_type)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">DOB/DOR</label></td><td><div style="display:flex; gap:5px;"><input type="date" name="dob_dor" value="${dob}" style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><input type="text" id="dob_age" value="${dobAge}" readonly style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#f5f5f5;"></div></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">NIN/BCRN</label></td><td><input type="text" name="nin_bcrn" value="${client.nin_bcrn || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">ID Expiry Date</label></td><td><div style="display:flex; gap:5px;"><input type="date" name="id_expiry_date" value="${idExpiry}" style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><input type="text" id="id_expiry_days" value="${idExpiryDays}" readonly style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#f5f5f5;"></div></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Client Status</label></td><td><select name="status" required style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createclientTypeSelectOptions(clientStatuses, client.status)}</select></td></tr>
-          </table>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">CUSTOMER DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Client Type</span>
+              <select name="client_type_display" class="detail-value" disabled style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px; background:#f5f5f5; cursor:not-allowed;">
+                ${createclientTypeSelectOptions(clientTypes, client.client_type)}
+              </select>
+              <input type="hidden" name="client_type" value="${client.client_type || ''}">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">DOB/DOR</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="date" name="dob_dor" value="${dob}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" id="dob_age" value="${dobAge}" readonly class="detail-value" style="width:50px; text-align:center; flex-shrink:0; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">NIN/BCRN</span>
+              <input type="text" name="nin_bcrn" value="${client.nin_bcrn || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ID Expiry Date</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="date" name="id_expiry_date" value="${idExpiry}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" id="id_expiry_days" value="${idExpiryDays}" readonly class="detail-value" style="width:50px; text-align:center; flex-shrink:0; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Client Status</span>
+              <select name="status" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createclientTypeSelectOptions(clientStatuses, client.status)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     `;
 
+  console.log(client);
   // Column 2: CONTACT DETAILS
   const col2 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">CONTACT DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Mobile No</label></td><td><div style="display:flex; gap:5px; align-items:center;"><input type="text" name="mobile_no" value="${client.mobile_no || ''}" required style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><input type="checkbox" name="wa" value="1" ${client.wa == "1" ? 'checked' : ''} style="width:18px; height:18px;"></div></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Contact No</label></td><td><input type="text" name="contact_no" value="${client.contact_no || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Home No</label></td><td><input type="text" name="home_no" value="${client.home_no || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Email Address</label></td><td><input type="email" name="email_address" value="${client.email_address || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Contact Person</label></td><td><input type="text" name="contact_person" value="${client.contact_person || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-          </table>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">CONTACT DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Mobile No</span>
+              <input type="text" name="mobile_no" value="${client.mobile_no || ''}" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">On Whatsapp</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="wa" value="1" ${client.wa == "1" ? 'checked' : ''}>
+              </div>
+            </div>
+            <div class="detail-row" id="alternate_no_row" style="${client.wa == "1" ? 'display:none;' : ''}">
+              <span class="detail-label">Alternate No</span>
+              <input type="text" name="alternate_no" value="${client.alternate_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email Address</span>
+              <input type="email" name="email_address" value="${client.email_address || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Contact Person</span>
+              <input type="text" name="contact_person" value="${client.contact_person || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
         </div>
       </div>
     `;
 
   // Column 3: ADDRESS DETAILS
   const col3 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">ADDRESS DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">District</label></td><td><select name="district" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(districts, client.district)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Address</label></td><td><input type="text" name="location" value="${client.location || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Island</label></td><td><select name="island" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(islands, client.island)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Country</label></td><td><select name="country" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(countries, client.country)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">P.O. Box No</label></td><td><input type="text" name="po_box_no" value="${client.po_box_no || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-          </table>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">ADDRESS DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">District</span>
+              <select name="district" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(districts, client.district)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Address</span>
+              <input type="text" name="location" value="${client.location || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Island</span>
+              <select name="island" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(islands, client.island)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Country</span>
+              <select name="country" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(countries, client.country)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">P.O. Box No</span>
+              <input type="text" name="po_box_no" value="${client.po_box_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
         </div>
       </div>
     `;
 
   // Column 4: REGISTRATION DETAILS
-  const col4 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">REGISTRATION DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">Sign Up Date</label></td><td><input type="date" name="signed_up" value="${signedUp}" required style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Source</label></td><td><select name="source" required style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(sources, client.source)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Source Name</label></td><td><input type="text" name="source_name" value="${client.source_name || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">PC Channel</label></td><td><input type="text" name="pc_channel" value="${client.pc_channel || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Agency</label></td><td><input type="text" name="agency" value="${client.agencies?.name || 'Keystone'}" readonly style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; background:#f5f5f5; box-sizing:border-box;"></td></tr>
-          </table>
+  const col4 = hideForIndividual ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">REGISTRATION DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Sign Up Date</span>
+              <input type="date" name="signed_up" value="${signedUp}" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Agency</span>
+              <input type="text" name="agency" value="${client.agency || 'Keystone'}" readonly class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#f5f5f5; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Agent</span>
+              <input type="text" name="agent" value="${client.agent || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Source</span>
+              <select name="source" class="detail-value" required style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(sources, client.source)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Source Name</span>
+              <input type="text" name="source_name" value="${client.source_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
         </div>
       </div>
     `;
 
   // Column 5: INDIVIDUAL DETAILS
-  const col5 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">INDIVIDUAL DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <div style="display:flex; gap:8px; margin-bottom:4px;">
-            <div style="flex:1; min-width:0;">
-              <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-                <tr><td style="padding:4px 0; width:70px;"><label style="font-size:10px;">Salutation</label></td><td><select name="salutation" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(salutations, client.salutation)}</select></td></tr>
-                <tr><td style="padding:4px 0;"><label style="font-size:10px;">First Name</label></td><td><input type="text" name="first_name" value="${client.first_name || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-              </table>
-            </div>
-            <div style="width:55px; flex-shrink:0;">
+  const col5 = hideForBusiness ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INDIVIDUAL DETAILS</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                <div class="detail-row" style="margin-bottom:0;">
+                  <span class="detail-label">Salutation</span>
+                  <select name="salutation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                    <option value="">Select</option>
+                    ${createSelectOptions(salutations, client.salutation)}
+                  </select>
+                </div>
+                <div class="detail-row" style="margin-bottom:0;">
+                  <span class="detail-label">First Name</span>
+                  <input type="text" name="first_name" value="${client.first_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                </div>
+              </div>
               ${photoUrl ? `
-                <img src="${photoUrl}" alt="Photo" id="clientPhotoImg" style="width:55px; height:55px; object-fit:cover; border:1px solid #ccc; cursor:pointer;" onclick="document.getElementById('editImage').click()">
+                <div style="flex-shrink:0; margin-top:13px; position:relative;">
+                  <img src="${photoUrl}" alt="Photo" class="detail-photo" id="clientPhotoImg" style="display:block; cursor:pointer;" onclick="document.querySelector('input[type=\\'file\\'][name=\\'image\\']').click()">
+                  <input type="file" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
+                  <input type="hidden" name="existing_image" id="existing_image" value="${client.image || ''}">
+                </div>
               ` : `
-                <div id="clientPhotoPreview" style="width:55px; height:55px; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; background:#f9f9f9; cursor:pointer;" onclick="document.getElementById('editImage').click()">
-                  <span style="font-size:8px; color:#999;">Photo</span>
+                <div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; cursor:pointer;" id="clientPhotoPreview" onclick="document.getElementById('image').click()">
+                  <span style="font-size:10px; color:#999;">Click to upload</span>
+                  <input type="file" id="image" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
                 </div>
               `}
-              <input type="file" id="editImage" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
-              <input type="hidden" name="existing_image" value="${client.image || ''}">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Other Names</span>
+              <input type="text" name="other_names" value="${client.other_names || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Surname</span>
+              <input type="text" name="surname" value="${client.surname || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Passport No</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <input type="text" name="passport_no" value="${client.passport_no || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <input type="text" value="SEY" readonly style="width:60px; border:1px solid #ddd; padding:4px 6px; border-radius:2px; background:#fff; text-align:center; font-size:11px; flex-shrink:0;">
+              </div>
             </div>
           </div>
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:70px;"><label style="font-size:10px;">Other Names</label></td><td><input type="text" name="other_names" value="${client.other_names || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Surname</label></td><td><input type="text" name="surname" value="${client.surname || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Passport No</label></td><td><div style="display:flex; gap:5px;"><input type="text" value="SEY" readonly style="width:45px; padding:4px 6px; border:1px solid #ccc; font-size:10px; text-align:center;"><input type="text" name="passport_no" value="${client.passport_no || ''}" style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"></div></td></tr>
-          </table>
         </div>
       </div>
     `;
 
   // Column 6: INCOME DETAILS
-  const col6 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">INCOME DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:90px;"><label style="font-size:10px;">Occupation</label></td><td><select name="occupation" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(occupations, client.occupation)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Income Source</label></td><td><select name="income_source" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><option value="">Select</option>${createSelectOptions(incomeSources, client.income_source)}</select></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Employer</label></td><td><input type="text" name="employer" value="${client.employer || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Monthly Income</label></td><td><input type="text" name="monthly_income" value="${client.monthly_income || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Savings Budget</label></td><td><input type="text" name="savings_budget" value="${client.savings_budget || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-          </table>
+  const col6 = hideForBusiness ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INCOME DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Occupation</span>
+              <select name="occupation" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(occupations, client.occupation)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Income Source</span>
+              <select name="income_source" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+                <option value="">Select</option>
+                ${createSelectOptions(incomeSources, client.income_source)}
+              </select>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Employer</span>
+              <input type="text" name="employer" value="${client.employer || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Monthly Income</span>
+              <input type="text" name="monthly_income" value="${client.monthly_income || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+          </div>
         </div>
       </div>
     `;
 
-  // Column 7: FAMILY DETAILS
-  const col7 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">FAMILY DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:90px;"><label style="font-size:10px;">Married</label></td><td><input type="checkbox" name="married" value="1" ${client.married ? 'checked' : ''} style="width:18px; height:18px;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Spouse's Name</label></td><td><input type="text" name="spouses_name" value="${client.spouses_name || ''}" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Children</label></td><td><div style="display:flex; gap:5px; align-items:center;"><input type="checkbox" name="has_children" value="1" ${client.children > 0 ? 'checked' : ''} style="width:18px; height:18px;"><input type="number" name="children" value="${client.children || ''}" style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"></div></td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">Details</label></td><td><textarea name="children_details" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; min-height:50px; resize:vertical; box-sizing:border-box;">${client.children_details || ''}</textarea></td></tr>
-          </table>
-        </div>
-      </div>
-    `;
-
-  // Column 8: OTHER DETAILS
-  const col8 = `
-      <div class="detail-section" style="border:1px solid #ddd; overflow:hidden; background:#fff;">
-        <div class="detail-section-header" style="background:#2d3e50; color:#fff; padding:8px 12px; font-size:11px; font-weight:600; text-align:center;">OTHER DETAILS</div>
-        <div class="detail-section-body" style="padding:10px;">
-          <table style="width:100%; border-collapse:collapse; table-layout:fixed; min-width:auto;">
-            <tr><td style="padding:4px 0; width:80px;"><label style="font-size:10px;">PEP</label></td><td><input type="checkbox" name="pep" value="1" ${client.pep ? 'checked' : ''} style="width:18px; height:18px;"></td></tr>
-            <tr><td colspan="2" style="padding:4px 0;"><input type="text" name="pep_comment" value="${client.pep_comment || ''}" placeholder="PEP Details" style="width:100%; padding:4px 6px; border:1px solid #ccc; font-size:10px; box-sizing:border-box;"></td></tr>
-            <tr><td colspan="2" style="padding:8px 0 4px 0;">
-              <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                <label style="font-size:10px; display:flex; align-items:center; gap:4px;">Vehicle <input type="checkbox" name="has_vehicle" value="1" ${client.has_vehicle ? 'checked' : ''} style="width:16px; height:16px;"></label>
-                <label style="font-size:10px; display:flex; align-items:center; gap:4px;">House <input type="checkbox" name="has_house" value="1" ${client.has_house ? 'checked' : ''} style="width:16px; height:16px;"></label>
-                <label style="font-size:10px; display:flex; align-items:center; gap:4px;">Business <input type="checkbox" name="has_business" value="1" ${client.has_business ? 'checked' : ''} style="width:16px; height:16px;"></label>
+  // Column 7: OTHER DETAILS
+  const col7 = hideForBusiness ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">OTHER DETAILS</div>
+          <div class="detail-section-body">
+            <div class="detail-row">
+              <span class="detail-label">Married</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="married" value="1" ${client.married ? 'checked' : ''}>
               </div>
-            </td></tr>
-            <tr><td style="padding:4px 0;"><label style="font-size:10px;">ID Expiry Date</label></td><td><div style="display:flex; gap:5px;"><input type="date" name="id_expiry_date_other" value="${idExpiry}" style="flex:1; padding:4px 6px; border:1px solid #ccc; font-size:10px;"><input type="text" value="${idExpiryDays}" readonly style="width:40px; padding:4px; border:1px solid #ccc; font-size:10px; text-align:center; background:#f5f5f5;"></div></td></tr>
-          </table>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Spouse's Name</span>
+              <input type="text" name="spouses_name" value="${client.spouses_name || ''}" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">PEP</span>
+              <div class="detail-value checkbox">
+                <input type="checkbox" name="pep" value="1" ${client.pep ? 'checked' : ''}>
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">PEP Details</span>
+              <textarea name="pep_comment" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;">${client.pep_comment || ''}</textarea>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Notes</span>
+              <textarea name="notes" class="detail-value" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; min-height:40px; resize:vertical; font-size:11px;">${client.notes || ''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // Column 8: INSURABLES
+  const col8 = hideForBusiness ? `` : `
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="detail-section">
+          <div class="detail-section-header">INSURABLES</div>
+          <div class="detail-section-body">
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Vehicle</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_vehicle" value="1" ${client.has_vehicle ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Home</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_house" value="1" ${client.has_house ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Business</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_business" value="1" ${client.has_business ? 'checked' : ''}>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; color:#000; font-weight:normal; margin:0; cursor:pointer;">Boat</label>
+                <div class="detail-value checkbox">
+                  <input type="checkbox" name="has_boat" value="1" ${client.has_boat ? 'checked' : ''}>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
+              <label style="font-size:10px; color:#555; font-weight:600; display:block; margin-bottom:4px;">Notes</label>
+              <textarea name="insurables_notes" class="detail-value" style="min-height:40px; width:100%; resize:vertical; font-size:11px; padding:4px 6px; border:1px solid #ddd; background:#fff; border-radius:2px; box-sizing:border-box;">${client.insurables_notes || ''}</textarea>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -1733,12 +1936,6 @@ function closeClientPageView() {
   document.getElementById('clientDetailsPageContent').style.display = 'none';
   document.getElementById('clientFormPageContent').style.display = 'none';
   currentClientId = null;
-
-  // Restore original page title
-  const clientPageTitle = document.getElementById('clientPageTitle');
-  if (clientPageTitle && originalPageTitleHTML) {
-    clientPageTitle.innerHTML = originalPageTitleHTML;
-  }
 }
 
 // ============================================================================
@@ -1798,15 +1995,12 @@ function handleImagePreview(event) {
     // Update photo in INDIVIDUAL DETAILS section (for edit mode or form preview)
     const clientPhotoImg = document.getElementById('clientPhotoImg');
     const clientPhotoPreview = document.getElementById('clientPhotoPreview');
-    const clientPhotoText = document.getElementById('clientPhotoText');
 
     if (clientPhotoImg) {
       // If photo img exists, update its src
       clientPhotoImg.src = imageDataUrl;
       clientPhotoImg.style.display = 'block';
       clientPhotoImg.style.cursor = 'pointer';
-      // Hide the "Photo" text
-      if (clientPhotoText) clientPhotoText.style.display = 'none';
       // Make sure click handler allows changing photo
       clientPhotoImg.onclick = function () {
         if (fileInput) fileInput.click();
@@ -2385,23 +2579,8 @@ function openClientModal(mode, client = null) {
     modalForm.reset();
 
     const clientTypeSelect = document.getElementById('client_type');
-    const clientTypeLabel = document.getElementById('clientTypeLabel');
-    const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
     if (clientTypeSelect && !clientTypeSelect.value) {
       clientTypeSelect.value = 'Individual';
-    }
-    // Update the labels (modal and full page)
-    const clientTypeValue = clientTypeSelect?.value || 'Select Client Type';
-    if (clientTypeLabel) {
-      clientTypeLabel.textContent = clientTypeValue;
-    }
-    if (clientTypeLabelPage) {
-      clientTypeLabelPage.textContent = clientTypeValue;
-    }
-    // Add change listener for client type
-    if (clientTypeSelect) {
-      clientTypeSelect.removeEventListener('change', updateClientTypeLabel);
-      clientTypeSelect.addEventListener('change', updateClientTypeLabel);
     }
 
     if (clientTypeSelect && (clientTypeSelect.value === 'Individual' || !clientTypeSelect.value)) {
@@ -2495,15 +2674,6 @@ function openClientModal(mode, client = null) {
     deleteBtn.style.display = 'inline-block';
 
     populateFormFields(document, client, fieldNames);
-
-    // Update client type label
-    updateClientTypeLabel();
-    // Add change listener for client type
-    const clientTypeSelectEdit = document.getElementById('client_type');
-    if (clientTypeSelectEdit) {
-      clientTypeSelectEdit.removeEventListener('change', updateClientTypeLabel);
-      clientTypeSelectEdit.addEventListener('change', updateClientTypeLabel);
-    }
 
     // Set checkboxes
     ['married', 'pep', 'has_vehicle', 'has_house', 'has_business', 'has_boat'].forEach(id => {
@@ -2605,13 +2775,10 @@ function openClientModal(mode, client = null) {
     if (modalBody) {
       formContentDiv.innerHTML = '';
 
-      // Clone ALL grid containers (Row 1 and Row 2)
-      const gridContainers = modalBody.querySelectorAll('div[style*="grid-template-columns"]');
-      if (gridContainers.length > 0 && !formContentDiv.querySelector('div[style*="grid-template-columns"]')) {
-        gridContainers.forEach(gridContainer => {
-          const clonedGrid = gridContainer.cloneNode(true);
-          formContentDiv.appendChild(clonedGrid);
-        });
+      const gridContainer = modalBody.querySelector('div[style*="grid-template-columns"]');
+      if (gridContainer && !formContentDiv.querySelector('div[style*="grid-template-columns"]')) {
+        const clonedGrid = gridContainer.cloneNode(true);
+        formContentDiv.appendChild(clonedGrid);
 
         setTimeout(() => {
           const clonedClientType = formContentDiv.querySelector('#client_type');
@@ -2632,14 +2799,40 @@ function openClientModal(mode, client = null) {
         clonedInsurables.style.setProperty('display', 'block', 'important');
       }
 
-      // Clone documents section directly into formContentDiv
+      // Clone documents section
       const editDocumentsList = modalBody.querySelector('#editClientDocumentsList');
-      if (editDocumentsList && !formContentDiv.querySelector('#editClientDocumentsList')) {
-        // Find the parent Documents section container
-        const documentsSection = editDocumentsList.closest('div[style*="margin-top:15px"]');
+      const editFormDocumentsSection = document.getElementById('editFormDocumentsSection');
+      if (editDocumentsList && editFormDocumentsSection) {
+        let documentsSection = editDocumentsList.closest('div[style*="margin-top"]') ||
+          editDocumentsList.parentElement?.parentElement;
         if (documentsSection) {
+          editFormDocumentsSection.innerHTML = '';
+
           const clonedDocs = documentsSection.cloneNode(true);
-          formContentDiv.appendChild(clonedDocs);
+          const docsTitle = clonedDocs.querySelector('h4');
+          const docsList = clonedDocs.querySelector('#editClientDocumentsList');
+          const docsButtons = clonedDocs.querySelector('div[style*="justify-content:flex-end"]');
+
+          if (docsTitle) {
+            const titleClone = docsTitle.cloneNode(true);
+            titleClone.style.marginBottom = '10px';
+            titleClone.style.color = '#000';
+            titleClone.style.fontSize = '13px';
+            titleClone.style.fontWeight = 'bold';
+            editFormDocumentsSection.appendChild(titleClone);
+          }
+
+          if (docsList) {
+            const listClone = docsList.cloneNode(true);
+            listClone.style.marginBottom = '10px';
+            editFormDocumentsSection.appendChild(listClone);
+          }
+
+          if (docsButtons) {
+            editFormDocumentsSection.appendChild(docsButtons.cloneNode(true));
+          }
+
+          editFormDocumentsSection.style.display = 'block';
         }
       }
 
@@ -2751,12 +2944,6 @@ function openClientModal(mode, client = null) {
 
           clonedClientTypeSelect.addEventListener('change', function () {
             const selectedType = this.value;
-            // Update the header labels
-            const clientTypeLabel = document.getElementById('clientTypeLabel');
-            const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
-            if (clientTypeLabel) clientTypeLabel.textContent = selectedType || 'Select Client Type';
-            if (clientTypeLabelPage) clientTypeLabelPage.textContent = selectedType || 'Select Client Type';
-
             if (selectedType === 'Individual') {
               hideBusinessFields(formContentDiv);
               showIndividualFields(formContentDiv);
@@ -2807,47 +2994,20 @@ function openClientModal(mode, client = null) {
     }
   }
 
-  // Attach client type change listener for BOTH add and edit modes (outside the if block)
-  setTimeout(() => {
-    const pageFormClientType = document.querySelector('#clientFormPageContent #client_type');
-    if (pageFormClientType) {
-      pageFormClientType.addEventListener('change', function() {
-        const selectedType = this.value;
-        const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
-        if (clientTypeLabelPage) {
-          clientTypeLabelPage.textContent = selectedType || 'Select Client Type';
-        }
-      });
-    }
-  }, 200);
-
   // Set page title (only if elements exist - they may not exist in modal view)
   const clientPageTitle = document.getElementById('clientPageTitle');
   const clientPageName = document.getElementById('clientPageName');
   const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
 
-  // Save original title HTML for restoration
-  if (clientPageTitle && !originalPageTitleHTML) {
-    originalPageTitleHTML = clientPageTitle.innerHTML;
-  }
-
-  // Update header Client Type dropdown and text
-  const headerClientTypeSelect = document.getElementById('headerClientTypeSelect');
-  const headerClientTypeText = document.getElementById('headerClientTypeText');
-
   if (mode === 'add') {
     if (clientPageTitle) clientPageTitle.textContent = 'Client - Add New';
     if (clientPageName) clientPageName.textContent = '';
     if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
-    if (headerClientTypeSelect) headerClientTypeSelect.value = '';
-    if (headerClientTypeText) headerClientTypeText.textContent = '[Select Client Type]';
   } else {
     const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-    if (clientPageTitle) clientPageTitle.textContent = 'Client - Edit';
+    if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
     if (clientPageName) clientPageName.textContent = clientName;
     if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
-    if (headerClientTypeSelect) headerClientTypeSelect.value = client.client_type || '';
-    if (headerClientTypeText) headerClientTypeText.textContent = client.client_type ? `[${client.client_type}]` : '[Select Client Type]';
   }
 
   // Hide table view, show page view
@@ -2951,7 +3111,7 @@ function deselectAllColumns() {
 }
 
 function saveColumnSettings() {
-  const items = Array.from(document.querySelectorAll('#columnSelection .column-item, #columnSelection .column-item-vertical'));
+  const items = Array.from(document.querySelectorAll('#columnSelection .column-item'));
   const order = items.map(item => item.dataset.column);
   const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n => n.value);
 
@@ -2986,7 +3146,7 @@ function initDragAndDrop() {
   const columnSelection = document.getElementById('columnSelection');
   if (!columnSelection) return;
 
-  const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
+  const columnItems = columnSelection.querySelectorAll('.column-item');
 
   columnItems.forEach(item => {
     if (item.dataset.dragInitialized === 'true') return;
@@ -3704,7 +3864,7 @@ function printTable() {
     'thead { display: table-header-group; }' +
     'thead th { background-color: #000 !important; color: #fff !important; padding: 8px 5px; text-align: left; border: 1px solid #333; font-weight: normal; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
     'tbody tr { page-break-inside: avoid; border-bottom: 1px solid #ddd; }' +
-    'tbody tr:nth-child(even) { background-color: #fff; }' +
+    'tbody tr:nth-child(even) { background-color: #f8f8f8; }' +
     'tbody td { padding: 6px 5px; border: 1px solid #ddd; white-space: nowrap; }' +
     '</style>' +
     '</head>' +
@@ -3750,30 +3910,6 @@ function initializeFilters() {
       filter.style.display = 'block';
     });
   }
-}
-
-// Update WA status for a client
-function updateClientWA(clientId, checked) {
-  fetch(`/clients/${clientId}/update-wa`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': csrfToken
-    },
-    body: JSON.stringify({ wa: checked ? 1 : 0 })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      showNotification('WA status updated', 'success');
-    } else {
-      showNotification('Failed to update WA status', 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('Failed to update WA status', 'error');
-  });
 }
 
 document.addEventListener('DOMContentLoaded', initializeFilters);
