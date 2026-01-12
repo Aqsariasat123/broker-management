@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/clients-index.css') }}">
+<link rel="stylesheet" href="{{ asset('css/clients-index.css') }}?v={{ time() }}">
 @include('partials.table-styles')
 
 @php
@@ -249,7 +249,6 @@
       <div class="footer-left">
         <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
         <button class="btn btn-column" id="columnBtn" type="button">Column</button>
-        <button class="btn btn-export" id="printBtn" type="button" style="margin-left:10px;">Print</button>
       </div>
       <div class="paginator">
         @php
@@ -318,7 +317,11 @@
         <div id="clientFormPageContent" style="display:none;">
           <!-- Client Form Card -->
           <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-            <div style="display:flex; justify-content:flex-end; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:1px solid #ddd; background:#fff;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-weight:600; font-size:14px;">Client Type</span>
+                <span style="color:#f3742a; font-size:14px;">- [<span id="clientTypeLabelPage">Select Client Type</span>]</span>
+              </div>
               <div class="client-page-actions">
                 <button type="button" class="btn-delete" id="clientDeleteBtn" style="display:none; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
                 <button type="submit" form="clientForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
@@ -352,7 +355,11 @@
         @csrf
         <div id="clientFormMethod" style="display:none;"></div>
         
-        <div class="modal-header" style="background:#fff; color:#000; padding:12px 15px; display:flex; justify-content:flex-end; align-items:center; border-bottom:1px solid #ddd;">
+        <div class="modal-header" style="background:#fff; color:#000; padding:12px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:600; font-size:14px;">Client Type</span>
+            <span style="color:#f3742a; font-size:14px;">- [<span id="clientTypeLabel">Select Client Type</span>]</span>
+          </div>
           <div style="display:flex; gap:8px;">
             <button type="button" class="btn-delete" id="clientDeleteBtn2" style="display:none; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
             <button type="submit" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
@@ -940,7 +947,7 @@
   const csrfToken = '{{ csrf_token() }}';
   const clientsTotal = {{ $clients->total() }};
 </script>
-<script src="{{ asset('js/clients-index.js') }}"></script>
+<script src="{{ asset('js/clients-index.js') }}?v={{ time() }}"></script>
 <script>
   // Auto-open client details if client_id is in URL
   document.addEventListener('DOMContentLoaded', function() {

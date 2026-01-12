@@ -25,6 +25,20 @@ const PASSPORT_PHOTO_DIMENSIONS = {
   tolerance: 0.15
 };
 
+// Helper: Update client type label in modal header and full page form
+function updateClientTypeLabel() {
+  const clientTypeSelect = document.getElementById('client_type');
+  const clientTypeLabel = document.getElementById('clientTypeLabel');
+  const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
+  const value = clientTypeSelect?.value || 'Select Client Type';
+  if (clientTypeLabel) {
+    clientTypeLabel.textContent = value;
+  }
+  if (clientTypeLabelPage) {
+    clientTypeLabelPage.textContent = value;
+  }
+}
+
 // Helper: Remove display:none from inline style
 function removeDisplayNone(element) {
   if (!element) return;
@@ -2371,8 +2385,23 @@ function openClientModal(mode, client = null) {
     modalForm.reset();
 
     const clientTypeSelect = document.getElementById('client_type');
+    const clientTypeLabel = document.getElementById('clientTypeLabel');
+    const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
     if (clientTypeSelect && !clientTypeSelect.value) {
       clientTypeSelect.value = 'Individual';
+    }
+    // Update the labels (modal and full page)
+    const clientTypeValue = clientTypeSelect?.value || 'Select Client Type';
+    if (clientTypeLabel) {
+      clientTypeLabel.textContent = clientTypeValue;
+    }
+    if (clientTypeLabelPage) {
+      clientTypeLabelPage.textContent = clientTypeValue;
+    }
+    // Add change listener for client type
+    if (clientTypeSelect) {
+      clientTypeSelect.removeEventListener('change', updateClientTypeLabel);
+      clientTypeSelect.addEventListener('change', updateClientTypeLabel);
     }
 
     if (clientTypeSelect && (clientTypeSelect.value === 'Individual' || !clientTypeSelect.value)) {
@@ -2466,6 +2495,15 @@ function openClientModal(mode, client = null) {
     deleteBtn.style.display = 'inline-block';
 
     populateFormFields(document, client, fieldNames);
+
+    // Update client type label
+    updateClientTypeLabel();
+    // Add change listener for client type
+    const clientTypeSelectEdit = document.getElementById('client_type');
+    if (clientTypeSelectEdit) {
+      clientTypeSelectEdit.removeEventListener('change', updateClientTypeLabel);
+      clientTypeSelectEdit.addEventListener('change', updateClientTypeLabel);
+    }
 
     // Set checkboxes
     ['married', 'pep', 'has_vehicle', 'has_house', 'has_business', 'has_boat'].forEach(id => {
@@ -2713,6 +2751,12 @@ function openClientModal(mode, client = null) {
 
           clonedClientTypeSelect.addEventListener('change', function () {
             const selectedType = this.value;
+            // Update the header labels
+            const clientTypeLabel = document.getElementById('clientTypeLabel');
+            const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
+            if (clientTypeLabel) clientTypeLabel.textContent = selectedType || 'Select Client Type';
+            if (clientTypeLabelPage) clientTypeLabelPage.textContent = selectedType || 'Select Client Type';
+
             if (selectedType === 'Individual') {
               hideBusinessFields(formContentDiv);
               showIndividualFields(formContentDiv);
@@ -2762,6 +2806,20 @@ function openClientModal(mode, client = null) {
       }
     }
   }
+
+  // Attach client type change listener for BOTH add and edit modes (outside the if block)
+  setTimeout(() => {
+    const pageFormClientType = document.querySelector('#clientFormPageContent #client_type');
+    if (pageFormClientType) {
+      pageFormClientType.addEventListener('change', function() {
+        const selectedType = this.value;
+        const clientTypeLabelPage = document.getElementById('clientTypeLabelPage');
+        if (clientTypeLabelPage) {
+          clientTypeLabelPage.textContent = selectedType || 'Select Client Type';
+        }
+      });
+    }
+  }, 200);
 
   // Set page title (only if elements exist - they may not exist in modal view)
   const clientPageTitle = document.getElementById('clientPageTitle');

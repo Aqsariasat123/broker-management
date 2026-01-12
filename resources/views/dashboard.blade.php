@@ -27,7 +27,7 @@
                 </option>
             @endforeach
         </select>
-        <button type="button" class="btn" onclick="exportDashboard()" style="padding: 5px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Export Report</button>
+        <button type="button" class="btn" onclick="exportDashboard()" style="padding: 5px 15px; background: #f3742a; color: white; border: none; border-radius: 4px; cursor: pointer;">Export Report</button>
       </form>
     </div>
   </div>

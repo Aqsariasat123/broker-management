@@ -76,10 +76,10 @@
     thead th:last-child { border-right:none; }
     tbody tr { background-color:#fff; border-bottom:1px solid #ddd; min-height:32px; }
     tbody tr:nth-child(even) { background-color:#fff; }
-    tbody tr.archived-row { background:#fff3cd !important; }
-    tbody tr.archived-row td { background:#fff3cd !important; }
-    tbody tr.inactive-row { background:#fff3cd !important; }
-    tbody tr.inactive-row td { background:#fff3cd !important; }
+    tbody tr.archived-row { background:#fff !important; }
+    tbody tr.archived-row td { background:#fff !important; }
+    tbody tr.inactive-row { background:#fff !important; }
+    tbody tr.inactive-row td { background:#fff !important; }
     tbody td { padding:8px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
     tbody td:last-child { border-right:none; }
     .action-cell { display:flex; align-items:center; gap:10px; padding:8px; }

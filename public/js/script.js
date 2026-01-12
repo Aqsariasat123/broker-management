@@ -223,9 +223,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Close dropdown on escape key
     document.addEventListener("keydown", function(e) {
-      if (e.key === "Escape" && profileDropdown.classList.contains("active")) { 
+      if (e.key === "Escape" && profileDropdown.classList.contains("active")) {
         profileDropdown.classList.remove("active");
       }
     });
   }
 });
+
+// Sidebar Collapse Button (inside sidebar)
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
+  const sidebar = document.querySelector(".sidebar");
+  const body = document.body;
+
+  if (sidebarCollapseBtn && sidebar) {
+    // Default: sidebar is expanded (not collapsed)
+    // Only collapse if user manually collapsed it in this session
+    sidebar.classList.remove("collapsed");
+    body.classList.remove("sidebar-collapsed");
+
+    sidebarCollapseBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      sidebar.classList.toggle("collapsed");
+
+      if (sidebar.classList.contains("collapsed")) {
+        body.classList.add("sidebar-collapsed");
+        setTimeout(() => initTooltips(), 100);
+      } else {
+        body.classList.remove("sidebar-collapsed");
+        const tooltip = document.querySelector(".sidebar-tooltip-chip");
+        if (tooltip) tooltip.remove();
+      }
+
+      updateToggleButtonIcon();
+    });
+  }
+});
+

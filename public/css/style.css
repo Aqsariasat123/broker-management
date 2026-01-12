@@ -24,23 +24,120 @@ body {
 /* Sidebar */
 .sidebar {
   width: 180px;
-  background: #2d2d2d;
-  color: #fff;
-  padding-top: 12px;
+  background: #ffffff;
+  color: #333;
+  padding-top: 5px;
   height: 100vh;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background 0.3s ease, color 0.3s ease;
   overflow-y: auto;
   overflow-x: visible;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 1000;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 .sidebar.collapsed {
   width: 60px;
   overflow-x: visible !important;
   overflow-y: auto;
+}
+
+/* Dark theme for sidebar */
+body.dark-theme .sidebar {
+  background: #2d2d2d;
+  color: #fff;
+  border-right-color: #444;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+}
+
+/* Sidebar Logo Image */
+.ks-sidebar-logo {
+  padding: 5px 8px;
+}
+
+.ks-sidebar-logo-img {
+  max-width: 120px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .ks-sidebar-logo {
+  padding: 5px 4px;
+}
+
+.sidebar.collapsed .ks-sidebar-logo-img {
+  max-width: 50px;
+  width: 50px;
+}
+
+/* Sidebar Controls */
+.ks-sidebar-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 5px;
+}
+
+body.dark-theme .ks-sidebar-controls {
+  border-bottom-color: #444;
+}
+
+.ks-sidebar-toggle,
+.ks-theme-toggle {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ks-sidebar-toggle:hover,
+.ks-theme-toggle:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+body.dark-theme .ks-sidebar-toggle,
+body.dark-theme .ks-theme-toggle {
+  background: #444;
+  border-color: #555;
+  color: #ccc;
+}
+
+body.dark-theme .ks-sidebar-toggle:hover,
+body.dark-theme .ks-theme-toggle:hover {
+  background: #555;
+  color: #fff;
+}
+
+.sidebar.collapsed .ks-sidebar-controls {
+  flex-direction: column;
+  padding: 8px 4px;
+}
+
+.sidebar.collapsed .ks-sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Dark theme body */
+body.dark-theme {
+  background: #1a1a1a;
+}
+
+body.dark-theme .main-content {
+  background: #1a1a1a;
 }
 
 .sidebar.collapsed .ks-sidebar-menu {
@@ -562,6 +659,42 @@ body {
 .ks-sidebar-menu li a:focus {
   outline: 2px solid rgba(243,116,42,0.25);
   outline-offset: 2px;
+}
+
+/* Light theme section header */
+.ks-sidebar-section-header span {
+  color: rgba(0,0,0,0.5) !important;
+}
+body.dark-theme .ks-sidebar-section-header span {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+/* Dark theme menu styles */
+body.dark-theme .ks-sidebar-menu li a {
+  color: #fff;
+}
+body.dark-theme .ks-sidebar-menu li a:hover,
+body.dark-theme .ks-sidebar-menu li.active a {
+  background: #f3742a;
+  color: #fff;
+}
+
+/* Logout button styling */
+.ks-sidebar-logout {
+  margin-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 10px;
+}
+.ks-sidebar-logout a {
+  color: #f3742a !important;
+}
+.ks-sidebar-logout:hover,
+.ks-sidebar-logout a:hover {
+  background: #f3742a !important;
+  color: #fff !important;
+}
+body.dark-theme .ks-sidebar-logout {
+  border-top-color: #444;
 }
 
 .ks-sidebar-label {

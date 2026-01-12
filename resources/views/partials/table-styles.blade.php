@@ -1,3 +1,3 @@
-<link rel="stylesheet" href="{{ asset('css/partials-table-styles.css') }}">
+<link rel="stylesheet" href="{{ asset('css/partials-table-styles.css') }}?v={{ time() }}">
 
 
