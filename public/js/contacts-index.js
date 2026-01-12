@@ -1003,7 +1003,7 @@ function initDragAndDrop() {
 
 // close modals on ESC and clicking backdrop
 document.addEventListener('DOMContentLoaded', function () {
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeContactModal(); closeColumnModal(); closeAddFollowUpModal(); } });
   document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('show'); document.body.style.overflow = ''; } });
   });
@@ -1019,3 +1019,76 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+
+// ========== Follow Up Modal Functions ==========
+function openAddFollowUpModal() {
+  if (!currentContactId) {
+    alert('Please select a contact first');
+    return;
+  }
+
+  // Reset form
+  document.getElementById('followUpForm').reset();
+  document.getElementById('fu_contact_id').value = currentContactId;
+
+  // Set default date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fu_follow_up_date').value = today;
+
+  // Show modal
+  document.getElementById('addFollowUpModal').classList.add('show');
+}
+
+function closeAddFollowUpModal() {
+  document.getElementById('addFollowUpModal').classList.remove('show');
+}
+
+async function saveFollowUp() {
+  const contactId = document.getElementById('fu_contact_id').value;
+  const followUpDate = document.getElementById('fu_follow_up_date').value;
+  const channel = document.getElementById('fu_channel').value;
+  const status = document.getElementById('fu_status').value;
+  const summary = document.getElementById('fu_summary').value;
+  const nextAction = document.getElementById('fu_next_action').value;
+
+  if (!followUpDate) {
+    alert('Please select a follow up date');
+    return;
+  }
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    const response = await fetch(`/contacts/${contactId}/followup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        follow_up_date: followUpDate,
+        channel: channel,
+        status: status,
+        summary: summary,
+        next_action: nextAction
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      closeAddFollowUpModal();
+      alert('Follow up added successfully!');
+      // Reload contact details to show new follow up
+      if (currentContactId) {
+        openContactDetails(currentContactId);
+      }
+    } else {
+      alert(data.message || 'Error adding follow up');
+    }
+  } catch (error) {
+    console.error('Error saving follow up:', error);
+    alert('Error saving follow up. Please try again.');
+  }
+}

@@ -295,10 +295,50 @@ class ContactController extends Controller
     {
         // Save column settings to session or database
         session(['contact_columns' => $request->columns ?? []]);
-        
+
         return redirect()->route('contacts.index')
             ->with('success', 'Column settings saved successfully.');
     }
 
- 
+    public function storeFollowup(Request $request, Contact $contact)
+    {
+        try {
+            // Generate follow up code
+            $lastFollowup = \App\Models\Followup::orderBy('id', 'desc')->first();
+            $lastNumber = 0;
+            if ($lastFollowup && $lastFollowup->follow_up_code) {
+                preg_match('/(\d+)$/', $lastFollowup->follow_up_code, $matches);
+                $lastNumber = isset($matches[1]) ? (int)$matches[1] : 0;
+            }
+            $followUpCode = 'FU' . str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
+
+            $followup = \App\Models\Followup::create([
+                'follow_up_code' => $followUpCode,
+                'contact_id' => $contact->id,
+                'user_id' => auth()->id(),
+                'follow_up_date' => $request->follow_up_date,
+                'channel' => $request->channel ?? 'Phone',
+                'status' => $request->status ?? 'Open',
+                'summary' => $request->summary,
+                'next_action' => $request->next_action,
+            ]);
+
+            // Also update contact's next_follow_up if needed
+            if ($request->follow_up_date) {
+                $contact->update(['next_follow_up' => $request->follow_up_date]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Follow up added successfully',
+                'followup' => $followup
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error storing followup: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding follow up: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -386,14 +386,14 @@
           </div>
         </div>
         
-        <!-- Documents Card - Separate -->
+        <!-- Follow Ups Card - Separate -->
         <div id="followupsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
-            <h4 style="margin:0; font-size:12px; font-weight:600; color:#333;">Follow Ups</h4>
-            <!-- <button class="btn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Add Follow Up</button> -->
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:1px solid #ddd;">
+            <h4 style="margin:0; font-size:14px; font-weight:600; color:#333;">Follow Ups</h4>
+            <button class="btn" onclick="openAddFollowUpModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:4px; cursor:pointer; font-size:12px;">Add Follow Up</button>
           </div>
-          <div id="followupcontent" style="display:flex; gap:10px; flex-wrap:wrap; padding:10px;">
-            <!-- Documents will be loaded via JavaScript -->
+          <div id="followupcontent" style="padding:10px;">
+            <!-- Follow ups will be loaded via JavaScript -->
           </div>
         </div>
         
@@ -477,7 +477,7 @@
   </div>
   <!-- Add/Edit Contact Modal -->
   <div class="modal" id="contactModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;">
         <h4 id="contactModalTitle" style="margin: 0; font-size: 16px; font-weight: bold;">Add Contact</h4>
         <div style="display: flex; gap: 8px;">
@@ -490,125 +490,134 @@
         @csrf
         <div id="contactFormMethod" style="display:none;"></div>
 
-        <div class="modal-body" style="padding: 12px;">
+        <div class="modal-body" style="padding: 12px 15px;">
           <h5 style="color: #f3742a; margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">Contact Details</h5>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 6px;">
-            <div>
-              <label for="type" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Type</label>
-              <select id="type" name="type" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <!-- Contact Type -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="type" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Contact Type</label>
+              <select id="type" name="type" class="form-control" required style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['contact_types'] as $t) <option value="{{ $t['id'] }}">{{ $t['name'] }}</option> @endforeach
               </select>
             </div>
-             <div>
-                 <label for="salutation" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Salutation</label>
-               <select id="salutation" name="salutation" class="form-control" style="flex:1; border:1px solid #ddd; padding:4px 6px; border-radius:2px; font-size:11px;">
-                  <option value="">Select</option>
-                  @foreach($lookupData['salutations'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
-                </select>
-              </div>
-            <div>
-              <label for="contact_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Name</label>
-              <input id="contact_name" name="contact_name" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Contact Name -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="contact_name" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Contact Name</label>
+              <input id="contact_name" name="contact_name" class="form-control" required style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
             </div>
-            <div>
-              <label for="occupation" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Occupation</label>
-              <select id="occupation" name="occupation" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Occupation -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="occupation" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Occupation</label>
+              <select id="occupation" name="occupation" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select or Type</option>
                 @foreach($allOccupations as $occ) <option value="{{ $occ }}">{{ $occ }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="employer" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Employer</label>
-              <select id="employer" name="employer" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Employer -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="employer" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Employer</label>
+              <select id="employer" name="employer" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select or Type</option>
                 @foreach($allEmployers as $emp) <option value="{{ $emp }}">{{ $emp }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="contact_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact No.</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="contact_no" name="contact_no" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="wa" name="wa" placeholder="WA" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <div class="checkbox-cell" style="display: flex; align-items: center; margin-top: 2px;">
-                  <input type="checkbox" id="wa_checkbox" class="checkbox-style">
-                </div>
+            <!-- Contact No -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="contact_no" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Contact No</label>
+              <div style="flex: 1; display: flex; gap: 6px; align-items: center;">
+                <input id="contact_no" name="contact_no" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+                <input id="wa" name="wa" placeholder="WA" class="form-control" style="width: 50px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+                <input type="checkbox" id="wa_checkbox" class="checkbox-style" style="width: 18px; height: 18px;">
               </div>
             </div>
-            <div>
-              <label for="email_address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Email Address</label>
-              <input id="email_address" name="email_address" type="email" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Email Address -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="email_address" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Email Address</label>
+              <input id="email_address" name="email_address" type="email" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
             </div>
-            <div>
-              <label for="address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Address / Location</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="address" name="address" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="location" name="location" placeholder="PR" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Address / Location -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="address" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Address / Location</label>
+              <div style="flex: 1; display: flex; gap: 6px;">
+                <input id="address" name="address" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+                <input id="location" name="location" placeholder="PR" class="form-control" style="width: 50px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
               </div>
             </div>
-            <div>
-              <label for="dob" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Of Birth / Age</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="dob" name="dob" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="age_display" type="text" placeholder="Age" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+            <!-- Date Of Birth / Age -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="dob" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Date Of Birth / Age</label>
+              <div style="flex: 1; display: flex; gap: 6px;">
+                <input id="dob" name="dob" type="date" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+                <input id="age_display" type="text" placeholder="Age" readonly class="form-control" style="width: 50px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; font-size: 12px;">
               </div>
             </div>
-            <div>
-              <label for="acquired" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Acquired</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="acquired" name="acquired" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input type="text" value="-" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
+            <!-- Date Acquired -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="acquired" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Date Acquired</label>
+              <div style="flex: 1; display: flex; gap: 6px;">
+                <input id="acquired" name="acquired" type="date" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+                <input type="text" value="-" readonly class="form-control" style="width: 50px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; background: #f5f5f5; font-size: 12px;">
               </div>
             </div>
-            <div>
-              <label for="source" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source</label>
-              <select id="source" name="source" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Source -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="source" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Source</label>
+              <select id="source" name="source" class="form-control" required style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['sources'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="source_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source Name</label>
-              <input id="source_name" name="source_name" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Source Name -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="source_name" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Source Name</label>
+              <input id="source_name" name="source_name" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
             </div>
-            <div>
-              <label for="agency" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agency</label>
-              <select id="agency" name="agency" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Agency -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="agency" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Agency</label>
+              <select id="agency" name="agency" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['agencies'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="agent" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agent</label>
-              <select id="agent" name="agent" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Agent -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="agent" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Agent</label>
+              <select id="agent" name="agent" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['agents'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
                 @foreach($users as $user) <option value="{{ $user->name }}">{{ $user->name }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="status" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Status</label>
-              <select id="status" name="status" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Status -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="status" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Status</label>
+              <select id="status" name="status" class="form-control" required style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['contact_statuses'] as $st) <option value="{{ $st['id'] }}">{{ $st['name']  }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="rank" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Ranking</label>
-              <select id="rank" name="rank" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Ranking -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="rank" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Ranking</label>
+              <select id="rank" name="rank" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
                 <option value="">Select</option>
                 @foreach($lookupData['ranks'] as $r) <option value="{{ $r['id'] }}">{{ $r['name'] }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="savings_budget" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Savings Budget</label>
-              <input id="savings_budget" name="savings_budget" type="number" step="1" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Savings Budget -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="savings_budget" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Savings Budget</label>
+              <input id="savings_budget" name="savings_budget" type="number" step="1" class="form-control" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
             </div>
-            <div>
-              <label for="children" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Children</label>
-              <input id="children" name="children" type="number" min="0" class="form-control" value="0" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <!-- Children -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="children" style="font-size: 12px; font-weight: 500; min-width: 130px; text-align: left;">Children</label>
+              <input id="children" name="children" type="number" min="0" class="form-control" value="0" style="flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
             </div>
+          </div>
 
           <input type="hidden" id="first_contact" name="first_contact">
           <input type="hidden" id="next_follow_up" name="next_follow_up">
@@ -619,6 +628,7 @@
           <input type="hidden" id="house" name="house">
           <input type="hidden" id="business" name="business">
           <input type="hidden" id="other" name="other">
+          <input type="hidden" id="salutation" name="salutation">
         </div>
 
         <div class="modal-footer" style="display: none;">
@@ -628,9 +638,64 @@
     </div>
   </div>
 
+  <!-- Add Follow Up Modal -->
+  <div class="modal" id="addFollowUpModal">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;">
+        <h4 style="margin: 0; font-size: 16px; font-weight: bold;">Add Follow Up</h4>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" onclick="saveFollowUp()" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
+          <button type="button" onclick="closeAddFollowUpModal()" class="btn-cancel" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 15px;">
+        <form id="followUpForm">
+          <input type="hidden" id="fu_contact_id" name="contact_id">
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Follow Up Date -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 500; min-width: 120px;">Follow Up Date</label>
+              <input type="date" id="fu_follow_up_date" name="follow_up_date" required style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px;">
+            </div>
+            <!-- Channel -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 500; min-width: 120px;">Channel</label>
+              <select id="fu_channel" name="channel" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
+                <option value="Phone">Phone</option>
+                <option value="Email">Email</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Meeting">Meeting</option>
+                <option value="SMS">SMS</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <!-- Status -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 500; min-width: 120px;">Status</label>
+              <select id="fu_status" name="status" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff;">
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>
+            <!-- Summary -->
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 500; min-width: 120px; padding-top: 6px;">Summary</label>
+              <textarea id="fu_summary" name="summary" rows="3" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; resize: vertical;"></textarea>
+            </div>
+            <!-- Next Action -->
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 500; min-width: 120px; padding-top: 6px;">Next Action</label>
+              <textarea id="fu_next_action" name="next_action" rows="2" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; resize: vertical;"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Column Selection Modal -->
-
-
 </div>
 
   <div class="modal" id="columnModal">
