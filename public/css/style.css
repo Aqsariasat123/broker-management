@@ -104,7 +104,7 @@ body {
 }
 
 .logo .orange {
-  color: #e67333; /* similar orange color */
+  color: #f3742a;
 }
 
 /* Menu styles */
@@ -509,7 +509,7 @@ body {
   user-select: none;
 }
 .ks-sidebar-logo-text .ks-sidebar-orange {
-  color: #e67333;
+  color: #f3742a;
 }
 
 .ks-sidebar-menu {
@@ -668,4 +668,34 @@ body {
   transition: opacity 0.2s ease, transform 0.2s ease;
   line-height: 1.4;
   min-width: max-content;
+}
+
+/* Global checkbox styling - orange background with white tick */
+input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  cursor: pointer;
+  border-radius: 3px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  border: 1px solid #ccc !important;
+  background-color: #fff !important;
+  position: relative;
+  vertical-align: middle;
+}
+input[type="checkbox"]:checked {
+  background-color: #f3742a !important;
+  border-color: #f3742a !important;
+}
+input[type="checkbox"]:checked::after {
+  content: '\2713' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
 }

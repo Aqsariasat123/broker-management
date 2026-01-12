@@ -23,6 +23,7 @@ class Contact extends Model
         'status',
         'rank',
         'first_contact',
+        'second_follow_up',
         'next_follow_up',
         'coid',
         'dob',
@@ -47,6 +48,7 @@ class Contact extends Model
     protected $casts = [
         'acquired' => 'date',
         'first_contact' => 'date',
+        'second_follow_up' => 'date',
         'next_follow_up' => 'date',
         'dob' => 'date',
         'married' => 'boolean',

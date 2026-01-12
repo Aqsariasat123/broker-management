@@ -812,6 +812,14 @@ class ClientController extends Controller
         ]);
     }
 
-   
-  
+    public function updateWA(Request $request, Client $client)
+    {
+        $client->wa = $request->input('wa', 0);
+        $client->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'WA status updated successfully.'
+        ]);
+    }
 }

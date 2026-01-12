@@ -136,14 +136,14 @@ Route::middleware('auth')->group(function () {
 
     // Policies Routes
     Route::get('/policies', [PolicyController::class, 'index'])->name('policies.index');
+    Route::get('/policies/export', [PolicyController::class, 'export'])->name('policies.export');
     Route::get('/policies/create', [PolicyController::class, 'create'])->name('policies.create');
+    Route::post('/policies/save-column-settings', [PolicyController::class, 'saveColumnSettings'])->name('policies.save-column-settings');
     Route::post('/policies', [PolicyController::class, 'store'])->name('policies.store');
     Route::get('/policies/{policy}', [PolicyController::class, 'show'])->name('policies.show');
     Route::get('/policies/{policy}/edit', [PolicyController::class, 'edit'])->name('policies.edit');
     Route::put('/policies/{policy}', [PolicyController::class, 'update'])->name('policies.update');
     Route::delete('/policies/{policy}', [PolicyController::class, 'destroy'])->name('policies.destroy');
-    Route::get('/policies/export', [PolicyController::class, 'export'])->name('policies.export');
-    Route::post('/policies/save-column-settings', [PolicyController::class, 'saveColumnSettings'])->name('policies.save-column-settings');
     Route::post('/policies/{policy}/upload-document', [PolicyController::class, 'uploadDocument'])->name('policies.upload-document');
     Route::post('/policies/{policy}/renewal-schedule', [PolicyController::class, 'storeRenewalSchedule'])->name('policies.renewal-schedule');
 
@@ -155,6 +155,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/clients/save-column-settings', [ClientController::class, 'saveColumnSettings'])->name('clients.save-column-settings');
     Route::post('/clients/{client}/upload-photo', [ClientController::class, 'uploadPhoto'])->name('clients.upload-photo');
     Route::post('/clients/{client}/upload-document', [ClientController::class, 'uploadDocument'])->name('clients.upload-document');
+    Route::post('/clients/{client}/update-wa', [ClientController::class, 'updateWA'])->name('clients.update-wa');
 
     // Contacts Routes
         Route::get('/contacts/export', [ContactController::class, 'export'])->name('contacts.export');
@@ -168,6 +169,7 @@ Route::middleware('auth')->group(function () {
 
     // Life Proposals Routes
     Route::get('/life-proposals/export', [LifeProposalController::class, 'export'])->name('life-proposals.export');
+    Route::get('/life-proposals/by-client/{clientId}', [LifeProposalController::class, 'getByClient'])->name('life-proposals.by-client');
     Route::post('/life-proposals/save-column-settings', [LifeProposalController::class, 'saveColumnSettings'])->name('life-proposals.save-column-settings');
     Route::post('/life-proposals/upload-document', [LifeProposalController::class, 'uploadDocument'])->name('life-proposals.upload-document');
     Route::get('/life-proposals/{lifeProposal}/generate-policy', [LifeProposalController::class, 'generatePolicy'])->name('life-proposals.generate-policy');

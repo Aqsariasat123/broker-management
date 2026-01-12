@@ -35,14 +35,16 @@
       <div class="page-title-section">
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-            <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-              <span style="font-size:13px;">Filter</span>
+            <label class="toggle-wrap">
               <input type="checkbox" id="filterToggle" {{ request()->has('filter') && request()->filter =='overdue' ? 'checked' : '' }}>
+              <span class="toggle-bg"></span>
+              <span class="toggle-circle"></span>
             </label>
+            <span style="font-size:14px; color:#2d2d2d; cursor:pointer;" onclick="document.getElementById('filterToggle').click()">Filter</span>
             @if(request()->has('filter') && request()->filter== 'overdue')
               <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
             @else
-              <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:{{ request()->has('overdue') && request()->overdue ? '#000' : '#000' }}; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
+              <button class="btn btn-overdue" id="overdueOnly" type="button" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Overdue Only</button>
             @endif
           </div>
         </div>

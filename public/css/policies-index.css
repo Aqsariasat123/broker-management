@@ -25,7 +25,6 @@
   .form-group input[type="checkbox"] {
     width: 18px !important;
     height: 18px !important;
-    accent-color: #f3742a !important;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -39,14 +38,13 @@
     vertical-align: middle;
     flex-shrink: 0;
   }
-  
+
   #policyForm input[type="checkbox"]:checked,
   .modal-body input[type="checkbox"]:checked,
   #policyFormPageContent input[type="checkbox"]:checked,
   .form-group input[type="checkbox"]:checked {
     background-color: #f3742a !important;
     border-color: #f3742a !important;
-    accent-color: #f3742a !important;
   }
   
   #policyForm input[type="checkbox"]:checked::after,
@@ -73,7 +71,6 @@
   
   /* Orange styling for checkboxes in detail view */
   .detail-value.checkbox input[type="checkbox"] {
-    accent-color: #f3742a !important;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -85,11 +82,10 @@
     position: relative;
     cursor: default;
   }
-  
+
   .detail-value.checkbox input[type="checkbox"]:checked {
     background-color: #f3742a !important;
     border-color: #f3742a !important;
-    accent-color: #f3742a !important;
   }
   
   .detail-value.checkbox input[type="checkbox"]:checked::after {
@@ -105,25 +101,17 @@
   }
   
   /* Orange styling for all checkboxes in column selection and other modals */
-  .column-item input[type="checkbox"],
-  .column-selection input[type="checkbox"],
-  input[type="checkbox"]:checked {
-    accent-color: #f3742a !important;
-  }
-  
   .column-item input[type="checkbox"]:checked,
   .column-selection input[type="checkbox"]:checked {
     background-color: #f3742a !important;
     border-color: #f3742a !important;
-    accent-color: #f3742a !important;
   }
-  
+
   /* Ensure all checkboxes that are checked show orange */
   input[type="checkbox"][checked],
   input[type="checkbox"]:checked {
     background-color: #f3742a !important;
     border-color: #f3742a !important;
-    accent-color: #f3742a !important;
   }
   
   /* Policy Details Page Styles */
@@ -408,4 +396,82 @@
 
 .grey-input input ,.grey-input select ,.grey-input textarea {
   background:#ddd !important;
+}
+
+/* Toggle Switch Styles - matching Proposals page */
+.toggle-wrap {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-wrap input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* The pill background */
+.toggle-wrap span:nth-child(2) {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+/* The circle */
+.toggle-wrap span:nth-child(3) {
+  position: absolute;
+  cursor: pointer;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+/* When checked - orange background */
+.toggle-wrap input:checked ~ span:nth-child(2) {
+  background-color: #f3742a;
+}
+
+/* When checked - move circle to right */
+.toggle-wrap input:checked ~ span:nth-child(3) {
+  left: 23px;
+}
+
+/* Filter Group styles */
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Thin scrollbar - for client policies view */
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
 }

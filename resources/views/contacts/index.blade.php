@@ -2,7 +2,7 @@
 @section('content')
 
 @include('partials.table-styles')
-<link rel="stylesheet" href="{{ asset('css/contacts-index.css') }}">
+<link rel="stylesheet" href="{{ asset('css/contacts-index.css') }}?v={{ time() }}">
 
 
 
@@ -38,32 +38,21 @@
               <div class="records-found">Records Found - {{ $contacts->total() }}</div>
 
               <div class="page-title-section">
-                @if(request()->has('follow_up') && request()->follow_up)
-                  <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+                <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
                     <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-                      <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-                        <span style="font-size:13px;">Filter</span>
-                        <input type="checkbox" id="filterToggle" checked>
+                      <label class="toggle-wrap">
+                        <input type="checkbox" id="filterToggle" {{ request()->has('follow_up') && request()->follow_up ? 'checked' : '' }}>
+                        <span class="toggle-bg"></span>
+                        <span class="toggle-circle"></span>
                       </label>
-                       @if(!request()->has('status') && request()->status != 'open')
-                      <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+                      <span style="font-size:14px; color:#2d2d2d; cursor:pointer;" onclick="document.getElementById('filterToggle').click()">Filter</span>
+                      @if(request()->has('follow_up') && request()->follow_up)
+                        <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+                      @else
+                        <button class="btn btn-follow-up" id="followUpBtn" type="button" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
                       @endif
                     </div>
                   </div>
-                @else
-                  <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-                    <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-                      <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-                        <span style="font-size:13px;">Filter</span>
-                        <input type="checkbox" id="filterToggle">
-                      </label>
-                       @if(!request()->has('status') && request()->status != 'open')
-                      <button class="btn btn-follow-up" id="followUpBtn" type="button" style="background:#2d2d2d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
-                                        @endif
-
-                    </div>
-                  </div>
-                @endif
               </div>
               <div class="action-buttons">
                 <button class="btn btn-add" id="addContactBtn">Add</button>
@@ -203,6 +192,11 @@
                             @php $value = $contact->first_contact ? $contact->first_contact->format('d-M-y') : '##########' @endphp
                             @break
 
+                        {{-- Second Follow Up (2FU) --}}
+                        @case('second_follow_up')
+                            @php $value = $contact->second_follow_up ? $contact->second_follow_up->format('d-M-y') : '##########' @endphp
+                            @break
+
                         {{-- Next Follow Up --}}
                         @case('next_follow_up')
                             @php $value = $contact->next_follow_up ? $contact->next_follow_up->format('d-M-y') : '##########' @endphp
@@ -326,12 +320,12 @@
 
     </div>
   </div>
-    <!-- Conact Page View (Full Page) -->
+    <!-- Contact Page View (Full Page) -->
   <div class="client-page-view" id="contactPageView" style="display:none;">
     <!-- Header Card with Contact Name -->
     <div class="client-page-header">
       <div class="client-page-title">
-        <span id="contactPageTitle">Contact Name</span> - <span class="client-name" id="contactPageName">-</span>
+        <span id="contactPageTitle">Contact - Add New</span><span class="client-name" id="contactPageName"></span>
       </div>
       </div>
     
@@ -341,77 +335,52 @@
       
         
         <!-- Contact Details Content Card - Separate -->
-        <div id="contactDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:hidden;">
+        <div id="contactDetailsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:12px; overflow:visible;">
         <div id="contactDetailsPageContent" style="display:none;">
-          <div style=" margin-bottom:15px; overflow:hidden;">
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px;">
-                <div class="client-page-nav">
-                       
-                
-                <button class="contact-tab active" data-tab="life-proposals-view" data-url="{{ route('life-proposals.index') }}">View Proposals</button>
-                <button class="contact-tab" data-tab="life-proposals-add" data-url="{{ route('life-proposals.index') }}">Add Proposal</button>
-                <button class="contact-tab" data-tab="life-proposals-follow-up" data-url="{{ route('life-proposals.index') }}">Follow Up</button>
-
-                </div>
+          <!-- Action buttons hidden - now in JavaScript generated content -->
+          <div style="display:none;">
                 <div class="client-page-actions" id="contactHeaderActions">
-                  <button class="btn btn-edit" id="editContactFromPageBtn" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;" onclick="if(currentContactId) openEditContract(currentContactId)">Edit</button>
-                  <button class="btn" id="contactContactPageBtn"  onclick="closeContactPageView()" style="background:#e0e0e0; color:#000; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;display:none;">Cancel</button>
-                   <button
-                    class="btn"
-                    id="saveContactFromPageBtn"
-                   style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                    onclick="saveContactFromPage()">
-                    Save
-                  </button>
-                  
-                <button
-                  class="btn"
-                  id="deleteContactFromPageBtn"
-                  style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                  onclick="deleteContact()">
-                  Delete
-                </button>
-                <button
-                  class="btn"
-                  id="closeContactFromPageBtn"
-                  style="background:#dc3545; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px; display:none;"
-                  onclick="closeContactPageView()">
-                  Close
-                </button>
+                  <button class="btn btn-edit" id="editContactFromPageBtn" style="display:none;" onclick="if(currentContactId) openEditContract(currentContactId)">Edit</button>
+                  <button class="btn" id="contactContactPageBtn" onclick="closeContactPageView()" style="display:none;">Cancel</button>
+                  <button class="btn" id="saveContactFromPageBtn" style="display:none;" onclick="saveContactFromPage()">Save</button>
+                  <button class="btn" id="deleteContactFromPageBtn" style="display:none;" onclick="deleteContact()">Delete</button>
+                  <button class="btn" id="closeContactFromPageBtn" style="display:none;" onclick="closeContactPageView()">Close</button>
                 </div>
-              </div>
-            </div>
-          </div> 
+          </div>
+        </div> 
         <div id="contactDetailsContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; padding:0;">
               <!-- Content will be loaded via JavaScript -->
             </div>
         </div>
 
-        <!-- Contact Schedule Card - Separate -->
-        <div id="contactScheduleContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px;  margin-bottom:15px; overflow:hidden;justify-content: space-between; ">
-             <div class="contact-bottom-tabs">
-                @foreach($lookupData['contact_statuses'] as $status)
-                    <button 
-                        class="contact-bottom-tab" 
-                        data-tab="{{ $status['id'] }}" 
-                        data-url="{{ route('schedules.index') }}">
-                        {{ $status['name'] }}
-                    </button>
-                @endforeach
-            </div>
-          <div id="contactScheduleContent" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; padding:0;">
-            <!-- Content will be loaded via JavaScript -->
-          </div>
+        <!-- Contact Schedule Card - Hidden (status buttons now inline) -->
+        <div id="contactScheduleContentWrapper" style="display:none !important;">
+          <div id="contactScheduleContent"></div>
         </div>
         
-        <!-- Documents Card - Separate -->
+        <!-- Follow Ups Card - Separate -->
         <div id="followupsContentWrapper" style="display:none; background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; overflow:hidden;">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #ddd;">
-            <h4 style="margin:0; font-size:12px; font-weight:600; color:#333;">Follow Ups</h4>
-            <button class="btn" id="addFollowUpBtn" onclick="openAddFollowUpModal()" style="background:#f3742a; color:#fff; border:none; padding:4px 12px; border-radius:2px; cursor:pointer; font-size:12px;">Add Follow Up</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #ddd;">
+            <h4 style="margin:0; font-size:13px; font-weight:600; color:#333;">Follow Ups</h4>
+            <button class="btn" id="addFollowUpBtn" onclick="openAddFollowUpModal()" style="background:#f3742a; color:#fff; border:none; padding:5px 14px; border-radius:3px; cursor:pointer; font-size:11px;">Add Follow Up</button>
           </div>
-          <div id="followupcontent" style="display:flex; gap:10px; flex-wrap:wrap; padding:10px;">
-            <!-- Documents will be loaded via JavaScript -->
+          <div id="followupcontent" style="padding:0;">
+            <!-- Follow ups table will be loaded via JavaScript -->
+            <table style="width:100%; border-collapse:collapse;">
+              <thead>
+                <tr style="background:#2d3e50; color:#fff;">
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">FUID</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Follow Up Date</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Time</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Action</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Next Step</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Time</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Status</th>
+                  <th style="border:1px solid #1d2e40; padding:8px 10px; font-size:11px; font-weight:500;">Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
         
@@ -495,12 +464,21 @@
   </div>
   <!-- Add/Edit Contact Modal -->
   <div class="modal" id="contactModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 900px;">
       <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #ddd;">
-        <h4 id="contactModalTitle" style="margin: 0; font-size: 16px; font-weight: bold;">Add Contact</h4>
+        <div>
+          <h4 id="contactModalTitle" style="margin: 0; font-size: 16px; font-weight: bold;">Contact - Add New</h4>
+          <div style="margin-top: 5px;">
+            <span style="font-size: 13px;">Contact Type - </span>
+            <select id="type" name="type" form="contactForm" class="form-control" required style="display: inline-block; width: auto; padding: 4px 8px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px; color: #f3742a;">
+              <option value="" style="color: #f3742a;">[Select Type]</option>
+              @foreach($lookupData['contact_types'] as $t) <option value="{{ $t['id'] }}">{{ $t['name'] }}</option> @endforeach
+            </select>
+          </div>
+        </div>
         <div style="display: flex; gap: 8px;">
-          <button type="submit" form="contactForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeContactModal()" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+          <button type="submit" form="contactForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 14px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
+          <button type="button" class="btn-cancel" onclick="closeContactModal()" style="background: #000; color: #fff; border: none; padding: 5px 14px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
         </div>
       </div>
 
@@ -509,135 +487,192 @@
         <div id="contactFormMethod" style="display:none;"></div>
 
         <div class="modal-body" style="padding: 12px;">
-          <h5 style="color: #f3742a; margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">Contact Details</h5>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: center; margin-bottom: 6px;">
+          <!-- CONTACT DETAILS Section -->
+          <div style="background: #2d5a6b; color: #fff; padding: 8px 12px; font-size: 12px; font-weight: 600; margin-bottom: 10px;">CONTACT DETAILS</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 12px; margin-bottom: 15px;">
             <div>
-              <label for="type" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Type</label>
-              <select id="type" name="type" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Name</label>
+              <input id="contact_name" name="contact_name" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Contact No</label>
+              <input id="contact_no" name="contact_no" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Email Address</label>
+              <input id="email_address" name="email_address" type="email" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Date Of Birth</label>
+              <input id="dob" name="dob" type="date" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Occupation</label>
+              <select id="occupation" name="occupation" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
                 <option value="">Select</option>
-                @foreach($lookupData['contact_types'] as $t) <option value="{{ $t['id'] }}">{{ $t['name'] }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="contact_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact Name</label>
-              <input id="contact_name" name="contact_name" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-            </div>
-            <div>
-              <label for="occupation" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Occupation</label>
-              <select id="occupation" name="occupation" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select or Type</option>
                 @foreach($allOccupations as $occ) <option value="{{ $occ }}">{{ $occ }}</option> @endforeach
               </select>
             </div>
             <div>
-              <label for="employer" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Employer</label>
-              <select id="employer" name="employer" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select or Type</option>
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Employer</label>
+              <select id="employer" name="employer" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
+                <option value="">Select</option>
                 @foreach($allEmployers as $emp) <option value="{{ $emp }}">{{ $emp }}</option> @endforeach
               </select>
             </div>
-            <div>
-              <label for="mobile_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Mobile No.</label>
-              <input id="mobile_no" name="mobile_no" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+            <div style="grid-column: span 2;">
+              <label style="font-size: 11px; font-weight: 500; display: block; margin-bottom: 3px;">Address</label>
+              <input id="address" name="address" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 11px;">
             </div>
-            <div>
-              <label for="contact_no" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Contact No.</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="contact_no" name="contact_no" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="wa" name="wa" placeholder="WA" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <div class="checkbox-cell" style="display: flex; align-items: center; margin-top: 2px;">
-                  <input type="checkbox" id="wa_checkbox" class="checkbox-style">
+          </div>
+
+          <!-- Lead / Prospect Details Title -->
+          <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: #333;">Lead / Prospect Details</div>
+
+          <!-- 4 Subsections in a row -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+            <!-- SOURCE DETAILS -->
+            <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+              <div style="background: #2d5a6b; color: #fff; padding: 6px 10px; font-size: 11px; font-weight: 600;">SOURCE DETAILS</div>
+              <div style="padding: 8px;">
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Date Acquired</label>
+                  <input id="acquired" name="acquired" type="date" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Source</label>
+                  <select id="source" name="source" class="form-control" required style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                    <option value="">Select</option>
+                    @foreach($lookupData['sources'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
+                  </select>
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Source Name</label>
+                  <input id="source_name" name="source_name" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div>
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Agency</label>
+                  <select id="agency" name="agency" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                    <option value="">Select</option>
+                    @foreach($lookupData['agencies'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
+                  </select>
                 </div>
               </div>
             </div>
-            <div>
-              <label for="email_address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Email Address</label>
-              <input id="email_address" name="email_address" type="email" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-            </div>
-            <div>
-              <label for="address" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Address / Location</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="address" name="address" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="location" name="location" placeholder="PR" class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
+
+            <!-- FAMILY DETAILS -->
+            <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+              <div style="background: #2d5a6b; color: #fff; padding: 6px 10px; font-size: 11px; font-weight: 600;">FAMILY DETAILS</div>
+              <div style="padding: 8px;">
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Spouse's Name</label>
+                  <input id="spouses_name" name="spouses_name" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Children Details</label>
+                  <input id="children_details" name="children_details" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div>
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Savings Budget</label>
+                  <input id="savings_budget" name="savings_budget" type="number" step="1" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
               </div>
-            </div>
-            <div>
-              <label for="dob" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Of Birth / Age</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="dob" name="dob" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input id="age_display" type="text" placeholder="Age" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
-              </div>
-            </div>
-            <div>
-              <label for="acquired" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Date Acquired</label>
-              <div style="display: flex; gap: 6px;">
-                <input id="acquired" name="acquired" type="date" class="form-control" style="flex: 1; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <input type="text" value="-" readonly class="form-control" style="width: 70px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; background: #f5f5f5; font-size: 12px;">
-              </div>
-            </div>
-            <div>
-              <label for="source" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source</label>
-              <select id="source" name="source" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select</option>
-                @foreach($lookupData['sources'] as $s) <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="source_name" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Source Name</label>
-              <input id="source_name" name="source_name" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-            </div>
-            <div>
-              <label for="agency" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agency</label>
-              <select id="agency" name="agency" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select</option>
-                @foreach($lookupData['agencies'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="agent" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Agent</label>
-              <select id="agent" name="agent" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select</option>
-                @foreach($lookupData['agents'] as $a) <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> @endforeach
-                @foreach($users as $user) <option value="{{ $user->name }}">{{ $user->name }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="status" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Status</label>
-              <select id="status" name="status" class="form-control" required style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select</option>
-                @foreach($lookupData['contact_statuses'] as $st) <option value="{{ $st['id'] }}">{{ $st['name']  }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="rank" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Ranking</label>
-              <select id="rank" name="rank" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-                <option value="">Select</option>
-                @foreach($lookupData['ranks'] as $r) <option value="{{ $r['id'] }}">{{ $r['name'] }}</option> @endforeach
-              </select>
-            </div>
-            <div>
-              <label for="savings_budget" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Savings Budget</label>
-              <input id="savings_budget" name="savings_budget" type="number" step="1" class="form-control" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
-            </div>
-            <div>
-              <label for="children" style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 3px;">Children</label>
-              <input id="children" name="children" type="number" min="0" class="form-control" value="0" style="width: 100%; padding: 4px 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 12px;">
             </div>
 
-          <input type="hidden" id="first_contact" name="first_contact">
-          <input type="hidden" id="next_follow_up" name="next_follow_up">
+            <!-- INSURABLE ASSETS -->
+            <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+              <div style="background: #2d5a6b; color: #fff; padding: 6px 10px; font-size: 11px; font-weight: 600;">INSURABLE ASSETS</div>
+              <div style="padding: 8px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: flex; align-items: center; gap: 3px;">
+                    <input type="checkbox" id="vehicle" name="vehicle" value="1"> Vehicle
+                  </label>
+                  <label style="font-size: 10px; display: flex; align-items: center; gap: 3px;">
+                    <input type="checkbox" id="house" name="house" value="1"> House
+                  </label>
+                  <label style="font-size: 10px; display: flex; align-items: center; gap: 3px;">
+                    <input type="checkbox" id="business" name="business" value="1"> Business
+                  </label>
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Other</label>
+                  <input id="other" name="other" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div>
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Notes</label>
+                  <input id="notes" name="notes" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- LEAD MANAGEMENT -->
+            <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+              <div style="background: #2d5a6b; color: #fff; padding: 6px 10px; font-size: 11px; font-weight: 600;">LEAD MANAGEMENT</div>
+              <div style="padding: 8px;">
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Contact Stage</label>
+                  <select id="status" name="status" class="form-control" required style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                    <option value="">Select</option>
+                    @foreach($lookupData['contact_statuses'] as $st) <option value="{{ $st['id'] }}">{{ $st['name'] }}</option> @endforeach
+                  </select>
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">1st Contacted</label>
+                  <input id="first_contact" name="first_contact" type="date" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Rank</label>
+                  <select id="rank" name="rank" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                    <option value="">Select</option>
+                    @foreach($lookupData['ranks'] as $r) <option value="{{ $r['id'] }}">{{ $r['name'] }}</option> @endforeach
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size: 10px; display: block; margin-bottom: 2px;">Next Follow Up</label>
+                  <input id="next_follow_up" name="next_follow_up" type="date" class="form-control" style="width: 100%; padding: 3px 5px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Buttons Row -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+            @foreach($lookupData['contact_statuses'] as $st)
+              <button type="button" class="status-btn" data-status="{{ $st['id'] }}" onclick="setContactStatus({{ $st['id'] }})" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 3px; background: #f5f5f5; font-size: 11px; cursor: pointer;">{{ $st['name'] }}</button>
+            @endforeach
+          </div>
+
+          <!-- Follow Ups Section -->
+          <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f9f9f9;">
+              <span style="font-size: 12px; font-weight: 600;">Follow Ups</span>
+              <button type="button" style="background: #f3742a; color: #fff; border: none; padding: 4px 12px; border-radius: 2px; cursor: pointer; font-size: 11px;" onclick="alert('Save contact first to add follow ups')">Add Follow Up</button>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #2d5a6b; color: #fff;">
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">FUID</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Follow Up Date</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Time</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Action</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Next Step</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Time</th>
+                  <th style="padding: 6px 8px; font-size: 10px; font-weight: 500; border: 1px solid #1d4a5b;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="7" style="padding: 20px; text-align: center; color: #999; font-size: 11px;">No follow ups yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <input type="hidden" id="coid" name="coid">
           <input type="hidden" id="married" name="married" value="0">
-          <input type="hidden" id="children_details" name="children_details">
-          <input type="hidden" id="vehicle" name="vehicle">
-          <input type="hidden" id="house" name="house">
-          <input type="hidden" id="business" name="business">
-          <input type="hidden" id="other" name="other">
-        </div>
-
-        <div class="modal-footer" style="display: none;">
-          <button type="button" class="btn-delete" id="contactDeleteBtn" style="display:none;" onclick="deleteContact()">Delete</button>
+          <input type="hidden" id="mobile_no" name="mobile_no">
+          <input type="hidden" id="wa" name="wa">
+          <input type="hidden" id="location" name="location">
+          <input type="hidden" id="agent" name="agent">
+          <input type="hidden" id="children" name="children" value="0">
         </div>
       </form>
     </div>
@@ -717,11 +752,11 @@
             @php
               $all = [
                 'contact_name'=>'Contact Name','contact_no'=>'Contact No','type'=>'Type','occupation'=>'Occupation','employer'=>'Employer',
-                'acquired'=>'Acquired','source'=>'Source','status'=>'Status','rank'=>'Rank','first_contact'=>'1st Contact',
-                'next_follow_up'=>'Next FU','coid'=>'COID','dob'=>'DOB','salutation'=>'Salutation','source_name'=>'Source Name',
-                'agency'=>'Agency','agent'=>'Agent','address'=>'Address','email_address'=>'Email Address','contact_id'=>'Contact ID',
+                'acquired'=>'Acquired','status'=>'Status','first_contact'=>'1st Contact','rank'=>'Rank','second_follow_up'=>'2FU',
+                'next_follow_up'=>'Next FU','coid'=>'COID','source_name'=>'Source Name',
+                'agency'=>'Agency','address'=>'Address','email_address'=>'Email Address','contact_id'=>'Contact ID',
                 'savings_budget'=>'Savings Budget','married'=>'Married','children'=>'Children','children_details'=>'Children Details',
-                'vehicle'=>'Vehicle','house'=>'House','business'=>'Business','other'=>'Other'
+                'vehicle'=>'Vehicle','house'=>'House','business'=>'Business','other'=>'Other','source'=>'Source'
               ];
               $ordered = [];
               foreach($selectedColumns as $col) {

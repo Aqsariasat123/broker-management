@@ -111,6 +111,11 @@ class LifeProposal extends Model
         return $this->belongsTo(LookupValue::class, 'source_of_payment_id');
     }
 
+    public function proposalClass()
+    {
+        return $this->belongsTo(LookupValue::class, 'class_id');
+    }
+
     public function medical()
     {
         return $this->hasOne(Medical::class);

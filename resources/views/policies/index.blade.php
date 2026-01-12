@@ -2,11 +2,30 @@
 @section('content')
 
 @include('partials.table-styles')
-<link rel="stylesheet" href="{{ asset('css/policies-index.css') }}">
+<link rel="stylesheet" href="{{ asset('css/policies-index.css') }}?v={{ time() }}">
 @php
   $config = \App\Helpers\TableConfigHelper::getConfig('policies');
-  $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('policies');
-  $columnDefinitions = $config['column_definitions'];
+
+  // When coming from Client page (client_id present), use Excel columns
+  $fromClient = request()->has('client_id') && request()->client_id;
+  if ($fromClient) {
+    $selectedColumns = ['policy_no','insurer','policy_class','policy_plan','start_date','end_date','premium','base_premium','insured_item','policy_status'];
+    $columnDefinitions = [
+      'policy_no' => 'Policy Number',
+      'insurer' => 'Insurer',
+      'policy_class' => 'Class',
+      'policy_plan' => 'Insurance Plan',
+      'start_date' => 'Start Date',
+      'end_date' => 'End Date',
+      'premium' => 'Total Premium',
+      'base_premium' => 'Base',
+      'insured_item' => 'Insured Item',
+      'policy_status' => 'Status',
+    ];
+  } else {
+    $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('policies');
+    $columnDefinitions = $config['column_definitions'];
+  }
   $mandatoryColumns = $config['mandatory_columns'];
 @endphp
 
@@ -59,7 +78,7 @@
 
       <div class="page-title-section">
 
-         @if($filter != "expiring")
+         @if($filter != "expiring" && !$fromClient)
           <div class="filter-group">
               <label class="toggle-switch">
                 <input type="checkbox" id="filterToggle" {{ (request()->get('follow_up') == 'true' || request()->get('dfr') == 'true' || request()->get('filter') == 'overdue' ) ? 'checked' : '' }}>
@@ -68,6 +87,7 @@
               <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
             </div>
          @endif
+        @if(!$fromClient)
         <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
              @if($filter != "expiring" && $filter != "life")
                 <div class="filter-group">
@@ -79,12 +99,15 @@
                 </div>
              @endif
         </div>
+        @endif
       </div>
       <div class="action-buttons">
      @if($filter != "expiring")
         <button type="button" class="btn btn-add" id="addPolicyBtn">Add</button>
       @endif
-        @if(request()->has('from_calendar') && request()->from_calendar == '1')
+        @if($fromClient)
+          <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
+        @elseif(request()->has('from_calendar') && request()->from_calendar == '1')
           <button class="btn btn-back" onclick="window.location.href='/calendar?filter=renewals'">Back</button>
         @else
           <button class="btn btn-close" onclick="window.history.back()">Close</button>

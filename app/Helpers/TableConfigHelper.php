@@ -15,12 +15,12 @@ class TableConfigHelper
                 'route_prefix' => 'contacts',
                 'session_key' => 'contact_columns',
                 'default_columns' => [
-                    'contact_name','contact_no','type','occupation','employer','acquired','source','status',
-                    'rank','first_contact','next_follow_up','coid','dob','salutation','source_name','agency',
-                    'agent','address','email_address','contact_id','savings_budget','married','children',
-                    'children_details','vehicle','house','business','other'
+                    'contact_name','contact_no','type','occupation','employer','acquired','status',
+                    'first_contact','rank','second_follow_up','next_follow_up','coid','source_name','agency',
+                    'address','email_address','contact_id','savings_budget','married','children',
+                    'children_details','vehicle','house','business','other','source'
                 ],
-                'mandatory_columns' => ['contact_name', 'type', 'source', 'status', 'salutation', 'contact_id'],
+                'mandatory_columns' => ['contact_name', 'type', 'source', 'status', 'contact_id'],
                 'column_definitions' => [
                     'contact_name' => 'Contact Name',
                     'contact_no' => 'Contact No',
@@ -30,15 +30,13 @@ class TableConfigHelper
                     'acquired' => 'Acquired',
                     'source' => 'Source',
                     'status' => 'Status',
-                    'rank' => 'Rank',
                     'first_contact' => '1st Contact',
+                    'rank' => 'Rank',
+                    'second_follow_up' => '2FU',
                     'next_follow_up' => 'Next FU',
                     'coid' => 'COID',
-                    'dob' => 'DOB',
-                    'salutation' => 'Salutation',
                     'source_name' => 'Source Name',
                     'agency' => 'Agency',
-                    'agent' => 'Agent',
                     'address' => 'Address',
                     'email_address' => 'Email Address',
                     'contact_id' => 'Contact ID',
@@ -57,14 +55,11 @@ class TableConfigHelper
                 'route_prefix' => 'policies',
                 'session_key' => 'policy_columns',
                 'default_columns' => [
-                    'policy_no','policy_code','client_name','insurer','policy_class','policy_plan','sum_insured','start_date',
-                    'end_date','insured','policy_status','date_registered','policy_id','insured_item','renewable',
-                    'biz_type','term','term_unit','base_premium','premium','frequency','pay_plan','agency','agent','notes'
+                    'policy_no','client_name','insurer','policy_class','policy_plan','sum_insured','start_date','end_date','insured','policy_status','date_registered','policy_code','insured_item','renewable','biz_type','term','term_unit','base_premium','premium','frequency','pay_plan','agency','agent','notes'
                 ],
                 'mandatory_columns' => ['policy_no'],
                 'column_definitions' => [
                     'policy_no' => 'Policy No',
-                    'policy_code' => 'Policy Code',
                     'client_name' => 'Client Name',
                     'insurer' => 'Insurer',
                     'policy_class' => 'Policy Class',
@@ -75,10 +70,10 @@ class TableConfigHelper
                     'insured' => 'Insured',
                     'policy_status' => 'Policy Status',
                     'date_registered' => 'Date Registered',
-                    'policy_id' => 'Policy ID',
+                    'policy_code' => 'Policy Code',
                     'insured_item' => 'Insured Item',
                     'renewable' => 'Renewable',
-                    'biz_type' => 'Business Type',
+                    'biz_type' => 'Biz Type',
                     'term' => 'Term',
                     'term_unit' => 'Term Unit',
                     'base_premium' => 'Base Premium',
@@ -170,8 +165,8 @@ class TableConfigHelper
                 'session_key' => 'life_proposal_columns',
                 'default_columns' => [
                     'proposers_name','insurer','policy_plan','sum_assured','term','add_ons','offer_date',
-                    'premium','frequency','stage','date','age','status','source_of_payment','mcr','doctor',
-                    'date_sent','date_completed','notes','agency','prid','class','is_submitted'
+                    'premium','frequency','stage','is_submitted','age','status','source_of_payment','mcr','doctor',
+                    'date_sent','date_completed','notes','agency','prid','class'
                 ],
                 'mandatory_columns' => ['proposers_name', 'insurer', 'policy_plan', 'status'],
                 'column_definitions' => [
@@ -185,7 +180,7 @@ class TableConfigHelper
                     'premium' => 'Premium',
                     'frequency' => 'Freq',
                     'stage' => 'Stage',
-                    'date' => 'Date',
+                    'is_submitted' => 'Submitted',
                     'age' => 'Age',
                     'status' => 'Status',
                     'source_of_payment' => 'Source Of Payment',
@@ -197,7 +192,6 @@ class TableConfigHelper
                     'agency' => 'Agency',
                     'prid' => 'PRID',
                     'class' => 'Class',
-                    'is_submitted' => 'Submitted',
                 ],
             ],
             'tasks' => [

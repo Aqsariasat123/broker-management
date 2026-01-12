@@ -8,6 +8,7 @@ use App\Models\Policy;
 use App\Models\Contact;
 use App\Models\Client;
 use App\Models\PaymentPlan;
+use App\Models\Followup;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -119,16 +120,42 @@ class CalendarController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | FOLLOW UPS
+        | FOLLOW UPS (from Followup model - contact follow-ups)
         |--------------------------------------------------------------------------
         */
         if ($filter === 'all' || $filter === 'follow-ups') {
-            $followUps = Contact::whereNotNull('next_follow_up')
+            // Get follow-ups from Followup model (linked to contacts)
+            $followUps = Followup::whereNotNull('follow_up_date')
+                ->whereDate('follow_up_date', '>=', $viewStartDate->toDateString())
+                ->whereDate('follow_up_date', '<=', $viewEndDate->toDateString())
+                ->where('status', '!=', 'Completed')
+                ->with(['contact', 'client'])
+                ->get();
+
+            foreach ($followUps as $followUp) {
+                $dateKey = Carbon::parse($followUp->follow_up_date)->format('Y-m-d');
+
+                // Get name from contact or client
+                $name = optional($followUp->contact)->contact_name
+                    ?? optional($followUp->client)->client_name
+                    ?? 'Follow Up';
+
+                $events[$dateKey][] = [
+                    'text'     => $name,
+                    'type'     => 'follow-up',
+                    'id'       => $followUp->id,
+                    'category' => 'follow-up',
+                    'class'    => 'follow-up',
+                ];
+            }
+
+            // Also include contacts with next_follow_up date set
+            $contactFollowUps = Contact::whereNotNull('next_follow_up')
                 ->whereDate('next_follow_up', '>=', $viewStartDate->toDateString())
                 ->whereDate('next_follow_up', '<=', $viewEndDate->toDateString())
                 ->get();
 
-            foreach ($followUps as $contact) {
+            foreach ($contactFollowUps as $contact) {
                 $dateKey = Carbon::parse($contact->next_follow_up)->format('Y-m-d');
 
                 $events[$dateKey][] = [

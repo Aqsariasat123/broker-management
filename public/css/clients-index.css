@@ -74,18 +74,18 @@
     thead th:first-child { text-align:center; }
     thead th:last-child { border-right:none; }
     tbody tr { background-color:#fff; border-bottom:1px solid #ddd; min-height:32px; }
-    tbody tr:nth-child(even) { background-color:#f8f8f8; }
+    tbody tr:nth-child(even) { background-color:#fff; }
     tbody tr.inactive-row { background:#fff3cd !important; }
     tbody tr.inactive-row td { background:#fff3cd !important; }
-    tbody tr.has-expired { background-color:#ffebee !important; }
-    tbody tr.has-expired td { background-color:#ffebee !important; }
-    tbody tr.has-expiring { background-color:#fff8e1 !important; }
-    tbody tr.has-expiring td { background-color:#fff8e1 !important; }
+    tbody tr.has-expired { background-color:#fff !important; }
+    tbody tr.has-expired td { background-color:#fff !important; }
+    tbody tr.has-expiring { background-color:#fff !important; }
+    tbody tr.has-expiring td { background-color:#fff !important; }
     tbody td { padding:8px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
     tbody td:last-child { border-right:none; }
     .bell-cell { text-align:center; padding:8px 5px; vertical-align:middle; min-width:50px; }
-    .bell-cell.expired { background-color:#ffebee !important; }
-    .bell-cell.expiring { background-color:#fff8e1 !important; }
+    .bell-cell.expired { background-color:#fff !important; }
+    .bell-cell.expiring { background-color:#fff !important; }
     .bell-cell:not(.expired):not(.expiring) { background-color:#fff !important; }
     .bell-radio { width:16px; height:16px; cursor:not-allowed; pointer-events:none; opacity:0.6; }
     .bell-radio.expired { accent-color:#dc3545; }
@@ -106,33 +106,34 @@
     .action-ellipsis { width:22px; height:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     .action-menu { display:none; }
     .checkbox-cell { text-align:center; }
-    .checkbox-cell input[type="checkbox"] { 
-      width:18px; 
-      height:18px; 
-      cursor:pointer; 
-      accent-color:#f3742a; 
-      border-radius:3px;
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-      border:2px solid #ccc;
-      background-color:#fff;
+    /* Global checkbox styling - orange background, white tick */
+    input[type="checkbox"] {
+      width:18px !important;
+      height:18px !important;
+      cursor:pointer;
+      border-radius:3px !important;
+      appearance:none !important;
+      -webkit-appearance:none !important;
+      -moz-appearance:none !important;
+      border:1px solid #ccc !important;
+      background-color:#fff !important;
       position:relative;
+      vertical-align:middle;
     }
-    .checkbox-cell input[type="checkbox"]:checked {
-      background-color:#f3742a;
-      border-color:#f3742a;
+    input[type="checkbox"]:checked {
+      background-color:#f3742a !important;
+      border-color:#f3742a !important;
     }
-    .checkbox-cell input[type="checkbox"]:checked::after {
-      content:'✓';
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%, -50%);
-      color:#fff;
-      font-size:12px;
-      font-weight:bold;
-      line-height:1;
+    input[type="checkbox"]:checked::after {
+      content:'✓' !important;
+      position:absolute !important;
+      top:50% !important;
+      left:50% !important;
+      transform:translate(-50%, -50%) !important;
+      color:#fff !important;
+      font-size:12px !important;
+      font-weight:bold !important;
+      line-height:1 !important;
     }
     .icon-expand { cursor:pointer; color:black; text-align:center; width:20px; }
     .btn-action { padding:2px 6px; font-size:11px; margin:1px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:2px; display:inline-block; }
@@ -169,7 +170,7 @@
     .nav-tab:hover { background:#1a1a1a; }
     .detail-section { background:#fff; margin-bottom:0; border:1px solid #ddd; border-radius:0;  }
     .detail-section:last-child { margin-bottom:0; }
-    .detail-section-header { display:block !important; background:#a0a0a0 !important; color:#fff !important; padding:6px 10px !important; font-weight:bold !important; font-size:12px !important; border-bottom:1px solid #ddd !important; text-transform:uppercase !important; }
+    .detail-section-header { display:block !important; background:#2d3e50 !important; color:#fff !important; padding:6px 10px !important; font-weight:bold !important; font-size:12px !important; border-bottom:1px solid #ddd !important; text-transform:uppercase !important; text-align:center !important; }
     .detail-section-body { padding:8px; background:#fff; }
     .detail-row { display:flex !important; flex-direction:row !important; align-items:center; margin-bottom:8px; gap:8px; }
     .detail-row:last-child { margin-bottom:0; }
@@ -363,9 +364,9 @@
       .sidebar, .main-content > .top-header { display: none !important; }
     }
     /* Responsive Styles */
-    @media (max-width: 1200px) {
-      /* Tablet adjustments */
-      #clientDetailsContent {
+    @media (max-width: 900px) {
+      /* Tablet adjustments - only on smaller screens */
+      #clientDetailsContent > div[style*="grid-template-columns"] {
         grid-template-columns: repeat(2, 1fr) !important;
       }
       .detail-section {
@@ -923,27 +924,25 @@
       }
     }
   
-    #clientDetailsContent { 
-      display:grid !important; 
-      grid-template-columns:repeat(4, 1fr) !important; 
-      gap:10px !important; 
-      align-items:start !important; 
-      padding:12px !important; 
+    #clientDetailsContent,
+    #clientDetailsContentModal {
+      display:grid !important;
+      grid-template-columns:repeat(4, 1fr) !important;
+      gap:10px !important;
+      align-items:start !important;
+      padding:12px !important;
     }
-    #clientDetailsContent > div {
+    #clientDetailsContent > div,
+    #clientDetailsContentModal > div {
       min-width:0 !important;
     }
-    #clientDetailsContent .detail-section[style*="grid-column:span 4"] {
+    #clientDetailsContent .detail-section[style*="grid-column:span 4"],
+    #clientDetailsContentModal .detail-section[style*="grid-column:span 4"] {
       grid-column:span 4 !important;
       margin-top:0 !important;
     }
-    #clientDetailsContent > div { 
-      display:flex !important; 
-      flex-direction:column !important; 
-      gap:10px !important; 
-      height:100% !important; 
-    }
-    #clientDetailsContent .detail-section { 
+    #clientDetailsContent .detail-section,
+    #clientDetailsContentModal .detail-section { 
       background:#fff !important; 
       margin-bottom:0 !important; 
       border:1px solid #ddd !important; 
@@ -952,110 +951,166 @@
       margin-right:0 !important;
       width:100% !important;
     }
-    #clientDetailsContent .detail-section:last-child { 
-      margin-bottom:0 !important; 
+    #clientDetailsContent .detail-section:last-child,
+    #clientDetailsContentModal .detail-section:last-child {
+      margin-bottom:0 !important;
     }
-    #clientDetailsContent .detail-section-header { 
-      background:#a0a0a0 !important; 
-      color:#fff !important; 
-      padding:6px 10px !important; 
-      font-weight:bold !important; 
-      font-size:12px !important; 
-      border-bottom:1px solid #ddd !important; 
-      text-transform:uppercase !important; 
-      line-height:1.4 !important; 
-      display:block !important; 
+    #clientDetailsContent .detail-section-header,
+    #clientDetailsContentModal .detail-section-header {
+      background:#2d3e50 !important;
+      color:#fff !important;
+      padding:6px 10px !important;
+      font-weight:bold !important;
+      font-size:11px !important;
+      border-bottom:1px solid #ddd !important;
+      text-transform:uppercase !important;
+      line-height:1.4 !important;
+      display:block !important;
+      text-align:center !important;
     }
-    #clientDetailsContent .detail-section-body { 
-      padding:8px !important; 
+    #clientDetailsContent .detail-section-body,
+    #clientDetailsContentModal .detail-section-body {
+      padding:8px !important;
       background:#fff !important;
       width:100% !important;
       box-sizing:border-box !important;
     }
-    #clientDetailsContent .detail-row { 
-      display:flex !important; 
-      flex-direction:row !important; 
-      align-items:center !important; 
-      margin-bottom:8px !important; 
-      gap:8px !important; 
+    #clientDetailsContent .detail-section-body table tr,
+    #clientDetailsContent .detail-section-body table tr:nth-child(even),
+    #clientDetailsContent .detail-section-body table tr:nth-child(odd),
+    #clientDetailsContent .detail-section-body table tbody tr,
+    #clientDetailsContent .detail-section-body table tbody tr:nth-child(even),
+    #clientDetailsContent .detail-section-body table tbody tr:nth-child(odd),
+    #clientDetailsContentModal .detail-section-body table tr,
+    #clientDetailsContentModal .detail-section-body table tr:nth-child(even),
+    #clientDetailsContentModal .detail-section-body table tr:nth-child(odd),
+    #clientDetailsContentModal .detail-section-body table tbody tr,
+    #clientDetailsContentModal .detail-section-body table tbody tr:nth-child(even),
+    #clientDetailsContentModal .detail-section-body table tbody tr:nth-child(odd),
+    .detail-section table tr,
+    .detail-section table tr:nth-child(even),
+    .detail-section table tr:nth-child(odd),
+    .detail-section table tbody tr,
+    .detail-section table tbody tr:nth-child(even),
+    .detail-section table tbody tr:nth-child(odd) {
+      background-color:#fff !important;
+      background:#fff !important;
+    }
+    #clientDetailsContent .detail-section-body table td,
+    #clientDetailsContentModal .detail-section-body table td,
+    .detail-section table td {
+      background-color:#fff !important;
+      background:#fff !important;
+      border:none !important;
+      border-right:none !important;
+      border-bottom:none !important;
+    }
+    #clientDetailsContent .detail-section-body table,
+    #clientDetailsContentModal .detail-section-body table,
+    .detail-section table {
+      border:none !important;
+      border-collapse:collapse !important;
+    }
+    #clientDetailsContent .detail-section-body table tr,
+    #clientDetailsContentModal .detail-section-body table tr,
+    .detail-section table tr {
+      border:none !important;
+      border-bottom:none !important;
+    }
+    #clientDetailsContent .detail-row,
+    #clientDetailsContentModal .detail-row {
+      display:flex !important;
+      flex-direction:row !important;
+      align-items:center !important;
+      margin-bottom:8px !important;
+      gap:8px !important;
       width:100% !important;
     }
-    #clientDetailsContent .detail-row:last-child { 
-      margin-bottom:0 !important; 
+    #clientDetailsContent .detail-row:last-child,
+    #clientDetailsContentModal .detail-row:last-child {
+      margin-bottom:0 !important;
     }
-    #clientDetailsContent .detail-label { 
-      font-size:10px !important; 
-      color:#555 !important; 
-      font-weight:600 !important; 
-      line-height:1.2 !important; 
-      display:block !important; 
-      min-width:120px !important; 
-      max-width:120px !important;
-      flex-shrink:0 !important; 
+    #clientDetailsContent .detail-label,
+    #clientDetailsContentModal .detail-label {
+      font-size:10px !important;
+      color:#555 !important;
+      font-weight:600 !important;
+      line-height:1.2 !important;
+      display:block !important;
+      min-width:80px !important;
+      max-width:80px !important;
+      flex-shrink:0 !important;
       text-align:left !important;
     }
-    #clientDetailsContent .detail-value { 
-      font-size:11px !important; 
-      color:#000 !important; 
-      padding:4px 6px !important; 
-      border:1px solid #ddd !important; 
-      background:#fff !important; 
-      border-radius:2px !important; 
-      min-height:22px !important; 
-      display:flex !important; 
-      align-items:center !important; 
-      box-sizing:border-box !important; 
-      flex:1 !important; 
+    #clientDetailsContent .detail-value,
+    #clientDetailsContentModal .detail-value {
+      font-size:11px !important;
+      color:#000 !important;
+      padding:4px 6px !important;
+      border:1px solid #ddd !important;
+      background:#fff !important;
+      border-radius:2px !important;
+      min-height:22px !important;
+      display:flex !important;
+      align-items:center !important;
+      box-sizing:border-box !important;
+      flex:1 !important;
       width:100% !important;
     }
-    #clientDetailsContent .detail-value.checkbox { 
-      border:none !important; 
-      padding:0 !important; 
-      background:transparent !important; 
-      min-height:auto !important; 
-      flex:0 0 auto !important; 
+    #clientDetailsContent .detail-value.checkbox,
+    #clientDetailsContentModal .detail-value.checkbox {
+      border:none !important;
+      padding:0 !important;
+      background:transparent !important;
+      min-height:auto !important;
+      flex:0 0 auto !important;
     }
-    #clientDetailsContent .detail-value.checkbox input[type="checkbox"] { 
-      width:18px !important; 
+    #clientDetailsContent .detail-value.checkbox input[type="checkbox"],
+    #clientDetailsContentModal .detail-value.checkbox input[type="checkbox"] {
+      width:18px !important;
       height:18px !important;
-      appearance:none !important; 
-      -webkit-appearance:none !important; 
+      appearance:none !important;
+      -webkit-appearance:none !important;
       -moz-appearance:none !important;
-      border:1px solid #ddd !important; 
-      border-radius:3px !important; 
-      background:#fff !important; 
-      position:relative !important; 
-      margin:0 !important; 
+      border:1px solid #ddd !important;
+      border-radius:3px !important;
+      background:#fff !important;
+      position:relative !important;
+      margin:0 !important;
       cursor:default !important;
     }
-    #clientDetailsContent .detail-value.checkbox input[type="checkbox"]:checked {
-      background-color:#f3742a !important; 
+    #clientDetailsContent .detail-value.checkbox input[type="checkbox"]:checked,
+    #clientDetailsContentModal .detail-value.checkbox input[type="checkbox"]:checked {
+      background-color:#f3742a !important;
       border-color:#f3742a !important;
     }
-    #clientDetailsContent .detail-value.checkbox input[type="checkbox"]:checked::after {
-      content:'✓' !important; 
-      position:absolute !important; 
-      top:50% !important; 
-      left:50% !important; 
+    #clientDetailsContent .detail-value.checkbox input[type="checkbox"]:checked::after,
+    #clientDetailsContentModal .detail-value.checkbox input[type="checkbox"]:checked::after {
+      content:'✓' !important;
+      position:absolute !important;
+      top:50% !important;
+      left:50% !important;
       transform:translate(-50%, -50%) !important;
-      color:#fff !important; 
-      font-size:12px !important; 
-      font-weight:bold !important; 
+      color:#fff !important;
+      font-size:12px !important;
+      font-weight:bold !important;
       line-height:1 !important;
     }
-    #clientDetailsContent .detail-photo { 
-      width:80px !important; 
-      height:100px !important; 
-      object-fit:cover !important; 
-      border:1px solid #ddd !important; 
-      border-radius:2px !important; 
-      flex-shrink:0 !important; 
-      cursor:pointer !important; 
+    #clientDetailsContent .detail-photo,
+    #clientDetailsContentModal .detail-photo {
+      width:80px !important;
+      height:100px !important;
+      object-fit:cover !important;
+      border:1px solid #ddd !important;
+      border-radius:2px !important;
+      flex-shrink:0 !important;
+      cursor:pointer !important;
     }
-    #clientDetailsContent .badge-status { 
-      font-size:11px !important; 
-      padding:4px 8px !important; 
-      display:inline-block !important; 
-      border-radius:4px !important; 
-      color:#fff !important; 
+    #clientDetailsContent .badge-status,
+    #clientDetailsContentModal .badge-status {
+      font-size:11px !important;
+      padding:4px 8px !important;
+      display:inline-block !important;
+      border-radius:4px !important;
+      color:#fff !important;
     }

@@ -31,6 +31,7 @@ class LifeProposalController extends Controller
         'sourceOfPayment',
         'medical',
         'followups',
+        'proposalClass',
     ]);
 
     $actionType = $request->input('action', 'view');
@@ -139,12 +140,87 @@ class LifeProposalController extends Controller
 
     $lookupData = $this->getLookupData();
 
+    // Return JSON if requested via AJAX
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'proposals' => $proposals->items(),
+            'total' => $proposals->total(),
+            'per_page' => $proposals->perPage(),
+            'current_page' => $proposals->currentPage(),
+        ]);
+    }
+
     return view(
         'life-proposals.index',
         compact('proposals', 'lookupData', 'actionType', 'contactId')
     );
 }
 
+    /**
+     * Get proposals by client ID (AJAX)
+     */
+    public function getByClient(Request $request, $clientId)
+    {
+        $query = LifeProposal::with([
+            'contact',
+            'insurer',
+            'policyPlan',
+            'frequency',
+            'agencies',
+            'stage',
+            'status',
+            'sourceOfPayment',
+            'medical',
+            'proposalClass',
+        ]);
+
+        // Get client to match proposals by proposer name
+        $client = Client::find($clientId);
+        if ($client) {
+            $clientName = trim(($client->first_name ?? '') . ' ' . ($client->surname ?? ''));
+            if ($clientName) {
+                $query->where('proposers_name', 'LIKE', '%' . $clientName . '%');
+            }
+        }
+
+        $proposals = $query->orderByDesc('created_at')->get();
+
+        // Transform proposals for JSON response
+        $data = $proposals->map(function ($proposal) {
+            return [
+                'id' => $proposal->id,
+                'proposers_name' => $proposal->proposers_name,
+                'insurer' => $proposal->insurer->name ?? '',
+                'policy_plan' => $proposal->policyPlan->name ?? '',
+                'sum_assured' => $proposal->sum_assured,
+                'term' => $proposal->term,
+                'add_ons' => $proposal->add_ons,
+                'offer_date' => $proposal->offer_date ? $proposal->offer_date->format('d-M-y') : '',
+                'premium' => $proposal->premium,
+                'frequency' => $proposal->frequency->name ?? '',
+                'stage' => $proposal->stage->name ?? '',
+                'is_submitted' => $proposal->is_submitted,
+                'age' => $proposal->age,
+                'status' => $proposal->status->name ?? '',
+                'source_of_payment' => $proposal->sourceOfPayment->name ?? '',
+                'mcr' => $proposal->mcr,
+                'doctor' => $proposal->medical->doctor ?? '',
+                'date_sent' => $proposal->medical->date_sent ?? '',
+                'date_completed' => $proposal->medical->date_completed ?? '',
+                'notes' => $proposal->medical->notes ?? '',
+                'agency' => $proposal->agency,
+                'prid' => $proposal->prid,
+                'class' => $proposal->proposalClass->name ?? '',
+                'hasExpired' => $proposal->hasExpired(),
+                'hasExpiring' => $proposal->hasExpiring(),
+            ];
+        });
+
+        return response()->json([
+            'proposals' => $data,
+            'total' => $proposals->count(),
+        ]);
+    }
 
     public function store(Request $request)
     {

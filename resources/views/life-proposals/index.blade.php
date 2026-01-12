@@ -20,11 +20,11 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
-            Life Proposals
+            Proposals
             @if(isset(request()->follow_up) || request()->follow_up === 1 ||  isset($contactid))
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> -  To Follow Up</span>
             @endif
-            
+
           </h3>
        
       </div>
@@ -38,20 +38,24 @@
           </div>
         <div class="page-title-section">
           <div style="display:flex; align-items:center; gap:15px; flex:1; justify-content:center;">
-              <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-                  <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+              <div class="filter-group" style="display:flex; align-items:center; gap:15px;">
+                  @php
+                    $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
+                    $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
+                  @endphp
+                  <label style="display:inline-flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+                    <span class="toggle-wrap" style="position:relative; display:inline-block; width:44px; height:24px;">
+                      <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }} style="opacity:0; width:0; height:0; position:absolute;">
+                      <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; border-radius:24px; transition:.3s;"></span>
+                      <span style="position:absolute; content:''; height:18px; width:18px; left:3px; top:3px; background-color:#fff; border-radius:50%; transition:.3s;"></span>
+                    </span>
                     <span style="font-size:13px;">Filter</span>
-                    @php
-                      $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
-                      $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
-                    @endphp
-                    <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
                   </label>
                   @if($hasFollowUp || $hasSubmitted)
                     <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
                   @else
-                    <button class="btn btn-follow-up" id="followUpBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
-                    <button class="btn btn-submitted" id="submittedBtn" type="button" style="border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Submitted</button>
+                    <button class="btn btn-follow-up" id="followUpBtn" type="button" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">To Follow Up</button>
+                    <button class="btn btn-submitted" id="submittedBtn" type="button" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Submitted</button>
                   @endif
                 </div>
               </div>
@@ -148,7 +152,7 @@
                     @elseif($col == 'insurer')
                       <td data-column="insurer">{{ $proposal->insurer->name }}</td>
                     @elseif($col == 'policy_plan')
-                      <td data-column="policy_plan">{{ $proposal->policy_plan }}</td>
+                      <td data-column="policy_plan">{{ $proposal->policyPlan->name ?? '-' }}</td>
                     @elseif($col == 'sum_assured')
                       <td data-column="sum_assured">{{ $proposal->sum_assured ? number_format($proposal->sum_assured,2) : '##########' }}</td>
                     @elseif($col == 'term')
@@ -185,17 +189,17 @@
                     @elseif($col == 'mcr')
                       <td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>
                     @elseif($col == 'doctor')
-                      <td data-column="doctor">{{ $proposal->doctor ?? '-' }}</td>
+                      <td data-column="doctor">{{ $proposal->medical->provider ?? '-' }}</td>
                     @elseif($col == 'date_sent')
-                      <td data-column="date_sent">{{ $proposal->date_sent ? $proposal->date_sent->format('d-M-y') : '##########' }}</td>
+                      <td data-column="date_sent">{{ $proposal->medical && $proposal->medical->ordered_on ? $proposal->medical->ordered_on->format('d-M-y') : '-' }}</td>
                     @elseif($col == 'date_completed')
-                      <td data-column="date_completed">{{ $proposal->date_completed ? $proposal->date_completed->format('d-M-y') : '##########' }}</td>
+                      <td data-column="date_completed">{{ $proposal->medical && $proposal->medical->completed_on ? $proposal->medical->completed_on->format('d-M-y') : '-' }}</td>
                     @elseif($col == 'notes')
-                      <td data-column="notes">{{ $proposal->notes ?? '-' }}</td>
+                      <td data-column="notes">{{ $proposal->medical->notes ?? '-' }}</td>
                     @elseif($col == 'agency')
                       <td data-column="agency">{{ $proposal->agencies->name ?? '-' }}</td>
                     @elseif($col == 'class')
-                      <td data-column="class">{{ $proposal->class }}</td>
+                      <td data-column="class">{{ $proposal->proposalClass->name ?? '-' }}</td>
                     @elseif($col == 'is_submitted')
                       <td data-column="is_submitted">{{ $proposal->is_submitted ? 'Yes' : 'No' }}</td>
                     @endif
