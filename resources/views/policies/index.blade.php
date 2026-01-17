@@ -55,7 +55,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0; font-size:18px; font-weight:600;">
               @if($filter == "expiring")
-                Policies  Expiring
+                Policies Due For Renewal
               @elseif($filter == "birthday_today")
                 Birthdays Today
               @elseif(request()->get('type') == "life")

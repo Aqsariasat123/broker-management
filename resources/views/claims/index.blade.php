@@ -44,19 +44,19 @@
 
       <div class="page-title-section">
         <div style="display:flex; align-items:center; gap:15px;">
+          @php
+            $hasPending = request()->has('pending') && (request()->pending == 'true' || request()->pending == '1');
+          @endphp
           <div class="filter-group" style="display:flex; align-items:center; gap:10px;">
-            <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-              <span style="font-size:13px;">Filter</span>
-              @php
-              
-                $hasPending = request()->has('pending') && (request()->pending == 'true' || request()->pending == '1');
-              @endphp
+            <label class="toggle-switch">
               <input type="checkbox" id="filterToggle" {{ $hasPending ? 'checked' : '' }}>
+              <span class="toggle-slider"></span>
             </label>
+            <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
             @if($hasPending)
-              <button class="btn" id="listAllBtn" type="button" style="background:#28a745; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">List ALL</button>
+              <button class="btn btn-list-all" id="listAllBtn" type="button">List ALL</button>
             @else
-              <button class="btn" id="showPendingBtn" type="button" style="background:#000; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Show Pending</button>
+              <button class="btn" id="showPendingBtn" type="button" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Show Pending</button>
             @endif
           </div>
         </div>

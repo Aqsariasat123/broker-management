@@ -182,17 +182,18 @@ class PolicyController extends Controller
 
     // Filter for expiring policies (next 30 days)
     if ($request->has('filter') && $request->filter == 'expiring') {
-        
+        $startDate = $request->has('start_date') ? \Carbon\Carbon::parse($request->start_date) : null;
+        $endDate = $request->has('end_date') ? \Carbon\Carbon::parse($request->end_date) : null;
+
         if ($startDate && $endDate) {
             $query->whereBetween('end_date', [$startDate->toDateString(), $endDate->toDateString()]);
-        }else{
-        $today = now()->toDateString();
-        $thirtyDaysFromNow = now()->addDays(30)->toDateString();
-        $query->whereDate('end_date', '>=', $today)
-              ->whereDate('end_date', '<=', $thirtyDaysFromNow);
-
+        } else {
+            $today = now()->toDateString();
+            $thirtyDaysFromNow = now()->addDays(30)->toDateString();
+            $query->whereDate('end_date', '>=', $today)
+                  ->whereDate('end_date', '<=', $thirtyDaysFromNow);
         }
-      
+
         $filter = $request->filter;
     }
 
