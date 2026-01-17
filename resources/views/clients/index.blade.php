@@ -18,14 +18,16 @@
     <button onclick="closeNotification()" style="background:transparent; border:none; color:#fff; font-size:20px; font-weight:bold; cursor:pointer; margin-left:15px; padding:0; line-height:1; width:20px; height:20px; display:flex; align-items:center; justify-content:center;">×</button>
   </div>
 
-  <!-- Main Clients Table View -->
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+  <!-- Main Clients Header -->
+  <div id="clientsPageHeader" style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
           @if($filter == "ids_expired")
              Expired IDs
           @elseif($filter == "birthday_today")
              Birthdays Today
+          @elseif($filter == "birthdays")
+             Birthday List - {{ request('start_date') ? \Carbon\Carbon::parse(request('start_date'))->format('F') : now()->format('F') }}
           @else
              Clients
             <span id="followUpLabel" style="display:{{ request()->get('follow_up') == 'true' && !request()->get('client_id') ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - To Follow Up</span>
@@ -44,7 +46,7 @@
 
       <div class="page-title-section">
         <div style="display:flex; align-items:center; gap:15px;">
-          @if($filter != "ids_expired" &&  $filter != "birthday_today"  )
+          @if($filter != "ids_expired" && $filter != "birthday_today" && $filter != "birthdays")
             <div class="filter-group">
               <label class="toggle-switch">
                 <input type="checkbox" id="filterToggle" {{ request()->get('follow_up') == 'true' ? 'checked' : '' }}>
@@ -61,7 +63,7 @@
         </div>
       </div>
       <div class="action-buttons">
-          @if($filter != "ids_expired"  &&  $filter != "birthday_today" )
+          @if($filter != "ids_expired" && $filter != "birthday_today" && $filter != "birthdays")
             <button class="btn btn-add" id="addClientBtn">Add</button>
           @endif
           <button class="btn btn-close" onclick="window.history.back()">Close</button>
@@ -195,7 +197,7 @@
       <div style="display:flex; gap:10px; justify-content:flex-end;">
         <input type="file" id="photoUploadInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
         <button class="btn" onclick="document.getElementById('photoUploadInput').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Upload Photo</button>
-        <button id="addDocumentBtn1" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Add Document</button>
+        <button id="addDocumentBtn1" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Upload Document</button>
       </div>
     </div>
   </div>
@@ -302,33 +304,41 @@
 function closeClientPageView() {
   const pageView = document.getElementById('clientPageView');
   if (pageView) pageView.style.display = 'none';
-  
+
   const tableView = document.getElementById('clientsTableView');
-  if (tableView) tableView.classList.remove('hidden');
-  
+  if (tableView) {
+    tableView.classList.remove('hidden');
+    tableView.style.display = 'block';
+  }
+
+  const pageHeader = document.getElementById('clientsPageHeader');
+  if (pageHeader) pageHeader.style.display = 'block';
+
   if (typeof currentClientId !== 'undefined') {
     currentClientId = null;
   }
 }
 </script>
 
-<!-- Add/Edit Client Modal -->
-<div class="modal" id="clientModal">
-  <div class="modal-content" style="max-width:95%; width:1400px; max-height:95vh; overflow-y:auto;">
-    <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" novalidate>
-      @csrf
-      <div id="clientFormMethod" style="display:none;"></div>
-      
-      <div class="modal-header" style="background:#fff; color:#000; padding:12px 15px; display:flex; justify-content:flex-end; align-items:center; border-bottom:1px solid #ddd;">
+<!-- Add/Edit Client Form View (inline, not overlay) -->
+<div id="clientModal" style="display:none;">
+  <form id="clientForm" method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data" novalidate>
+    @csrf
+    <div id="clientFormMethod" style="display:none;"></div>
+
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="clientModalTitle" style="margin:0; font-size:18px; font-weight:600;">Client - Add New Individual</h3>
         <div style="display:flex; gap:8px;">
-          <button type="button" class="btn-delete" id="clientDeleteBtn" style="display:none; background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
+          <button type="button" class="btn-delete" id="clientDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
           <button type="submit" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
-          <button type="button" class="modal-close" onclick="closeClientModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
+          <button type="button" onclick="closeClientModal()" style="background:#333; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Cancel</button>
         </div>
       </div>
+    </div>
 
-      <!-- CORRECTED FORM STRUCTURE -->
-      <div class="modal-body" style="background:#fff; padding:20px; overflow-x: auto;">
+      <!-- FORM CONTENT -->
+      <div style="padding:0; overflow-x: auto;">
         
         <style>
           .form-grid {
@@ -349,16 +359,17 @@ function closeClientPageView() {
             margin: 0;
             white-space: nowrap;
           }
-          .form-item input, 
-          .form-item select, 
+          .form-item input,
+          .form-item select,
           .form-item textarea {
-            border: 1px solid #777;
+            border: 1px solid #999;
             padding: 5px 6px;
             font-size: 12px;
             border-radius: 0;
             width: 100%;
             box-sizing: border-box;
             height: 28px;
+            background-color: #d9d9d9;
           }
           .form-item textarea {
             height: 100%;
@@ -373,10 +384,10 @@ function closeClientPageView() {
             width: 100%;
           }
           .green-bg {
-            background-color: #e2efda;
+            background-color: #d9d9d9;
           }
           .grey-bg {
-            background-color: #f2f2f2;
+            background-color: #d9d9d9;
           }
           .checkbox-item {
             accent-color: #f3742a;
@@ -387,306 +398,201 @@ function closeClientPageView() {
           }
         </style>
 
+        <div style="background:#fff; padding:20px 30px; border:1px solid #ddd; border-radius:4px;">
         <div class="form-grid">
-          
-          <!-- ROW 1 -->
-          <!-- Column 1: Client Type -->
+
+          <!-- ROW 1: Client Type | First Name | Surname | Other Names | Salutation -->
           <div class="form-item">
             <label>Client Type</label>
-            <select id="client_type" name="client_type" onchange="toggleClientFields()">
+            <select id="client_type" name="client_type" onchange="toggleClientFields(); updateClientModalTitle();">
               <option value="Individual" selected>Individual</option>
               <option value="Business">Business</option>
               <option value="Company">Company</option>
             </select>
           </div>
-          
-          <!-- Column 2: Name -->
           <div class="form-item" data-field-type="individual">
-            <label>Name</label>
+            <label>First Name</label>
             <input id="first_name" name="first_name" type="text">
           </div>
-          <!-- Business Name (Hidden by default, spans 2 columns) -->
-          <div class="form-item" data-field-type="business" style="display:none; grid-column:span 2;">
+          <div class="form-item" data-field-type="business" style="display:none; grid-column:span 4;">
             <label>Business Name</label>
             <input id="business_name" name="business_name" type="text">
           </div>
-
-          <!-- Column 3: Surname -->
           <div class="form-item" data-field-type="individual">
             <label>Surname</label>
-            <input id="surname" name="surname" type="text" class="green-bg">
+            <input id="surname" name="surname" type="text">
           </div>
-
-          <!-- Column 4: Other Names -->
           <div class="form-item" data-field-type="individual">
             <label>Other Names</label>
-            <input id="other_names" name="other_names" type="text" class="green-bg">
+            <input id="other_names" name="other_names" type="text">
           </div>
-
-          <!-- Column 5: Salutation -->
           <div class="form-item" data-field-type="individual">
             <label>Salutation</label>
-            <select id="salutation" name="salutation" class="green-bg">
-              <option value="">Select</option>
-              @foreach($lookupData['salutations'] ?? [] as $s) 
-                <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="salutation" name="salutation" type="text">
           </div>
 
-          <!-- ROW 2 -->
-          <!-- Column 1: DOB with Age -->
+          <!-- ROW 2: DOB | NIN | ID Document Type | ID Expiry Date | Income Source -->
           <div class="form-item" data-field-type="individual">
             <label>DOB</label>
-            <div class="combined-input-group">
-              <input id="dob_dor" name="dob_dor" type="date" class="green-bg" style="flex:1;">
-              <input id="dob_age" type="text" readonly style="width:40px; text-align:center; border-left:none;" class="green-bg" placeholder="">
-            </div>
+            <input id="dob_dor" name="dob_dor" type="text">
           </div>
-
-          <!-- Column 2: NIN -->
           <div class="form-item" data-field-type="individual">
             <label>NIN</label>
-            <input id="nin_bcrn" name="nin_bcrn" type="text" class="green-bg">
+            <input id="nin_bcrn" name="nin_bcrn" type="text">
           </div>
-          <!-- Business BCRN (Hidden) -->
           <div class="form-item" data-field-type="business" style="display:none;">
             <label>BCRN</label>
             <input id="bcrn_business" name="nin_bcrn" type="text">
           </div>
-
-          <!-- Column 3: ID Document Type -->
           <div class="form-item" data-field-type="individual">
             <label>ID Document Type</label>
-            <select id="id_document_type" name="id_document_type" class="green-bg">
-              <option value="">Select</option>
-              <option value="NIN">NIN</option>
-              <option value="Passport">Passport</option>
-              <option value="Driver License">Driver License</option>
-            </select>
+            <input id="id_document_type" name="id_document_type" type="text" value="ID Card">
           </div>
-
-          <!-- Column 4: ID Expiry Date -->
           <div class="form-item" data-field-type="individual">
             <label>ID Expiry Date</label>
-            <input id="id_expiry_date" name="id_expiry_date" type="date" class="green-bg">
+            <input id="id_expiry_date" name="id_expiry_date" type="text">
           </div>
-
-          <!-- Column 5: Passport No & Issuing Country -->
-          <div class="form-item" data-field-type="individual">
-            <div style="display:flex; justify-content:space-between;">
-              <label>Passport No</label>
-              <label style="margin-left:auto;">Issuing Country</label>
-            </div>
-            <div class="combined-input-group">
-              <input id="passport_no" name="passport_no" type="text" class="green-bg" style="width:60%;">
-              <input type="text" value="SEY" readonly style="width:40%; text-align:center; background:#ccffcc; border-left:none; font-weight:bold;">
-              <select id="issuing_country" name="issuing_country" style="display:none;">
-                <option value="131" selected>Seychelles</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- ROW 3 -->
-          <!-- Column 1: Income Source -->
           <div class="form-item" data-field-type="individual">
             <label>Income Source</label>
-            <select id="income_source" name="income_source" class="green-bg">
-              <option value="">Select</option>
-              @foreach($lookupData['income_sources'] ?? [] as $i) 
-                <option value="{{ $i['id'] }}">{{ $i['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="income_source" name="income_source" type="text">
           </div>
 
-          <!-- Column 2: Monthly Income -->
+          <!-- ROW 3: Monthly Income | Occupation | Employer | Married | Spouse's Name -->
           <div class="form-item" data-field-type="individual">
             <label>Monthly Income</label>
-            <input id="monthly_income" name="monthly_income" type="number" class="green-bg">
+            <input id="monthly_income" name="monthly_income" type="text">
           </div>
-
-          <!-- Column 3: Occupation -->
           <div class="form-item" data-field-type="individual">
             <label>Occupation</label>
-            <select id="occupation" name="occupation" class="green-bg">
-              <option value="">Select</option>
-              @foreach($lookupData['occupations'] ?? [] as $o) 
-                <option value="{{ $o['id'] }}">{{ $o['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="occupation" name="occupation" type="text">
           </div>
-
-          <!-- Column 4: Employer -->
           <div class="form-item" data-field-type="individual">
             <label>Employer</label>
-            <input id="employer" name="employer" type="text" class="green-bg">
+            <input id="employer" name="employer" type="text">
           </div>
-
-          <!-- Column 5: Married & Spouse's Name -->
           <div class="form-item" data-field-type="individual">
-            <div style="display:flex; justify-content:space-between;">
-              <label>Married</label>
-              <label style="margin-left:auto;">Spouse's Name</label>
-            </div>
-            <div class="combined-input-group">
-              <div style="width:40px; display:flex; align-items:center; justify-content:center; border:1px solid #777; border-right:none; background:#e2efda;">
-                <input id="married" name="married" type="checkbox" value="1" class="checkbox-item">
-              </div>
-              <input id="spouses_name" name="spouses_name" type="text" class="green-bg" style="flex:1;">
-            </div>
+            <label>Married</label>
+            <input id="married" name="married" type="text">
+          </div>
+          <div class="form-item" data-field-type="individual">
+            <label>Spouse's Name</label>
+            <input id="spouses_name" name="spouses_name" type="text">
           </div>
 
-          <!-- ROW 4: PEP -->
-          <!-- Column 1: PEP Checkbox -->
+          <!-- ROW 4: PEP | PEP Details | Passport No | Issuing Country -->
           <div class="form-item" data-field-type="individual">
             <label>PEP</label>
-            <div style="padding-top:4px;">
-              <input id="pep" name="pep" type="checkbox" value="1" class="checkbox-item">
-            </div>
+            <input id="pep" name="pep" type="text">
           </div>
-
-          <!-- Columns 2-5: PEP Details (spans 4 columns) -->
-          <div class="form-item" data-field-type="individual" style="grid-column: span 4;">
+          <div class="form-item" data-field-type="individual" style="grid-column: span 2;">
             <label>PEP Details</label>
-            <input id="pep_comment" name="pep_comment" type="text" class="green-bg">
+            <input id="pep_comment" name="pep_comment" type="text">
+          </div>
+          <div class="form-item" data-field-type="individual">
+            <label>Passport No</label>
+            <input id="passport_no" name="passport_no" type="text">
+          </div>
+          <div class="form-item" data-field-type="individual">
+            <label>Issuing Country</label>
+            <div style="display:flex; gap:0;">
+              <input type="text" value="Seychelles" readonly style="flex:1; border:1px dashed #999; background:#d9d9d9;">
+              <input type="text" value="SEY" readonly style="width:50px; text-align:center; border:1px dashed #999; border-left:none; background:#d9d9d9; font-weight:bold;">
+            </div>
+            <input id="issuing_country" name="issuing_country" type="hidden" value="131">
           </div>
 
-          <!-- ROW 5 -->
-          <!-- Column 1: Mobile No -->
+          <!-- ROW 5: Mobile No + Wattsapp | Alternate No + Wattsapp | Home No | Email Address | P.O. Box Number -->
           <div class="form-item">
-            <label>Mobile No</label>
-            <input id="mobile_no" name="mobile_no" type="text">
-          </div>
-
-          <!-- Column 2: Wattsapp -->
-          <div class="form-item">
-            <label style="color:#f3742a;">Wattsapp</label>
-            <div style="padding-top:4px;">
-              <input id="wa" name="wa" type="checkbox" value="1" class="checkbox-item">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Mobile No</label>
+              <label style="color:#f3742a; font-size:10px;">Wattsapp</label>
+            </div>
+            <div style="display:flex; gap:0;">
+              <input id="mobile_no" name="mobile_no" type="text" style="flex:1;">
+              <div style="width:32px; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid #999; border-left:none;">
+                <input id="wa" name="wa" type="checkbox" value="1" class="checkbox-item" style="width:16px !important; height:16px !important;">
+              </div>
             </div>
           </div>
-
-          <!-- Column 3: Alternate No -->
           <div class="form-item">
-            <label>Alternate No</label>
-            <input id="alternate_no" name="alternate_no" type="text">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Alternate No</label>
+              <label style="color:#f3742a; font-size:10px;">Wattsapp</label>
+            </div>
+            <div style="display:flex; gap:0;">
+              <input id="alternate_no" name="alternate_no" type="text" style="flex:1;">
+              <div style="width:32px; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid #999; border-left:none;">
+                <input id="wa2" name="wa2" type="checkbox" value="1" class="checkbox-item" style="width:16px !important; height:16px !important;">
+              </div>
+            </div>
           </div>
-
-          <!-- Column 4: Email Address -->
+          <div class="form-item">
+            <label>Home No</label>
+            <input id="home_no" name="home_no" type="text">
+          </div>
           <div class="form-item">
             <label>Email Address</label>
             <input id="email_address" name="email_address" type="email">
           </div>
-
-          <!-- Column 5: P.O. Box Number -->
           <div class="form-item">
             <label>P.O. Box Number</label>
             <input id="po_box_no" name="po_box_no" type="text">
           </div>
 
-          <!-- ROW 6 -->
-          <!-- Column 1: District -->
-          <div class="form-item">
-            <label>District</label>
-            <select id="district" name="district">
-              <option value="">Select</option>
-              @foreach($lookupData['districts'] ?? [] as $d) 
-                <option value="{{ $d['id'] }}">{{ $d['name'] }}</option> 
-              @endforeach
-            </select>
-          </div>
-
-          <!-- Column 2: Location -->
+          <!-- ROW 6: Location | District | Island | Country | Notes (spans 3 rows) -->
           <div class="form-item">
             <label>Location</label>
             <input id="location" name="location" type="text">
           </div>
-
-          <!-- Column 3: Island -->
+          <div class="form-item">
+            <label>District</label>
+            <input id="district" name="district" type="text">
+          </div>
           <div class="form-item">
             <label>Island</label>
-            <select id="island" name="island">
-              <option value="">Select</option>
-              @foreach($lookupData['islands'] ?? [] as $is) 
-                <option value="{{ $is['id'] }}">{{ $is['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="island" name="island" type="text">
           </div>
-
-          <!-- Column 4: Country -->
           <div class="form-item">
             <label>Country</label>
-            <select id="country" name="country">
-              <option value="">Select</option>
-              @foreach($lookupData['countries'] ?? [] as $c) 
-                <option value="{{ $c['id'] }}">{{ $c['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="country" name="country" type="text">
           </div>
-
-          <!-- Column 5: Notes (Spans rows 6-7) -->
-          <div class="form-item" style="grid-column: 5; grid-row: 6 / span 2;">
+          <div class="form-item" style="grid-row: span 3;">
             <label>Notes</label>
-            <textarea id="notes" name="notes" style="resize:none; height:100%;"></textarea>
+            <textarea id="notes" name="notes" style="resize:none; height:100%; min-height:80px;"></textarea>
           </div>
 
-          <!-- ROW 7 -->
-          <!-- Column 1: Sign Up Date -->
+          <!-- ROW 7: Sign Up Date | Agency | Agent | Source -->
           <div class="form-item">
             <label>Sign Up Date</label>
-            <input id="signed_up" name="signed_up" type="date">
+            <input id="signed_up" name="signed_up" type="text">
           </div>
-
-          <!-- Column 2: Agency -->
           <div class="form-item">
             <label>Agency</label>
-            <select id="agency" name="agency">
-              <option value="">Select</option>
-              @foreach($lookupData['agencies'] ?? [] as $a) 
-                <option value="{{ $a['id'] }}">{{ $a['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="agency" name="agency" type="text">
           </div>
-
-          <!-- Column 3: Agent -->
           <div class="form-item">
             <label>Agent</label>
-            <select id="agent" name="agent">
-              <option value="">Select</option>
-              @foreach($lookupData['agents'] ?? [] as $ag) 
-                <option value="{{ $ag['id'] }}">{{ $ag['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="agent" name="agent" type="text">
           </div>
-
-          <!-- Column 4: Source -->
           <div class="form-item">
             <label>Source</label>
-            <select id="source" name="source">
-              <option value="">Select</option>
-              @foreach($lookupData['sources'] ?? [] as $s) 
-                <option value="{{ $s['id'] }}">{{ $s['name'] }}</option> 
-              @endforeach
-            </select>
+            <input id="source" name="source" type="text">
           </div>
 
-          <!-- ROW 8 -->
-          <!-- Empty columns 1-3 -->
-          <div style="grid-column: 1;"></div>
-          <div style="grid-column: 2;"></div>
-          <div style="grid-column: 3;"></div>
-
-          <!-- Column 4: Source Name (If applicable) - positioned below Source -->
+          <!-- ROW 8: Source Name -->
+          <div class="form-item" style="grid-column: 1;"></div>
+          <div class="form-item" style="grid-column: 2;"></div>
+          <div class="form-item" style="grid-column: 3;"></div>
           <div class="form-item" style="grid-column: 4;">
-            <label style="color:#999; font-size:10px;">Source Name (If applicable)</label>
-            <input id="source_name" name="source_name" type="text" style="border-style:dashed; border-color:#ccc;">
+            <label>Source Name</label>
+            <input id="source_name" name="source_name" type="text">
           </div>
 
           <!-- ROW 9: INSURABLES SECTION -->
-          <div style="grid-column: 1 / span 5; margin-top:20px; padding-top:15px; border-top:1px solid #ddd;">
-            <div style="display:flex; align-items:center; gap:30px;">
-              <h4 style="font-size:13px; font-weight:bold; margin:0;">Insurables</h4>
-              
+          <div style="grid-column: 1 / span 5; margin-top:15px; padding-top:15px; border-top:1px solid #ddd;">
+            <div style="display:flex; align-items:center; gap:20px;">
+              <h4 style="font-size:13px; font-weight:bold; margin:0; min-width:80px;">Insurables</h4>
+
               <div style="display:flex; align-items:center; gap:5px;">
                 <label for="has_vehicle" style="font-size:12px; margin:0; cursor:pointer;">Vehicle</label>
                 <input id="has_vehicle" name="has_vehicle" type="checkbox" value="1" class="checkbox-item">
@@ -713,22 +619,24 @@ function closeClientPageView() {
           <input type="hidden" name="status" id="status" value="Active">
 
         </div> <!-- End Form Grid -->
-        
-        <!-- Document Section inside Modal Form -->
-        <div style="margin-top:20px; border-top:2px solid #ddd; padding-top:10px;">
-           <h4 style="font-weight:bold; font-size:16px;">Documents</h4>
+        </div> <!-- End Form White Box -->
+
+        <!-- Document Section -->
+        <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:4px; margin-top:15px;">
+           <h4 style="font-weight:bold; font-size:16px; margin:0 0 15px 0;">Documents</h4>
            <div id="editClientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; min-height:50px;">
               <!-- Docs loaded via JS -->
            </div>
-           <div style="text-align:right;">
-              <button type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px;">+ Add Document</button>
+           <div style="text-align:right; margin-top:15px;">
+              <button type="button" class="btn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; margin-right:8px;">Upload Photo</button>
+              <button type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px;">Upload Document</button>
            </div>
         </div>
 
-      </div> <!-- End Modal Body -->
-    </form>
-  </div>
+      </div> <!-- End Form Content -->
+  </form>
 </div>
+<!-- End Client Form View -->
 
 <!-- Client Details Modal -->
 <div class="modal" id="clientDetailsModal">

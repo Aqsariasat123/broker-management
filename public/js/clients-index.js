@@ -910,13 +910,19 @@ async function openClientDetailsModal(clientId) {
       throw new Error('populateClientDetailsModal function is missing');
     }
 
-    // STEP 5: Hide table view (with null check)
+    // STEP 5: Hide table view and page header (with null check)
     const clientsTableView = document.getElementById('clientsTableView');
+    const clientsPageHeader = document.getElementById('clientsPageHeader');
     if (clientsTableView) {
       clientsTableView.classList.add('hidden');
+      clientsTableView.style.display = 'none';
       console.log('✅ Table view hidden');
     } else {
       console.warn('⚠️ clientsTableView element not found');
+    }
+    if (clientsPageHeader) {
+      clientsPageHeader.style.display = 'none';
+      console.log('✅ Page header hidden');
     }
     
     // STEP 6: Show page view (with null check)
@@ -2030,11 +2036,24 @@ function closeClientDetailsModal() {
 
 function closeClientPageView() {
   const clientPageView = document.getElementById('clientPageView');
-  clientPageView.classList.remove('show');
-  clientPageView.style.display = 'none';
-  document.getElementById('clientsTableView').classList.remove('hidden');
-  document.getElementById('clientDetailsPageContent').style.display = 'none';
-  document.getElementById('clientFormPageContent').style.display = 'none';
+  const clientsTableView = document.getElementById('clientsTableView');
+  const clientsPageHeader = document.getElementById('clientsPageHeader');
+
+  if (clientPageView) {
+    clientPageView.classList.remove('show');
+    clientPageView.style.display = 'none';
+  }
+  if (clientsTableView) {
+    clientsTableView.classList.remove('hidden');
+    clientsTableView.style.display = 'block';
+  }
+  if (clientsPageHeader) {
+    clientsPageHeader.style.display = 'block';
+  }
+  const detailsContent = document.getElementById('clientDetailsPageContent');
+  const formContent = document.getElementById('clientFormPageContent');
+  if (detailsContent) detailsContent.style.display = 'none';
+  if (formContent) formContent.style.display = 'none';
   currentClientId = null;
 }
 
@@ -2670,89 +2689,110 @@ function previewClientPhoto(event) {
 // Open Add Client Modal
 function openClientModal() {
     const modal = document.getElementById('clientModal');
+    const tableView = document.getElementById('clientsTableView');
+    const pageHeader = document.getElementById('clientsPageHeader');
+
     if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('show');
-        document.body.classList.add('modal-open');
-        
+        // Hide table view and page header, show form view
+        if (tableView) tableView.style.display = 'none';
+        if (pageHeader) pageHeader.style.display = 'none';
+        modal.style.display = 'block';
+
         // Reset form for new client
         const form = document.getElementById('clientForm');
         if (form) {
             form.reset();
             form.action = clientsStoreRoute;
         }
-        
+
         // Hide delete button for new client
         const deleteBtn = document.getElementById('clientDeleteBtn');
         if (deleteBtn) {
             deleteBtn.style.display = 'none';
         }
-        
-        // Update modal title
-        const title = document.getElementById('clientModalTitle');
-        if (title) {
-            title.textContent = 'Client - Add New';
-        }
-        
+
+        // Update modal title based on client type
+        updateClientModalTitle();
+
         // Reset method to POST
         const methodField = document.getElementById('clientFormMethod');
         if (methodField) {
             methodField.innerHTML = '';
         }
-        
+
         // Initialize fields
         toggleClientFields();
+    }
+}
+
+// Update modal title based on client type selection
+function updateClientModalTitle() {
+    const title = document.getElementById('clientModalTitle');
+    const clientType = document.getElementById('client_type');
+    if (title && clientType) {
+        const type = clientType.value || 'Individual';
+        title.textContent = 'Client - Add New ' + type;
     }
 }
 
 // Close Client Modal
 function closeClientModal() {
     const modal = document.getElementById('clientModal');
+    const tableView = document.getElementById('clientsTableView');
+    const pageHeader = document.getElementById('clientsPageHeader');
+
     if (modal) {
         modal.style.display = 'none';
-        modal.classList.remove('show');
-        document.body.classList.remove('modal-open');
+    }
+    if (tableView) {
+        tableView.style.display = 'block';
+    }
+    if (pageHeader) {
+        pageHeader.style.display = 'block';
     }
 }
 
 // Open Edit Client Modal
 function openEditClient(clientId) {
     if (!clientId) return;
-    
+
     currentClientId = clientId;
-    
+
     // Fetch client data
     fetch(`/clients/${clientId}/edit`)
         .then(response => response.json())
         .then(data => {
             if (data.client) {
                 populateClientForm(data.client);
-                
+
                 const modal = document.getElementById('clientModal');
+                const tableView = document.getElementById('clientsTableView');
+                const pageHeader = document.getElementById('clientsPageHeader');
+
                 if (modal) {
-                    modal.style.display = 'flex';
-                    modal.classList.add('show');
-                    document.body.classList.add('modal-open');
+                    if (tableView) tableView.style.display = 'none';
+                    if (pageHeader) pageHeader.style.display = 'none';
+                    modal.style.display = 'block';
                 }
-                
+
                 // Update form action for edit
                 const form = document.getElementById('clientForm');
                 if (form) {
                     form.action = `/clients/${clientId}`;
                 }
-                
+
                 // Add PUT method
                 const methodField = document.getElementById('clientFormMethod');
                 if (methodField) {
                     methodField.innerHTML = '<input type="hidden" name="_method" value="PUT">';
                 }
-                
+
                 // Show delete button
                 const deleteBtn = document.getElementById('clientDeleteBtn');
                 if (deleteBtn) {
                     deleteBtn.style.display = 'inline-block';
                 }
-                
+
                 // Update title
                 const title = document.getElementById('clientModalTitle');
                 if (title) {

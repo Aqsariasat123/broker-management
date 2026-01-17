@@ -106,6 +106,34 @@ class ClientController extends Controller
                   ->whereDay('dob_dor', now()->day);
         }
 
+        // Filter for Birthdays in date range (from calendar)
+        if ($request->has('filter') && $request->filter == 'birthdays') {
+            if ($request->has('start_date') && $request->has('end_date')) {
+                $startDate = \Carbon\Carbon::parse($request->start_date);
+                $endDate = \Carbon\Carbon::parse($request->end_date);
+
+                // Get all clients with birthdays and filter in PHP (same logic as CalendarController)
+                $query->whereNotNull('dob_dor')
+                      ->where(function($q) use ($startDate, $endDate) {
+                          // For same month range (most common case)
+                          if ($startDate->month == $endDate->month) {
+                              $q->whereRaw('MONTH(dob_dor) = ?', [$startDate->month])
+                                ->whereRaw('DAY(dob_dor) >= ?', [$startDate->day])
+                                ->whereRaw('DAY(dob_dor) <= ?', [$endDate->day]);
+                          } else {
+                              // Cross-month range
+                              $q->where(function($sub) use ($startDate) {
+                                  $sub->whereRaw('MONTH(dob_dor) = ?', [$startDate->month])
+                                      ->whereRaw('DAY(dob_dor) >= ?', [$startDate->day]);
+                              })->orWhere(function($sub) use ($endDate) {
+                                  $sub->whereRaw('MONTH(dob_dor) = ?', [$endDate->month])
+                                      ->whereRaw('DAY(dob_dor) <= ?', [$endDate->day]);
+                              });
+                          }
+                      });
+            }
+        }
+
         if($request->has('filter')){
           $filter = $request->filter;
         }

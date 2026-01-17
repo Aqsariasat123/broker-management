@@ -689,7 +689,7 @@ document.querySelectorAll('.category-dropdown').forEach(dropdown => {
                 url = `/debit-notes?from_calendar=1&filter=overdue&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'birthdays':
-                url = `/clients?from_calendar=1&filter=birthday_today&start_date=${startDate}&end_date=${endDate}`;
+                url = `/clients?from_calendar=1&filter=birthdays&start_date=${startDate}&end_date=${endDate}`;
                 break;
         }
 
@@ -700,6 +700,49 @@ document.querySelectorAll('.category-dropdown').forEach(dropdown => {
 });
 
 // ---------------------------------
-// 11. INIT
+// 11. VIEW BUTTONS (MONTH, WEEK, DAY, SCHEDULE)
+// ---------------------------------
+document.getElementById('month-view').onclick = () => {
+    setActiveView('month-view');
+    // Month view is default - just refresh
+    updateDisplay();
+};
+
+document.getElementById('week-view').onclick = () => {
+    setActiveView('week-view');
+    // For now, show current week in month view
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    updateDisplay();
+};
+
+document.getElementById('day-view').onclick = () => {
+    setActiveView('day-view');
+    // For now, show current day in month view
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    updateDisplay();
+};
+
+document.getElementById('schedule-view').onclick = () => {
+    setActiveView('schedule-view');
+    // For now, just refresh
+    updateDisplay();
+};
+
+function setActiveView(viewId) {
+    // Remove active class from all view buttons
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    // Add active class to clicked button
+    const btn = document.getElementById(viewId);
+    if (btn) {
+        btn.classList.add('active');
+    }
+}
+
+// ---------------------------------
+// 12. INIT
 // ---------------------------------
 updateDisplay();
