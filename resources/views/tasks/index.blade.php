@@ -50,7 +50,9 @@
         </div>
       </div>
       <div class="action-buttons">
+        @if(!(request()->has('filter') && request()->filter == 'overdue'))
         <button class="btn btn-add" id="addTaskBtn">Add</button>
+        @endif
         <button class="btn btn-back" onclick="handleBack()">Back</button>
       </div>
     </div>
