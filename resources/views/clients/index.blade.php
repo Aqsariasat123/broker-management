@@ -156,32 +156,29 @@
 <!-- ============================================================================ -->
 <div class="client-page-view" id="clientPageView" style="display:none;">
   <!-- Header with Title and Buttons -->
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px 20px; margin-bottom:10px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 id="clientPageTitle" style="margin:0; font-size:18px; font-weight:600;">
-        Client
-        <span id="clientPageName" style="color:#f3742a; font-size:16px;"></span>
-      </h3>
-      <div style="display:flex; gap:8px;">
-        <button id="editClientFromPageBtn" onclick="openEditClient(currentClientId)" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Edit</button>
-        <button onclick="closeClientPageView()" style="background:#e0e0e0; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Close</button>
-      </div>
-    </div>
+  <div style="background:#f5f5f5; padding:15px 20px; margin-bottom:10px;">
+    <h3 style="margin:0; font-size:20px; font-weight:600;">
+      Client - <span id="clientPageName" style="color:#f3742a;"></span>
+    </h3>
   </div>
 
-  <!-- Nav Tabs -->
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px 15px; margin-bottom:15px;">
+  <!-- Nav Tabs Row -->
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px; margin-bottom:10px;">
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="nav-tab active" data-tab="details" data-url="#" style="background:#f3742a; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Details</button>
-      <button class="nav-tab" data-tab="proposals" data-url="/life-proposals" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
-      <button class="nav-tab" data-tab="policies" data-url="/policies" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Policies</button>
-      <button class="nav-tab" data-tab="payments" data-url="/payment-plans" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
-      <button class="nav-tab" data-tab="vehicles" data-url="/vehicles" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Vehicles</button>
-      <button class="nav-tab" data-tab="claims" data-url="/claims" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Claims</button>
-      <button class="nav-tab" data-tab="documents" data-url="#" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Documents</button>
+      <button class="nav-tab" data-tab="proposals" data-url="/life-proposals" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
+      <button class="nav-tab" data-tab="policies" data-url="/policies" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Policies</button>
+      <button class="nav-tab" data-tab="payments" data-url="/payment-plans" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
+      <button class="nav-tab" data-tab="vehicles" data-url="/vehicles" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Vehicles</button>
+      <button class="nav-tab" data-tab="claims" data-url="/claims" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Claims</button>
+      <button class="nav-tab" data-tab="documents" data-url="#" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Documents</button>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button id="editClientFromPageBtn" onclick="openEditClient(currentClientId)" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Edit</button>
+      <button onclick="closeClientPageView()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Close</button>
     </div>
   </div>
 
+  
   <!-- Details Content -->
   <div id="clientDetailsPageContent" style="display:block; background:#fff; border:1px solid #ddd; border-radius:4px; padding:20px;">
     <div id="clientDetailsContent" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
