@@ -1,0 +1,29 @@
+
+  .container-table { max-width: 100%; margin: 0 auto; }
+  h3 { background: #f1f1f1; padding: 8px; margin-bottom: 10px; font-weight: bold; border: 1px solid #ddd; }
+  .top-bar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .action-buttons { margin-left:auto; display:flex; gap:10px; }
+  .btn { border:none; cursor:pointer; padding:6px 12px; font-size:13px; border-radius:2px; white-space:nowrap; transition:background-color .2s; text-decoration:none; color:inherit; background:#fff; border:1px solid #ccc; }
+  .btn-back { background:#ccc; color:#333; border-color:#ccc; }
+  .btn-add { background:#df7900; color:#fff; border-color:#df7900; }
+  .btn-edit { background:#007bff; color:#fff; border-color:#007bff; }
+  .info-section { background:#fff; border:1px solid #ddd; margin-bottom:15px; padding:15px; }
+  .info-section h4 { margin:0 0 12px 0; font-size:15px; font-weight:bold; color:#333; border-bottom:1px solid #ddd; padding-bottom:8px; }
+  .info-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:12px; }
+  .info-item { display:flex; flex-direction:column; }
+  .info-label { font-size:12px; color:#555; font-weight:600; margin-bottom:4px; }
+  .info-value { font-size:13px; color:#000; }
+  .badge-status { font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; }
+  .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #ddd; max-height: 500px; overflow-y: auto; background: #fff; margin-top:15px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead tr { background-color: black; color: white; height:35px; font-weight: normal; }
+  thead th { padding:6px 5px; text-align:left; border-right:1px solid #444; white-space:nowrap; font-weight: normal; }
+  thead th:last-child { border-right:none; }
+  tbody tr { background-color:#fefefe; border-bottom:1px solid #ddd; min-height:28px; }
+  tbody tr:nth-child(even) { background-color:#f8f8f8; }
+  tbody td { padding:5px 5px; border-right:1px solid #ddd; white-space:nowrap; vertical-align:middle; font-size:12px; }
+  tbody td:last-child { border-right:none; }
+  tbody td a { color:#007bff; text-decoration:underline; }
+  tbody td a:hover { color:#0056b3; text-decoration:none; }
+  .empty-state { text-align:center; padding:20px; color:#999; font-size:13px; }
+  @media (max-width:768px) { .info-grid { grid-template-columns:1fr; } }

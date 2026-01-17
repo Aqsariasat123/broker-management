@@ -1,0 +1,281 @@
+
+
+  .calendar-container {
+    margin-top: 10px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+  }
+
+  /* Header Section */
+  .calendar-header {
+    margin-bottom: 10px;
+  }
+
+  .calendar-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #2d2d2d;
+  }
+
+  /* Category Filters */
+  .category-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    position: relative;
+    z-index: 200;
+  }
+
+  .category-btn {
+    background: #d0d0d0;
+    color: #000;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .category-btn:hover {
+    opacity: 0.9;
+  }
+
+  /* ALL button - dark/black with white text */
+  .category-btn[data-filter="all"] {
+    background: #2d2d2d;
+    color: #fff;
+  }
+
+  /* Tasks, Follow Ups, Renewals, Instalments, Birthdays - Gray with black text */
+  .category-btn[data-filter="tasks"],
+  .category-btn[data-filter="follow-ups"],
+  .category-btn[data-filter="renewals"],
+  .category-btn[data-filter="instalments"],
+  .category-btn[data-filter="birthdays"] {
+    background: #d0d0d0;
+    color: #000;
+  }
+
+  /* Selected state - Orange with white text */
+  .category-btn.selected[data-filter="tasks"],
+  .category-btn.selected[data-filter="follow-ups"],
+  .category-btn.selected[data-filter="renewals"],
+  .category-btn.selected[data-filter="instalments"],
+  .category-btn.selected[data-filter="birthdays"] {
+    background: #f37021;
+    color: #fff;
+    border: 2px solid #f37021;
+    border-bottom: 2px solid #fff;
+    position: relative;
+    z-index: 101;
+  }
+
+  /* Dropdown container for Tasks and Follow Ups */
+  .category-dropdown-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .category-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: -2px;
+    background: linear-gradient(to bottom, #fff, #f5f5f5);
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 0 0 6px 6px;
+    font-size: 11px;
+    font-weight: 400;
+    white-space: nowrap;
+    z-index: 300;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #f37021;
+    border-top: none;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .category-dropdown:hover {
+    background: linear-gradient(to bottom, #f37021, #e05a10);
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(243, 112, 33, 0.3);
+    transform: translateX(-50%) scale(1.02);
+  }
+
+  .category-dropdown:active {
+    transform: translateX(-50%) scale(0.98);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .category-dropdown.show {
+    display: block;
+  }
+
+  /* When button is selected and has dropdown, remove bottom border radius */
+  .category-btn.selected {
+    border-radius: 4px 4px 0 0;
+  }
+
+  /* Date Navigation and View Controls */
+  .controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .date-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .date-navigation .year,
+  .date-navigation .month {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d2d2d;
+  }
+
+  .date-navigation .arrow {
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+    user-select: none;
+  }
+
+  .date-navigation .arrow:hover {
+    color: #000;
+  }
+
+  /* View Controls */
+  .view-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .nav-arrow {
+    background: #00b8f4;
+    color: #fff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-arrow:hover {
+    background: #0099cc;
+  }
+
+  .view-btn {
+    background: #00b8f4;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+
+  .view-btn:hover {
+    background: #0099cc;
+  }
+
+  .view-btn.active {
+    background: #00b8f4;
+  }
+
+  /* Calendar Table */
+  .calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+  }
+
+  .calendar-table thead th {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2d2d2d;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+  }
+
+  .calendar-table tbody td {
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+    vertical-align: top;
+    height: 65px;
+    width: 14.28%;
+    position: relative;
+  }
+
+  .calendar-table tbody td.outside-month {
+    color: #bbb;
+    background: #fafafa;
+  }
+
+  .day-number {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: #2d2d2d;
+  }
+
+  .day-number.outside {
+    color: #bbb;
+  }
+
+  /* Event Styles */
+  .event {
+    font-size: 10px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+
+  .event.renewal {
+    background: #ffb74d;
+    color: #000;
+  }
+
+  .event.birthday,
+  .event.follow-up {
+    background: #f8bbd0;
+    color: #000;
+  }
+
+  .event.task,
+  .event.instalment {
+    background: #b3e5fc;
+    color: #000;
+  }

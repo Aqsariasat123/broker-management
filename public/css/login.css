@@ -1,0 +1,90 @@
+
+  /* Reset default margin/padding */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Full screen background and center container */
+  body, html {
+    height: 100%;
+    background-color: #f1f1f1;
+    font-family: Arial, sans-serif;
+  }
+
+  .container {
+    min-height: 100vh; /* full height of viewport */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* padding for small screens */
+  }
+
+  .login-box {
+    background-color: white;
+    padding: 40px 30px;
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.1);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .logo {
+    font-weight: bold;
+    font-size: 28px;
+    margin-bottom: 30px;
+    text-align: center;
+    user-select: none;
+  }
+
+  .logo .orange {
+    color: #f3742a;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    padding: 10px 15px;
+    border: 1.8px solid #ddd;
+    border-radius: 5px;
+    font-size: 15px;
+    transition: border-color 0.3s ease;
+  }
+
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    outline: none;
+    border-color: #f3742a;
+  }
+
+  button {
+    padding: 12px 20px;
+    background-color: #f3742a;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+
+  button:hover {
+    background-color: #cc6229;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 400px) {
+    .login-box {
+      padding: 30px 20px;
+      max-width: 100%;
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }

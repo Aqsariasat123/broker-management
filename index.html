@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insurance Broker - Dashboard</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Insurance Broker</h1>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Navigation will be populated by JavaScript -->
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <h2>Dashboard</h2>
+        <div class="topbar-actions">
+          <button class="btn btn-primary">New Record</button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <div class="content-main">
+          <!-- Summary Cards -->
+          <div class="summary-grid" id="summary-cards">
+            <!-- Summary cards will be populated by JavaScript -->
+          </div>
+
+          <!-- Welcome Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Welcome</h3>
+            </div>
+            <div style="padding: 20px;">
+              <p>Select a page from the sidebar to view and manage data.</p>
+              <p style="margin-top: 10px; color: var(--text-light);">
+                This application was generated from the Excel design file. Each sheet has been converted into a page with forms and tables.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Rail -->
+        <aside class="content-rail">
+          <div class="rail-card">
+            <div class="rail-card-title">Quick Actions</div>
+            <div class="rail-card-content">
+              <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Add New</button>
+              <button class="btn btn-secondary" style="width: 100%;">Export Data</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="scripts/script.js"></script>
+  <script>
+    // Load navigation
+    async function loadNavigation() {
+      try {
+        const response = await fetch('data/design.json');
+        const data = await response.json();
+        
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = '';
+        
+        // Add Dashboard link
+        const dashboardLink = document.createElement('a');
+        dashboardLink.href = 'index.html';
+        dashboardLink.className = 'nav-item' + (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') ? ' active' : '');
+        dashboardLink.textContent = 'Dashboard';
+        nav.appendChild(dashboardLink);
+        
+        // Add links for each sheet
+        data.sheets.forEach(sheet => {
+          if (sheet.fields && sheet.fields.length > 0) {
+            const link = document.createElement('a');
+            link.href = 'pages/' + sheet.page;
+            link.className = 'nav-item';
+            if (window.location.pathname.includes(sheet.page)) {
+              link.classList.add('active');
+            }
+            link.textContent = sheet.name;
+            nav.appendChild(link);
+          }
+        });
+      } catch (error) {
+        console.error('Error loading navigation:', error);
+      }
+    }
+    
+    loadNavigation();
+  </script>
+</body>
+</html>
+

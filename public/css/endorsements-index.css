@@ -1,0 +1,12 @@
+
+  /* Bell cell styles matching clients page */
+  .bell-cell { text-align:center; padding:8px 5px; vertical-align:middle; min-width:50px; }
+  .bell-cell.expired { background-color:#ffebee !important; }
+  .bell-cell.expiring { background-color:#fff8e1 !important; }
+  .bell-cell:not(.expired):not(.expiring) { background-color:#fff !important; }
+  tbody tr.has-expired { background-color:#ffebee !important; }
+  tbody tr.has-expired td { background-color:#ffebee !important; }
+  tbody tr.has-expiring { background-color:#fff8e1 !important; }
+  tbody tr.has-expiring td { background-color:#fff8e1 !important; }
+  .footer { padding:15px 20px; border-top:1px solid #ddd; display:flex; justify-content:center; gap:10px; background:#f9f9f9; }
+
