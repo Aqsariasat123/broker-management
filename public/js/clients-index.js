@@ -1524,15 +1524,15 @@ function populateClientDetailsModal(client) {
       </div>
     `;
 
-  // The remaining cards only for Individual
-  const col4 = isIndividual ? '' : /* Registration Details */ `<div style="display:flex; flex-direction:column; gap:10px;">
+  // Registration Details - show for all client types
+  const col4 = `<div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">REGISTRATION DETAILS</div>
         <div class="detail-section-body">
           <div class="detail-row"><span class="detail-label">Sign Up Date</span><div class="detail-value">${signedUp}</div></div>
-          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agencies.name || 'Keystone'}</div></div>
-          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agents.name || '-'}</div></div>
-          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.sources.name || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agency</span><div class="detail-value">${client.agencies?.name || 'Keystone'}</div></div>
+          <div class="detail-row"><span class="detail-label">Agent</span><div class="detail-value">${client.agents?.name || '-'}</div></div>
+          <div class="detail-row"><span class="detail-label">Source</span><div class="detail-value">${client.sources?.name || '-'}</div></div>
           <div class="detail-row"><span class="detail-label">Source Name</span><div class="detail-value">${client.source_name || '-'}</div></div>
         </div>
       </div>
@@ -1593,8 +1593,8 @@ function populateClientDetailsModal(client) {
       </div>
     `;
 
-  // Assemble HTML
-  content.innerHTML = col1 + col2 + col3 + col7 + col4 + col5 + col6 + col8;
+  // Assemble HTML - Row 1: CUSTOMER, CONTACT, ADDRESS, REGISTRATION | Row 2: INDIVIDUAL, INCOME, OTHER, INSURABLES
+  content.innerHTML = col1 + col2 + col3 + col4 + col5 + col6 + col7 + col8;
 
   // Documents
   const documentsList = document.getElementById('clientDocumentsList');
