@@ -1429,30 +1429,32 @@ function populateClientDetailsModal(client) {
         <div class="detail-section-body">
           <div class="detail-row">
             <span class="detail-label">Mobile No</span>
-            <div class="detail-value">${client.mobile_no || '-'}</div>
-          </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">On Whatsapp</span>
-              <div class="detail-value checkbox">
-                <input type="checkbox" ${client.wa == "1" ? 'checked' : ''} disabled>
-              </div>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${client.mobile_no || '-'}</div>
+              <span style="font-size:10px; color:#666;">WA</span>
+              <input type="checkbox" ${client.wa == "1" ? 'checked' : ''} disabled style="accent-color:#f3742a;">
             </div>
-          <div class="detail-row" style="${client.wa == "1" ? 'display:none;' : ''}" >
+          </div>
+          <div class="detail-row">
             <span class="detail-label">Alternate No</span>
-            <div class="detail-value">${client.alternate_no || '-'}</div>
+            <div style="display:flex; gap:5px; align-items:center; flex:1;">
+              <div class="detail-value" style="flex:1;">${client.alternate_no || '-'}</div>
+              <span style="font-size:10px; color:#666;">WA</span>
+              <input type="checkbox" ${client.wa2 == "1" ? 'checked' : ''} disabled style="accent-color:#f3742a;">
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Home No</span>
+            <div class="detail-value">${client.home_no || '-'}</div>
           </div>
           <div class="detail-row">
             <span class="detail-label">Email Address</span>
             <div class="detail-value">${client.email_address || '-'}</div>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Contact Person</span>
-            <div class="detail-value">${client.contact_person || '-'}</div>
-          </div>
-            <div class="detail-row" ${hideForIndividual}>
-            <span class="detail-label">Designation</span>
+            <span class="detail-label" style="color:#999;">Designation</span>
             <div class="detail-value">${client.designation || '-'}</div>
-            </div>
+          </div>
           </div>
         </div>
       </div>
@@ -1465,60 +1467,55 @@ function populateClientDetailsModal(client) {
         <div class="detail-section-header">ADDRESS DETAILS</div>
         <div class="detail-section-body">
           <div class="detail-row">
+            <span class="detail-label">Location</span>
+            <div class="detail-value">${client.location || '-'}</div>
+          </div>
+          <div class="detail-row">
             <span class="detail-label">District</span>
             <div class="detail-value">${client.districts?.name || '-'}</div>
           </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Address</span>
-            <div class="detail-value">${client.location || '-'}</div>
-          </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Island</span>
+          <div class="detail-row">
+            <span class="detail-label">Island</span>
             <div class="detail-value">${client.islands?.name || '-'}</div>
           </div>
-            <div class="detail-row" ${hideForBusiness}>
+          <div class="detail-row">
             <span class="detail-label">Country</span>
             <div class="detail-value">${client.countries?.name || '-'}</div>
           </div>
-            <div class="detail-row" ${hideForBusiness}>
+          <div class="detail-row">
             <span class="detail-label">P.O. Box No</span>
             <div class="detail-value">${client.po_box_no || '-'}</div>
-            </div>
+          </div>
           </div>
         </div>
       </div>
     `;
 
   // Column 7: OTHER DETAILS
-  const col7 = hideForBusiness ? `` : `
+  const col7 = !isIndividual ? `` : `
       <div style="display:flex; flex-direction:column; gap:10px;">
       <div class="detail-section">
         <div class="detail-section-header">OTHER DETAILS</div>
         <div class="detail-section-body">
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Married</span>
-              <div class="detail-value checkbox">
-                <input type="checkbox" ${client.married ? 'checked' : ''} disabled>
-          </div>
-          </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Spouse's Name</span>
-              <div class="detail-value">${client.spouses_name || '-'}</div>
-          </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">PEP</span>
-              <div class="detail-value checkbox">
-                <input type="checkbox" ${client.pep ? 'checked' : ''} disabled>
-          </div>
-          </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">PEP Details</span>
-              <div class="detail-value" style="min-height:40px; white-space:pre-wrap;">${client.pep_comment || '-'}</div>
+          <div class="detail-row">
+            <span class="detail-label">Married</span>
+            <div class="detail-value checkbox">
+              <input type="checkbox" ${client.married ? 'checked' : ''} disabled style="accent-color:#f3742a;">
             </div>
-            <div class="detail-row" ${hideForBusiness}>
-              <span class="detail-label">Notes</span>
-              <textarea class="detail-value" style="min-height:40px; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Spouse's Name</span>
+            <div class="detail-value">${client.spouses_name || '-'}</div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">PEP</span>
+            <div class="detail-value checkbox">
+              <input type="checkbox" ${client.pep ? 'checked' : ''} disabled style="accent-color:#f3742a;">
             </div>
+          </div>
+          <div class="detail-row" style="flex-direction:column; align-items:stretch;">
+            <textarea class="detail-value" placeholder="(Enter PEP Details)" style="min-height:60px; white-space:pre-wrap; resize:vertical; width:100%;" disabled>${client.pep_comment || ''}</textarea>
+          </div>
           </div>
         </div>
       </div>
@@ -1553,7 +1550,13 @@ function populateClientDetailsModal(client) {
               ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}')"></div>`
       : `<div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>`}
             </div>
-            <div class="detail-row"><span class="detail-label">Passport No</span><div class="detail-value">${client.passport_no || '-'}</div></div>
+            <div class="detail-row">
+              <span class="detail-label">Passport No</span>
+              <div style="display:flex; gap:5px; align-items:center; flex:1;">
+                <div class="detail-value" style="flex:1;">${client.passport_no || '-'}</div>
+                <div class="detail-value" style="width:40px; text-align:center; flex-shrink:0; font-weight:bold;">SEY</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1562,7 +1565,7 @@ function populateClientDetailsModal(client) {
   const col6 = !isIndividual ? '' : /* Income Details */ `
       <div style="display:flex; flex-direction:column; gap:10px;">
         <div class="detail-section">
-          <div class="detail-section-header">INDIVIDUAL INCOME DETAILS</div>
+          <div class="detail-section-header">INCOME DETAILS</div>
           <div class="detail-section-body">
             <div class="detail-row"><span class="detail-label">Occupation</span><div class="detail-value">${client.occupations?.name || '-'}</div></div>
             <div class="detail-row"><span class="detail-label">Income Source</span><div class="detail-value">${client.income_sources?.name || '-'}</div></div>
@@ -1576,17 +1579,19 @@ function populateClientDetailsModal(client) {
   const col8 = !isIndividual ? '' : /* Insurable Details */ `
       <div style="display:flex; flex-direction:column; gap:10px;">
         <div class="detail-section">
-          <div class="detail-section-header">INDIVIDUAL INSURABLES</div>
+          <div class="detail-section-header">INSURABLES</div>
           <div class="detail-section-body">
-            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:15px;">
-              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Vehicle</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled></div></div>
-              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Home</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_house ? 'checked' : ''} disabled></div></div>
-              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Business</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_business ? 'checked' : ''} disabled></div></div>
-              <div style="display:flex; align-items:center; gap:8px;"><label style="font-size:11px;">Boat</label><div class="detail-value checkbox"><input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled></div></div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:5px;"><label style="font-size:12px;">Vehicle</label><input type="checkbox" ${client.has_vehicle ? 'checked' : ''} disabled style="accent-color:#f3742a;"></div>
+              <div style="display:flex; align-items:center; gap:5px;"><label style="font-size:12px;">House</label><input type="checkbox" ${client.has_house ? 'checked' : ''} disabled style="accent-color:#f3742a;"></div>
+              <div style="display:flex; align-items:center; gap:5px;"><label style="font-size:12px;">Business</label><input type="checkbox" ${client.has_business ? 'checked' : ''} disabled style="accent-color:#f3742a;"></div>
             </div>
-            <div style="margin-top:15px; border-top:1px solid #ddd; padding-top:8px;">
-              <label style="font-size:10px; color:#555;">Notes</label>
-              <textarea class="detail-value" style="min-height:40px; width:100%; white-space:pre-wrap; resize:vertical;" disabled>${client.notes || ''}</textarea>
+            <div style="display:flex; align-items:center; gap:5px; margin-bottom:10px;">
+              <label style="font-size:12px;">Boat</label><input type="checkbox" ${client.has_boat ? 'checked' : ''} disabled style="accent-color:#f3742a;">
+            </div>
+            <div>
+              <label style="font-size:12px;">Notes</label>
+              <textarea class="detail-value" style="min-height:50px; width:100%; white-space:pre-wrap; resize:vertical; margin-top:5px;" disabled>${client.notes || ''}</textarea>
             </div>
           </div>
         </div>
