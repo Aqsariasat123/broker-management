@@ -173,9 +173,9 @@
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:12px 15px; margin-bottom:15px;">
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button class="nav-tab active" data-tab="details" data-url="#" style="background:#f3742a; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Details</button>
-      <button class="nav-tab" data-tab="proposals" data-url="/proposals" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
+      <button class="nav-tab" data-tab="proposals" data-url="/life-proposals" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
       <button class="nav-tab" data-tab="policies" data-url="/policies" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Policies</button>
-      <button class="nav-tab" data-tab="payments" data-url="/payments" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
+      <button class="nav-tab" data-tab="payments" data-url="/payment-plans" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
       <button class="nav-tab" data-tab="vehicles" data-url="/vehicles" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Vehicles</button>
       <button class="nav-tab" data-tab="claims" data-url="/claims" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Claims</button>
       <button class="nav-tab" data-tab="documents" data-url="#" style="background:#fff; color:#000; border:1px solid #ddd; padding:6px 12px; border-radius:2px; cursor:pointer; font-size:13px;">Documents</button>
