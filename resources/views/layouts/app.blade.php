@@ -19,7 +19,7 @@
    
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
-  
+      @yield('page-header')
       @yield('content')
     </div>
   </div>

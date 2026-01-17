@@ -12,18 +12,18 @@
 
 <div class="dashboard">
   <!-- Main Documents Header with Client Name -->
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <h3 style="margin:0; font-size:18px; font-weight:600;">
         Documents
         @if(isset($client) && $client)
           <span style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
         @endif
-        
         @if($policy)
           <span style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $policy->policy_code }}</span>
         @endif
       </h3>
+      @include('partials.page-header-right')
     </div>
   </div> 
   

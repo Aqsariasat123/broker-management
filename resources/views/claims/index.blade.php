@@ -17,16 +17,12 @@
 <div class="dashboard">
   <!-- Main Claims Table View -->
   <div class="clients-table-view" id="clientsTableView">
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
-         
-            
-            
               @if($policy)
-                {{ $policy->policy_code }} - 
+                {{ $policy->policy_code }} -
               @endif
-              
               @if($policy)
                  <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Claims</span>
               @else
@@ -36,9 +32,8 @@
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
             @endif
             <span id="followUpLabel" style="display:{{ request()->get('pending') == 1 ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - Pending </span>
-
           </h3>
-       
+          @include('partials.page-header-right')
       </div>
     </div>
   <div class="container-table">

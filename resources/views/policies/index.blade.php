@@ -51,7 +51,7 @@
       </ul>
     </div>
   @endif
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0; font-size:18px; font-weight:600;">
               @if($filter == "expiring")
@@ -60,12 +60,11 @@
                 Birthdays Today
               @elseif(request()->get('type') == "life")
                 Policies - <span style="color:#f3742a;">Life  </span>
-                
               @else
                 Policies
               @endif
               </h3>
-
+              @include('partials.page-header-right')
       </div>
   </div>
   <!-- Main Policies Table View -->

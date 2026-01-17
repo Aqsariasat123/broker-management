@@ -19,16 +19,17 @@
   <div class="clients-table-view" id="clientsTableView">
     
     <div class="container-table">
-      <!-- To Follow Up Card -->
-      <div style=" border-radius:4px; overflow:hidden; margin-bottom:15px;">
-        <div class="page-header" style="background:#fff; border-bottom:1px solid #ddd; margin-bottom:0; padding:15px 20px;">
-           <h3>
+      <!-- Header -->
+      <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+           <h3 style="margin:0; font-size:18px; font-weight:600;">
                     @if($statusfilter == 'open')
                         Open Leads
-                    @else 
+                    @else
                   Contacts{{ request()->has('follow_up') && request()->follow_up ? ' - To Follow Up' : '' }}
                     @endif
             </h3>
+            @include('partials.page-header-right')
         </div>
       </div>
 

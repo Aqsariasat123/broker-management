@@ -1,13 +1,21 @@
 @extends('layouts.app')
 
+@section('page-header')
+<div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0; font-size:18px; font-weight:600;">Dashboard</h3>
+    @include('partials.page-header-right')
+  </div>
+</div>
+@endsection
+
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 
 
 
 <div class="dashboard">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>Admin Dashboard</h2>
+  <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px;">
     <div style="display: flex; gap: 10px;">
       <form method="GET" action="{{ route('dashboard') }}" style="display: flex; gap: 10px; align-items: center;">
         <select name="date_range" class="form-control" style="width: auto; padding: 5px 10px;" onchange="this.form.submit()">

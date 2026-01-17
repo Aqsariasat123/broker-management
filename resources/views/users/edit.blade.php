@@ -23,9 +23,29 @@
     </div>
 
     <div class="form-container">
-      <form method="POST" action="{{ route('users.update', $user->id) }}">
+      <form method="POST" action="{{ route('users.update', $user->id) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="profile_picture">Profile Picture</label>
+            <div style="display:flex; align-items:center; gap:15px;">
+              <div style="width:80px; height:80px; border-radius:8px; overflow:hidden; border:1px solid #ddd; background:#f5f5f5;">
+                @if($user->profile_picture)
+                  <img src="{{ asset('storage/' . $user->profile_picture) }}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
+                @else
+                  <img src="{{ asset('asset/user.png') }}" alt="Default" style="width:100%; height:100%; object-fit:cover;">
+                @endif
+              </div>
+              <div>
+                <input type="file" id="profile_picture" name="profile_picture" class="form-control" accept="image/*" style="padding:8px;">
+                <small style="color:#666; font-size:12px;">JPG, PNG (Max 2MB)</small>
+              </div>
+            </div>
+            @error('profile_picture')<span class="error-message">{{ $message }}</span>@enderror
+          </div>
+        </div>
 
         <div class="form-row">
           <div class="form-group">

@@ -17,26 +17,21 @@
 <div class="dashboard">
   <!-- Main Vehicles Table View -->
   <div class="clients-table-view" id="clientsTableView">
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-             <h3>
+             <h3 style="margin:0; font-size:18px; font-weight:600;">
           @if($policy)
-            {{ $policy->policy_code }} - 
+            {{ $policy->policy_code }} -
                <span style="color:#f3742a;">Vehicles</span>
           @endif
-         
           @if($client)
-           
              <span style="color:#f3742a;">{{ $client->client_name }} -  </span>
-            
           @endif
-                    @if(!$policy)
-           <span>Vehicles</span>    
-            @endif
-
-
+          @if(!$policy)
+           <span>Vehicles</span>
+          @endif
         </h3>
-       
+        @include('partials.page-header-right')
       </div>
   </div> 
   <div class="container-table">

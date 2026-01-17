@@ -19,12 +19,12 @@
 <div class="dashboard">
   <!-- Main Tasks Table View -->
   <div class="clients-table-view" id="clientsTableView">
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
             {{ request()->has('filter') && request()->filter== 'overdue' ? 'Tasks - Overdue' : 'Tasks' }}
           </h3>
-       
+          @include('partials.page-header-right')
       </div>
     </div>
   <div class="container-table">

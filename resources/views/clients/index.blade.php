@@ -19,7 +19,7 @@
   </div>
 
   <!-- Main Clients Table View -->
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
           @if($filter == "ids_expired")
@@ -31,6 +31,7 @@
             <span id="followUpLabel" style="display:{{ request()->get('follow_up') == 'true' && !request()->get('client_id') ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - To Follow Up</span>
           @endif
           </h3>
+          @include('partials.page-header-right')
       </div>
     </div>
    
@@ -118,14 +119,30 @@
       </table>
     </div>
 
-    <div class="footer" style="background:#fff; border-top:1px solid #ddd; margin-top:0;">
-      <div class="footer-left">
-        <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}">Export</a>
-        <button class="btn btn-column" id="columnBtn" type="button">Column</button>
-        <button class="btn btn-export" id="printBtn" type="button" style="margin-left:10px;">Print</button>
+    <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+      <div class="footer-left" style="display:flex; gap:8px;">
+        <a class="btn btn-export" href="{{ route('clients.export', array_merge(request()->query(), ['page' => $clients->currentPage()])) }}" style="background:#fff; border:1px solid #ddd; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; color:#333;">Export</a>
+        <button class="btn btn-column" id="columnBtn" type="button" style="background:#fff; border:1px solid #ddd; padding:6px 16px; border-radius:2px; cursor:pointer;">Column</button>
       </div>
       <div class="paginator">
-        {{ $clients->links() }}
+        @php
+          $base = url()->current();
+          $q = request()->query();
+          $current = $clients->currentPage();
+          $last = max(1, $clients->lastPage());
+          function clients_page_url($base, $q, $p) {
+            $params = array_merge($q, ['page' => $p]);
+            return $base . '?' . http_build_query($params);
+          }
+        @endphp
+
+        <a class="btn-page" href="{{ $current > 1 ? clients_page_url($base, $q, 1) : '#' }}" @if($current <= 1) disabled @endif>&laquo;</a>
+        <a class="btn-page" href="{{ $current > 1 ? clients_page_url($base, $q, $current - 1) : '#' }}" @if($current <= 1) disabled @endif>&lsaquo;</a>
+
+        <span style="padding:0 8px;">Page {{ $current }} of {{ $last }}</span>
+
+        <a class="btn-page" href="{{ $current < $last ? clients_page_url($base, $q, $current + 1) : '#' }}" @if($current >= $last) disabled @endif>&rsaquo;</a>
+        <a class="btn-page" href="{{ $current < $last ? clients_page_url($base, $q, $last) : '#' }}" @if($current >= $last) disabled @endif>&raquo;</a>
       </div>
     </div>
   </div>

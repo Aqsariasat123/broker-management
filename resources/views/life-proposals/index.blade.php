@@ -17,16 +17,15 @@
 <div class="dashboard">
   <!-- Main Life Proposals Table View -->
   <div class="clients-table-view" id="clientsTableView">
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
             Proposals
             @if(isset(request()->follow_up) || request()->follow_up === 1 ||  isset($contactid))
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> -  To Follow Up</span>
             @endif
-
           </h3>
-       
+          @include('partials.page-header-right')
       </div>
     </div>
   <div class="container-table">

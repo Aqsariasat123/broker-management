@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -98,6 +99,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'boolean',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $oldValues = $user->getAttributes();
@@ -109,6 +111,18 @@ class UserController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+            $validated['profile_picture'] = $path;
+        }
 
         $user->update($validated);
 

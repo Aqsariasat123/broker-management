@@ -4,10 +4,17 @@
 @include('partials.table-styles')
 <link rel="stylesheet" href="{{ asset('css/calender-index.css') }}?v={{ time() }}">
 
+<div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0; font-size:18px; font-weight:600;">Calendar</h3>
+    @include('partials.page-header-right')
+  </div>
+</div>
+
 <div class="calendar-container">
   <!-- Header -->
   <div class="calendar-header">
-    <div class="calendar-title">Calendar</div>
+    <div class="calendar-title"></div>
     
     <!-- Category Filters -->
     <div class="category-filters">

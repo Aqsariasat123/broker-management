@@ -11,11 +11,11 @@
 @endphp
 
 <div class="dashboard">
-    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
+    <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
              <h3 style="margin:0; font-size:18px; font-weight:600;">
               @if($policy)
-                {{ $policy->policy_code }} - 
+                {{ $policy->policy_code }} -
               @endif
                 @php
                       $hasPaidStatus = request()->filled('paid_status');
@@ -26,18 +26,16 @@
               @else
                  <span class="client-name" > Commissions</span>
               @endif
-
-            
-          
           @if($hasPaidStatus)
-               - 
+               -
              <span style="color:#f3742a;">Out Standing  </span>
               @endif
                @if($hasinsurer)
-               - 
+               -
              <span style="color:#f3742a;">{{request()->get('insurer')}}  </span>
               @endif
               </h3>
+              @include('partials.page-header-right')
       </div>
   </div>
   <!-- Main Commissions Table View -->
