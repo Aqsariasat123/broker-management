@@ -15,12 +15,12 @@
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <h3 style="margin:0; font-size:18px; font-weight:600;">
-        Documents
         @if(isset($client) && $client)
-          <span style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
-        @endif
-        @if($policy)
-          <span style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $policy->policy_code }}</span>
+          Documents - <span style="color:#f3742a;">{{ $client->client_name }}</span>
+        @elseif($policy)
+          Documents - <span style="color:#f3742a;">{{ $policy->policy_code }}</span>
+        @else
+          Documents
         @endif
       </h3>
       @include('partials.page-header-right')
@@ -44,15 +44,12 @@
           @endif 
           
           <div class="action-buttons">
-            @if(isset($client) && $client)
-              {{-- Smart back button - goes to client page and opens client details --}}
-              <button class="btn btn-close" onclick="goBackToClient({{ $client->id }}, '{{ addslashes($client->client_name) }}')" style="background:#000; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Back</button>
+            @if(request()->has('client_id') && request()->client_id)
+              <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
             @elseif(isset($policy) && $policy)
-              {{-- Back to policy page --}}
-              <button class="btn btn-close" onclick="window.location.href='{{ route('policies.show', $policy->id) }}'" style="background:#000; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Back</button>
+              <button class="btn btn-back" onclick="window.location.href='{{ route('policies.index', ['policy_id' => $policy->id]) }}'">Back</button>
             @else
-              {{-- Regular back button for non-client/non-policy contexts --}}
-              <button class="btn btn-close" onclick="window.history.back()" style="background:#000; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Back</button>
+              <button class="btn btn-close" onclick="window.history.back()">Close</button>
             @endif
           </div>
         </div>
@@ -201,8 +198,57 @@
     </div>
   </div>
 
-  <!-- Modals remain the same... -->
-  
+  <!-- Column Selection Modal -->
+  <div class="modal" id="columnModal">
+    <div class="modal-content column-modal-vertical">
+      <div class="modal-header">
+        <h4>Column Select & Sort</h4>
+        <div class="modal-header-buttons">
+          <button class="btn-save-orange" onclick="saveColumnSettings()">Save</button>
+          <button class="btn-cancel-gray" onclick="closeColumnModal()">Cancel</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <form id="columnForm" action="{{ route('documents.save-column-settings') }}" method="POST">
+          @csrf
+          @if(request()->has('client_id') && request()->client_id)
+            <input type="hidden" name="client_id" value="{{ request()->client_id }}">
+          @endif
+          <div class="column-selection-vertical" id="columnSelection">
+            @php
+              $all = $columnDefinitions;
+              $ordered = [];
+              foreach($selectedColumns as $col) {
+                if(isset($all[$col])) {
+                  $ordered[$col] = $all[$col];
+                  unset($all[$col]);
+                }
+              }
+              $ordered = array_merge($ordered, $all);
+              $counter = 1;
+            @endphp
+
+            @foreach($ordered as $key => $label)
+              @php
+                $isMandatory = in_array($key, $mandatoryColumns);
+                $isChecked = in_array($key, $selectedColumns) || $isMandatory;
+              @endphp
+              <div class="column-item-vertical" draggable="true" data-column="{{ $key }}">
+                <span class="column-number">{{ $counter }}</span>
+                <label class="column-label-wrapper">
+                  <input type="checkbox" class="column-checkbox" id="col_{{ $key }}" value="{{ $key }}" @if($isChecked) checked @endif @if($isMandatory) disabled @endif>
+                  <span class="column-label-text">{{ $label }}</span>
+                </label>
+              </div>
+              @php $counter++; @endphp
+            @endforeach
+          </div>
+          <div class="column-drag-hint">Drag and Select to position and display</div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 @include('partials.table-scripts', [

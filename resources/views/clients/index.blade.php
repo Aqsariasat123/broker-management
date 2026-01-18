@@ -19,7 +19,7 @@
   </div>
 
   <!-- Main Clients Header -->
-  <div id="clientsPageHeader" style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
+  <div id="clientsPageHeader" style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px; {{ request()->has('client_id') ? 'display:none;' : '' }}">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
           @if($filter == "ids_expired")
@@ -37,7 +37,7 @@
       </div>
     </div>
    
-  <div class="clients-table-view" id="clientsTableView">
+  <div class="clients-table-view" id="clientsTableView" style="{{ request()->has('client_id') ? 'display:none;' : '' }}">
   <div class="container-table">
     <!-- Clients Card -->
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
@@ -165,16 +165,16 @@
   <!-- Nav Tabs Row -->
   <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px; margin-bottom:10px;">
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="nav-tab" data-tab="proposals" data-url="/life-proposals" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
-      <button class="nav-tab" data-tab="policies" data-url="/policies" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Policies</button>
-      <button class="nav-tab" data-tab="payments" data-url="/payment-plans" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
-      <button class="nav-tab" data-tab="vehicles" data-url="/vehicles" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Vehicles</button>
-      <button class="nav-tab" data-tab="claims" data-url="/claims" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Claims</button>
-      <button class="nav-tab" data-tab="documents" data-url="#" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Documents</button>
+      <button class="nav-tab" onclick="goToClientProposals()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Proposals</button>
+      <button class="nav-tab" onclick="goToClientPolicies()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Policies</button>
+      <button class="nav-tab" onclick="goToClientPayments()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Payments</button>
+      <button class="nav-tab" onclick="goToClientVehicles()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Vehicles</button>
+      <button class="nav-tab" onclick="goToClientClaims()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Claims</button>
+      <button class="nav-tab" onclick="goToClientDocuments()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Documents</button>
     </div>
     <div style="display:flex; gap:8px;">
-      <button id="editClientFromPageBtn" onclick="openEditClient(currentClientId)" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Edit</button>
-      <button onclick="closeClientPageView()" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Close</button>
+      <button id="editClientFromPageBtn" onclick="openClientEditPage(currentClientId)" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Edit</button>
+      <button onclick="closeClientPageView()" style="background:#ccc; color:#000; border:none; padding:8px 16px; border-radius:2px; cursor:pointer;">Close</button>
     </div>
   </div>
 
@@ -228,13 +228,49 @@
   </div>
 </div>
 
+<!-- ============================================================================ -->
+<!-- CLIENT EDIT PAGE VIEW - SEPARATE EDIT SCREEN -->
+<!-- ============================================================================ -->
+<div id="clientEditPageView" style="display:none;">
+  <form id="clientEditForm" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="hidden" name="_method" value="PUT" id="editFormMethod">
+
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; margin-bottom:15px;">
+      <h3 style="margin:0; font-size:20px; font-weight:600;">
+        Client - <span id="editPageClientName" style="color:#f3742a;"></span>
+      </h3>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="editDeleteBtn" onclick="deleteClient()" style="background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:4px; cursor:pointer;">Delete</button>
+        <button type="submit" style="background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:4px; cursor:pointer;">Save</button>
+        <button type="button" onclick="closeClientEditPage()" style="background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:4px; cursor:pointer;">Close</button>
+      </div>
+    </div>
+
+    <!-- Edit Form Content - Will be populated by JS -->
+    <div id="editFormContent" style="background:#fff; border:1px solid #ddd; padding:20px;">
+      <!-- JS will populate this -->
+    </div>
+
+    <!-- Documents Section -->
+    <div style="background:#fff; border:1px solid #ddd; border-top:none; padding:20px;">
+      <h4 style="font-weight:bold; margin:0 0 15px 0; font-size:14px;">Documents</h4>
+      <div id="editPageDocuments" style="display:flex; gap:10px; flex-wrap:wrap; min-height:50px; margin-bottom:15px;">
+        <!-- Documents loaded by JS -->
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('editPhotoInput').click()" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Upload Photo</button>
+        <button type="button" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Add Document</button>
+      </div>
+      <input type="file" id="editPhotoInput" name="image" accept="image/*" style="display:none;">
+    </div>
+  </form>
+</div>
+
 <style>
 .nav-tab {
   transition: all 0.2s;
-}
-.nav-tab:hover {
-  background: #f5f5f5 !important;
-  color: #000 !important;
 }
 .nav-tab.active {
   background: #f3742a !important;
@@ -247,7 +283,7 @@
   overflow: hidden;
 }
 .detail-section-header {
-  background: #000;
+  background: #a0a0a0 !important;
   color: #fff;
   padding: 8px 12px;
   font-size: 11px;
@@ -329,7 +365,7 @@ function closeClientPageView() {
         <div style="display:flex; gap:8px;">
           <button type="button" class="btn-delete" id="clientDeleteBtn" style="display:none; background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;" onclick="deleteClient()">Delete</button>
           <button type="submit" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Save</button>
-          <button type="button" onclick="closeClientModal()" style="background:#333; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Cancel</button>
+          <button type="button" onclick="closeClientModal()" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer;">Cancel</button>
         </div>
       </div>
     </div>
@@ -820,5 +856,5 @@ function closeClientPageView() {
   const csrfToken = '{{ csrf_token() }}';
   const clientsTotal = {{ $clients->total() }};
 </script>
-<script src="{{ asset('js/clients-index.js') }}"></script>
+<script src="{{ asset('js/clients-index.js') }}?v={{ time() }}"></script>
 @endsection

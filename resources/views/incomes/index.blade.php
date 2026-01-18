@@ -191,7 +191,7 @@
         <h4 id="incomeModalTitle" style="margin:0; font-size:18px; font-weight:bold;">Add Income</h4>
         <div style="display:flex; gap:10px;">
           <button type="submit" form="incomeForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeIncomeModal()" style="background:#000; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeIncomeModal()" style="background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Cancel</button>
         </div>
       </div>
       <form id="incomeForm" method="POST" action="{{ route('incomes.store') }}" enctype="multipart/form-data">

@@ -11,7 +11,7 @@
           <div class="records-found">Records Found - {{ $values->total() }}</div>
         <div class="action-buttons">
           <button class="btn btn-add" onclick="openValueDialog()">Add</button>
-          <a href="{{ route('dashboard') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
+          <a href="{{ route('dashboard') }}" class="btn" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
         </div>
       </div>
       
@@ -45,7 +45,7 @@
           <button onclick="applyFilters()" class="btn" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Filter</button>
         </div>
         <div>
-          <button onclick="clearFilters()" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Clear</button>
+          <button onclick="clearFilters()" class="btn" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Clear</button>
         </div>
       </div>
 

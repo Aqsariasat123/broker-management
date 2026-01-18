@@ -12,7 +12,7 @@ class Claim extends Model
 
     protected $fillable = [
         'claim_id', 'policy_id', 'policy_no', 'client_id', 'loss_date', 'claim_date', 'claim_amount',
-        'claim_summary', 'claim_stage', 'status', 'close_date', 'paid_amount', 'settlment_notes'
+        'claim_summary', 'claim_stage', 'status', 'close_date', 'paid_amount', 'settlment_notes', 'comments'
     ];
 
     protected $dates = ['loss_date', 'claim_date', 'close_date'];

@@ -247,7 +247,7 @@ class TableConfigHelper
                 'route_prefix' => 'claims',
                 'session_key' => 'claim_columns',
                 'default_columns' => [
-                    'claim_id','policy_no','client_name','loss_date','claim_date','claim_amount','claim_summary','status','close_date','paid_amount','settlment_notes'
+                    'claim_id','policy_no','client_name','loss_date','claim_date','claim_amount','claim_summary','status','close_date','paid_amount','settlment_notes','comments'
                 ],
                 'mandatory_columns' => ['claim_id', 'policy_no', 'status'],
                 'column_definitions' => [
@@ -262,6 +262,7 @@ class TableConfigHelper
                     'close_date' => 'Close Date',
                     'paid_amount' => 'Paid Amount',
                     'settlment_notes' => 'Settlment Notes',
+                    'comments' => 'Comments',
                 ],
             ],
             'incomes' => [

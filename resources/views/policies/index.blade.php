@@ -54,7 +54,9 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0; font-size:18px; font-weight:600;">
-              @if($filter == "expiring")
+              @if(isset($client) && $client)
+                Policies - <span style="color:#f3742a;">{{ $client->client_name ?? $client->first_name . ' ' . $client->surname }}</span>
+              @elseif($filter == "expiring")
                 Policies Due For Renewal
               @elseif($filter == "birthday_today")
                 Birthdays Today
@@ -102,9 +104,13 @@
       </div>
       <div class="action-buttons">
      @if($filter != "expiring")
-        <button type="button" class="btn btn-add" id="addPolicyBtn">Add</button>
-      @endif
         @if($fromClient)
+          <button type="button" class="btn btn-add" onclick="window.location.href='{{ route('policies.create', ['client_id' => request()->client_id]) }}'">Add</button>
+        @else
+          <button type="button" class="btn btn-add" id="addPolicyBtn">Add</button>
+        @endif
+      @endif
+        @if(request()->has('client_id') && request()->client_id)
           <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
         @elseif(request()->has('from_calendar') && request()->from_calendar == '1')
           <button class="btn btn-back" onclick="window.location.href='/calendar?filter=renewals'">Back</button>
@@ -677,7 +683,7 @@
         <h4 style="margin:0;">Add Vehicle Details</h4>
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="saveVehicle()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
-          <button type="button" onclick="closeVehicleDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+          <button type="button" onclick="closeVehicleDialog()" style="background:#ccc; color:#000; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
         </div>
       </div>
       <form id="vehicleForm">
@@ -756,7 +762,7 @@
         <h4 style="margin:0;">Add Nominee</h4>
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="saveNominee()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
-          <button type="button" onclick="closeNomineeDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
+          <button type="button" onclick="closeNomineeDialog()" style="background:#ccc; color:#000; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Close</button>
         </div>
       </div>
       <form id="nomineeForm">
@@ -888,7 +894,7 @@
 
         </div>
         <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
-          <button type="button" class="btn-cancel" onclick="closeRenewalModal()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeRenewalModal()" style="background:#ccc; color:#000; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Cancel</button>
           <button type="submit" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer;">Save</button>
         </div>
       </form>
@@ -900,7 +906,7 @@
       <h4 id="filterModalTitle" style="margin:0; font-size:18px; font-weight:bold;">Filters</h4>
       <div style="display:flex; gap:10px;">
         <button type="submit" form="filterForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Apply</button>
-        <button type="button" class="btn-cancel" onclick="closeFilterModal()" style="background:#6c757d; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Close</button>
+        <button type="button" class="btn-cancel" onclick="closeFilterModal()" style="background:#ccc; color:#000; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Close</button>
       </div>
     </div>
 

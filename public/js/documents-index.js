@@ -446,6 +446,7 @@
     if (e.key === 'Escape') {
       closeDocumentModal();
       closeDocumentDetailsModal();
+      closeColumnModal();
     }
   });
 
@@ -462,116 +463,80 @@
     }
   });
 
-  // Only declare if not already declared (to avoid duplicate declaration errors)
-  if (typeof draggedElement === 'undefined') {
-    var draggedElement = null;
-  }
-  if (typeof dragOverElement === 'undefined') {
-    var dragOverElement = null;
-  }
+  document.getElementById('columnModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeColumnModal();
+    }
+  });
 
-  // Initialize drag and drop when column modal opens
+  // Drag and drop variables
+  let draggedElement = null;
   let dragInitialized = false;
 
+  // Initialize drag and drop when column modal opens
   function initDragAndDrop() {
     const columnSelection = document.getElementById('columnSelection');
     if (!columnSelection) return;
 
-    // Only initialize once to avoid duplicate event listeners
-    if (dragInitialized) {
-      // Re-enable draggable on all items
-      const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
-      columnItems.forEach(item => {
-        item.setAttribute('draggable', 'true');
-      });
-      return;
-    }
+    // Prevent duplicate initialization
+    if (dragInitialized) return;
 
-    // Make all column items draggable
-    const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
+    const items = columnSelection.querySelectorAll('.column-item-vertical');
 
-    columnItems.forEach(item => {
-      // Ensure draggable attribute is set
+    items.forEach(item => {
       item.setAttribute('draggable', 'true');
       item.style.cursor = 'move';
 
-      // Drag start
       item.addEventListener('dragstart', function(e) {
         draggedElement = this;
         this.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-        // Create a ghost image
-        const dragImage = this.cloneNode(true);
-        dragImage.style.opacity = '0.5';
-        document.body.appendChild(dragImage);
-        e.dataTransfer.setDragImage(dragImage, 0, 0);
-        setTimeout(() => {
-          if (document.body.contains(dragImage)) {
-            document.body.removeChild(dragImage);
-          }
-        }, 0);
+        e.dataTransfer.setData('text/html', this.outerHTML);
       });
 
-      // Drag end
       item.addEventListener('dragend', function(e) {
         this.classList.remove('dragging');
-        if (dragOverElement) {
-          dragOverElement.classList.remove('drag-over');
-          dragOverElement = null;
-        }
+        document.querySelectorAll('.column-item-vertical').forEach(el => {
+          el.classList.remove('drag-over');
+        });
         draggedElement = null;
+        updateColumnNumbers();
       });
 
-      // Drag over
       item.addEventListener('dragover', function(e) {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-
         if (draggedElement && this !== draggedElement) {
-          if (dragOverElement && dragOverElement !== this) {
-            dragOverElement.classList.remove('drag-over');
-          }
-
           this.classList.add('drag-over');
-          dragOverElement = this;
-
           const rect = this.getBoundingClientRect();
-          const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-
-          if (next) {
-            if (this.nextSibling && this.nextSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this.nextSibling);
-            } else if (!this.nextSibling) {
-              this.parentNode.appendChild(draggedElement);
-            }
+          const midY = rect.top + rect.height / 2;
+          if (e.clientY < midY) {
+            this.parentNode.insertBefore(draggedElement, this);
           } else {
-            if (this.previousSibling !== draggedElement) {
-              this.parentNode.insertBefore(draggedElement, this);
-            }
+            this.parentNode.insertBefore(draggedElement, this.nextSibling);
           }
         }
       });
 
-      // Drag leave
       item.addEventListener('dragleave', function(e) {
-        if (!this.contains(e.relatedTarget)) {
-          this.classList.remove('drag-over');
-          if (dragOverElement === this) {
-            dragOverElement = null;
-          }
-        }
+        this.classList.remove('drag-over');
       });
 
-      // Drop
       item.addEventListener('drop', function(e) {
         e.preventDefault();
-        e.stopPropagation();
         this.classList.remove('drag-over');
-        dragOverElement = null;
-        return false;
       });
     });
 
     dragInitialized = true;
+  }
+
+  // Update column numbers after drag
+  function updateColumnNumbers() {
+    const items = document.querySelectorAll('#columnSelection .column-item-vertical');
+    items.forEach((item, index) => {
+      const numberSpan = item.querySelector('.column-number');
+      if (numberSpan) {
+        numberSpan.textContent = index + 1;
+      }
+    });
   }

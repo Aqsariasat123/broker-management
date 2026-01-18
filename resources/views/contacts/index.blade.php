@@ -464,7 +464,7 @@
         <h4 id="contactModalTitle" style="margin: 0; font-size: 16px; font-weight: bold;">Add Contact</h4>
         <div style="display: flex; gap: 8px;">
           <button type="submit" form="contactForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeContactModal()" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeContactModal()" style="background: #ccc; color: #000; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
         </div>
       </div>
 
@@ -627,7 +627,7 @@
         <h4 style="margin: 0; font-size: 16px; font-weight: bold;">Add Follow Up</h4>
         <div style="display: flex; gap: 8px;">
           <button type="button" onclick="saveFollowUp()" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Save</button>
-          <button type="button" onclick="closeAddFollowUpModal()" class="btn-cancel" style="background: #000; color: #fff; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
+          <button type="button" onclick="closeAddFollowUpModal()" class="btn-cancel" style="background: #ccc; color: #000; border: none; padding: 5px 12px; border-radius: 2px; cursor: pointer; font-size: 12px;">Cancel</button>
         </div>
       </div>
       <div class="modal-body" style="padding: 15px;">

@@ -682,6 +682,16 @@ document.addEventListener('change', function (e) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {
+  // Check if client_id is in URL and auto-open client details
+  const urlParams = new URLSearchParams(window.location.search);
+  const clientIdFromUrl = urlParams.get('client_id');
+  if (clientIdFromUrl) {
+    // Auto-open client details when page loads with client_id parameter
+    setTimeout(() => {
+      openClientDetailsModal(parseInt(clientIdFromUrl));
+    }, 100);
+  }
+
   const filterToggle = document.getElementById('filterToggle');
   if (filterToggle?.checked) {
     document.querySelectorAll('.column-filter').forEach(filter => {
@@ -747,104 +757,7 @@ if (listAllBtn) {
 // CLIENT MODAL FUNCTIONS
 // ============================================================================
 
-async function openEditClient(id) {
-  try {
-    const res = await fetch(`/clients/${id}/edit`, {
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errorText}`);
-    }
-    const client = await res.json();
-    currentClientId = id;
-
-    // Get form container
-    const formContainer = document.querySelector('#clientFormPageContent form div[style*="padding:12px"]');
-    if (!formContainer) {
-      console.error('Form container not found');
-      return;
-    }
-
-    // Set form action and method
-    const form = document.querySelector('#clientFormPageContent form');
-    if (form) {
-      form.action = `/clients/${id}`;
-      form.method = 'POST';
-      const methodDiv = form.querySelector('#clientFormMethod');
-      if (methodDiv) {
-        methodDiv.innerHTML = '@method("PUT")';
-      }
-    }
-
-    // Show delete button
-    const deleteBtn = document.querySelector('#clientFormPageContent .btn-delete');
-    if (deleteBtn) {
-      deleteBtn.style.display = 'inline-block';
-    }
-
-    // Populate edit form with same structure as detail page
-    populateClientEditForm(client, formContainer);
-
-    // Set page title (only if elements exist)
-    const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Unknown';
-    const clientPageTitle = document.getElementById('clientPageTitle');
-    const clientPageName = document.getElementById('clientPageName');
-    const editClientFromPageBtn = document.getElementById('editClientFromPageBtn');
-    if (clientPageTitle) clientPageTitle.textContent = 'Edit Client';
-    if (clientPageName) clientPageName.textContent = clientName;
-    if (editClientFromPageBtn) editClientFromPageBtn.style.display = 'none';
-
-    // Set up documents section
-    const editFormDocumentsSection = document.getElementById('editFormDocumentsSection');
-    if (editFormDocumentsSection) {
-      // Create documents section HTML
-      const documentsHTML = `
-          <h4 style="font-weight:bold; margin-bottom:10px; color:#000; font-size:13px;">Documents</h4>
-          <div id="editClientDocumentsList" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-            ${renderDocumentsList(client.documents || [])}
-          </div>
-          <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <input type="file" id="image" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
-            <button type="button" class="btn" onclick="document.getElementById('image').click()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Upload Photo</button>
-            <button id="addDocumentBtn2" type="button" class="btn" onclick="openDocumentUploadModal()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; display:inline-block;">Add Document</button>
-          </div>
-        
-        `;
-      editFormDocumentsSection.innerHTML = documentsHTML;
-      editFormDocumentsSection.style.display = 'block';
-    }
-
-    // Hide table view, show page view
-    document.getElementById('clientsTableView').classList.add('hidden');
-    const clientPageView = document.getElementById('clientPageView');
-    clientPageView.classList.add('show');
-    clientPageView.style.display = 'block';
-    document.getElementById('clientDetailsPageContent').style.display = 'none';
-    document.getElementById('clientFormPageContent').style.display = 'block';
-
-    // Setup nav tab listeners for page view
-    document.querySelectorAll('#clientPageView .nav-tab').forEach(tab => {
-      // Remove existing listeners by cloning
-      const newTab = tab.cloneNode(true);
-      tab.parentNode.replaceChild(newTab, tab);
-      // Add click listener
-      newTab.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (!currentClientId) return;
-        const baseUrl = this.getAttribute('data-url');
-        if (!baseUrl || baseUrl === '#') return;
-        window.location.href = baseUrl + '?client_id=' + currentClientId;
-      });
-    });
-  } catch (e) {
-    console.error(e);
-    alert('Error loading client data: ' + e.message);
-  }
-}
+// openEditClient function moved to line ~2798 to avoid duplication
 
 // Open client details modal
 // ============================================================================
@@ -1611,9 +1524,9 @@ function populateClientDetailsModal(client) {
   const addDocumentBtn = document.getElementById('addDocumentBtn1');
   if (addDocumentBtn && currentClientId) addDocumentBtn.style.display = 'inline-block';
 
-  // Edit button
+  // Edit button - calls new edit page
   const editBtn = document.getElementById('editClientFromPageBtn');
-  if (editBtn) editBtn.onclick = () => openEditClient(currentClientId);
+  if (editBtn) editBtn.onclick = () => openClientEditPage(currentClientId);
 
   // Tab navigation
   document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -2644,7 +2557,7 @@ function updateDocumentsList(client) {
 function editClientFromModal() {
   if (currentClientId) {
     closeClientDetailsModal();
-    openEditClient(currentClientId);
+    openClientEditPage(currentClientId);
   }
 }
 
@@ -2745,38 +2658,378 @@ function closeClientModal() {
     const modal = document.getElementById('clientModal');
     const tableView = document.getElementById('clientsTableView');
     const pageHeader = document.getElementById('clientsPageHeader');
+    const clientPageView = document.getElementById('clientPageView');
 
+    // Hide the modal/form
     if (modal) {
         modal.style.display = 'none';
     }
+
+    // Hide client page view as well
+    if (clientPageView) {
+        clientPageView.style.display = 'none';
+    }
+
+    // Show the table view and header
     if (tableView) {
         tableView.style.display = 'block';
     }
     if (pageHeader) {
         pageHeader.style.display = 'block';
     }
+
+    // Reset form
+    const form = document.getElementById('clientForm');
+    if (form) {
+        form.reset();
+        form.action = '/clients';
+    }
+
+    // Hide delete button
+    const deleteBtn = document.getElementById('clientDeleteBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+    }
+
+    // Reset method field
+    const methodField = document.getElementById('clientFormMethod');
+    if (methodField) {
+        methodField.innerHTML = '';
+    }
+
+    // Reset title
+    const title = document.getElementById('clientModalTitle');
+    if (title) {
+        title.textContent = 'Client - Add New Individual';
+    }
+
+    // Reset currentClientId
+    currentClientId = null;
 }
 
-// Open Edit Client Modal
+// ============================================================================
+// CLIENT EDIT PAGE - NEW CLEAN EDIT VIEW
+// ============================================================================
+
+function openClientEditPage(clientId) {
+    console.log('=== openClientEditPage called ===', clientId);
+    if (!clientId) return;
+    currentClientId = clientId;
+
+    fetch(`/clients/${clientId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.json();
+    })
+    .then(client => {
+        if (!client || !client.id) throw new Error('Invalid client data');
+
+        // Set form action
+        const form = document.getElementById('clientEditForm');
+        if (form) form.action = `/clients/${clientId}`;
+
+        // Set client name in header
+        const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || client.client_name || 'Unknown';
+        document.getElementById('editPageClientName').textContent = clientName;
+
+        // Build the edit form content
+        const isIndividual = client.client_type === 'Individual';
+        const formContent = document.getElementById('editFormContent');
+
+        formContent.innerHTML = buildEditFormHTML(client, isIndividual);
+
+        // Load documents
+        const docsContainer = document.getElementById('editPageDocuments');
+        if (docsContainer && client.documents) {
+            docsContainer.innerHTML = renderDocumentsList(client.documents);
+        }
+
+        // Hide other views, show edit page
+        const tableView = document.getElementById('clientsTableView');
+        const pageHeader = document.getElementById('clientsPageHeader');
+        const pageView = document.getElementById('clientPageView');
+        const modal = document.getElementById('clientModal');
+        const editPage = document.getElementById('clientEditPageView');
+
+        if (tableView) tableView.style.setProperty('display', 'none', 'important');
+        if (pageHeader) pageHeader.style.setProperty('display', 'none', 'important');
+        if (pageView) {
+            pageView.classList.remove('show');
+            pageView.style.setProperty('display', 'none', 'important');
+        }
+        if (modal) modal.style.setProperty('display', 'none', 'important');
+        if (editPage) editPage.style.setProperty('display', 'block', 'important');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error loading client data: ' + error.message);
+    });
+}
+
+function buildEditFormHTML(client, isIndividual) {
+    const inputStyle = 'width:100%; padding:6px 10px; border:1px solid #ccc; font-size:13px; background:#fff; border-radius:3px;';
+    const labelStyle = 'font-size:12px; color:#333; min-width:100px;';
+    const rowStyle = 'display:flex; align-items:center; margin-bottom:8px; gap:8px;';
+    const headerStyle = 'background:#a0a0a0 !important; color:#fff; padding:8px 12px; border-radius:4px; font-size:11px; font-weight:600; margin-bottom:12px; text-transform:uppercase;';
+    const checkStyle = 'width:16px; height:16px; accent-color:#f3742a;';
+
+    // Helper: row with label and input side by side
+    const fieldRow = (label, name, value, type = 'text', inputExtra = '') => `
+        <div style="${rowStyle}">
+            <label style="${labelStyle}">${label}</label>
+            <input type="${type}" name="${name}" value="${value || ''}" style="${inputStyle}" ${inputExtra}>
+        </div>`;
+
+    const selectRow = (label, name, value, options) => `
+        <div style="${rowStyle}">
+            <label style="${labelStyle}">${label}</label>
+            <select name="${name}" style="${inputStyle}">
+                ${options.map(opt => `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+            </select>
+        </div>`;
+
+    const checkboxRow = (label, name, checked) => `
+        <div style="${rowStyle}">
+            <input type="checkbox" name="${name}" value="1" ${checked ? 'checked' : ''} style="${checkStyle}">
+            <label style="font-size:12px; color:#333;">${label}</label>
+        </div>`;
+
+    // Build 4 column layout
+    let html = '<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:20px;">';
+
+    // Column 1: CUSTOMER DETAILS
+    html += `<div>
+        <div style="${headerStyle}">CUSTOMER DETAILS</div>
+        ${selectRow('Client Type', 'client_type', client.client_type, ['Individual', 'Business'])}
+        <div style="${rowStyle}">
+            <label style="${labelStyle}">DOB/DOR</label>
+            <input type="date" name="dob_dor" value="${client.dob_dor ? client.dob_dor.split('T')[0] : ''}" style="${inputStyle} flex:2;">
+            <span style="font-size:11px; color:#666;">Age</span>
+            <input type="text" value="${calculateAgeFromDate(client.dob_dor)}" readonly style="width:40px; padding:5px; border:1px solid #ccc; background:#f5f5f5; text-align:center;">
+        </div>
+        ${fieldRow('NIN/BCRN', 'nin_bcrn', client.nin_bcrn)}
+        <div style="${rowStyle}">
+            <label style="${labelStyle}">ID Expiry Date</label>
+            <input type="date" name="id_expiry_date" value="${client.id_expiry_date ? client.id_expiry_date.split('T')[0] : ''}" style="${inputStyle} flex:2;">
+            <span style="font-size:11px; color:#666;">Age</span>
+            <input type="text" value="${calculateAgeFromDate(client.id_expiry_date)}" readonly style="width:40px; padding:5px; border:1px solid #ccc; background:#f5f5f5; text-align:center;">
+        </div>
+        ${selectRow('Client Status', 'status', client.status, ['Active', 'Inactive', 'Pending'])}
+    </div>`;
+
+    // Column 2: CONTACT DETAILS
+    html += `<div>
+        <div style="${headerStyle}">CONTACT DETAILS</div>
+        ${fieldRow('Mobile No', 'mobile_no', client.mobile_no)}
+        ${checkboxRow('On Wattsapp', 'wa', client.wa == 1)}
+        ${fieldRow('Alternate No', 'alternate_no', client.alternate_no)}
+        ${fieldRow('Email Address', 'email_address', client.email_address, 'email')}
+        ${fieldRow('Contact Person', 'contact_person', client.contact_person)}
+    </div>`;
+
+    // Column 3: ADDRESS DETAILS
+    html += `<div>
+        <div style="${headerStyle}">ADDRESS DETAILS</div>
+        ${fieldRow('Location', 'location', client.location)}
+        ${fieldRow('District', 'district', client.district)}
+        ${fieldRow('Island', 'island', client.island)}
+        ${fieldRow('Country', 'country', client.country)}
+        ${fieldRow('P.O. Box No', 'po_box_no', client.po_box_no)}
+    </div>`;
+
+    // Column 4: REGISTRATION DETAILS
+    html += `<div>
+        <div style="${headerStyle}">REGISTRATION DETAILS</div>
+        ${fieldRow('Sign Up Date', 'signed_up', client.signed_up ? client.signed_up.split('T')[0] : '', 'date')}
+        ${fieldRow('Agency', 'agency', client.agency)}
+        ${fieldRow('Agent', 'agent', client.agent)}
+        ${fieldRow('Source', 'source', client.source)}
+        ${fieldRow('Source Name', 'source_name', client.source_name)}
+    </div>`;
+
+    html += '</div>'; // End first row
+
+    // Second row: INDIVIDUAL/INCOME/OTHER/INSURABLES - Only for Individual clients
+    if (isIndividual) {
+        html += '<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:20px;">';
+
+        // Column 1: INDIVIDUAL DETAILS
+        html += `<div>
+            <div style="${headerStyle}">INDIVIDUAL DETAILS</div>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    ${fieldRow('Salutation', 'salutation', client.salutation)}
+                    ${fieldRow('First Name', 'first_name', client.first_name)}
+                    ${fieldRow('Other Names', 'other_names', client.other_names)}
+                    ${fieldRow('Surname', 'surname', client.surname)}
+                    <div style="${rowStyle}">
+                        <label style="${labelStyle}">Passport No</label>
+                        <input type="text" value="SEY" readonly style="width:45px; padding:5px; border:1px solid #ccc; background:#f5f5f5; text-align:center;">
+                        <input type="text" name="passport_no" value="${client.passport_no || ''}" style="${inputStyle}">
+                    </div>
+                </div>
+                <div style="width:70px; height:85px; border:1px solid #ddd; display:flex; align-items:center; justify-content:center; background:#f9f9f9;">
+                    ${client.image ? `<img src="/storage/${client.image}" style="max-width:100%; max-height:100%; object-fit:cover;">` : '<span style="color:#ccc; font-size:10px;">Photo</span>'}
+                </div>
+            </div>
+        </div>`;
+
+        // Column 2: INCOME DETAILS
+        html += `<div>
+            <div style="${headerStyle}">INCOME DETAILS</div>
+            ${fieldRow('Occupation', 'occupation', client.occupation)}
+            ${fieldRow('Income Source', 'income_source', client.income_source)}
+            ${fieldRow('Employer', 'employer', client.employer)}
+            ${fieldRow('Monthly Income', 'monthly_income', client.monthly_income)}
+        </div>`;
+
+        // Column 3: OTHER DETAILS
+        html += `<div>
+            <div style="${headerStyle}">OTHER DETAILS</div>
+            ${checkboxRow('Married', 'married', client.married == 1)}
+            ${fieldRow("Spouse's Name", 'spouses_name', client.spouses_name)}
+            ${checkboxRow('PEP', 'pep', client.pep == 1)}
+            <div style="margin-top:6px;">
+                <label style="font-size:12px; color:#333; display:block; margin-bottom:4px;">PEP Details</label>
+                <textarea name="pep_comment" style="${inputStyle} height:50px; resize:none;">${client.pep_comment || ''}</textarea>
+            </div>
+        </div>`;
+
+        // Column 4: INSURABLES
+        html += `<div>
+            <div style="${headerStyle}">INSURABLES</div>
+            <div style="display:flex; gap:15px; margin-bottom:8px; flex-wrap:wrap;">
+                <label style="display:flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" name="has_vehicle" value="1" ${client.has_vehicle == 1 ? 'checked' : ''} style="${checkStyle}"> Vehicle</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" name="has_house" value="1" ${client.has_house == 1 ? 'checked' : ''} style="${checkStyle}"> House</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" name="has_business" value="1" ${client.has_business == 1 ? 'checked' : ''} style="${checkStyle}"> Business</label>
+            </div>
+            <label style="display:flex; align-items:center; gap:4px; font-size:12px; margin-bottom:8px;"><input type="checkbox" name="has_boat" value="1" ${client.has_boat == 1 ? 'checked' : ''} style="${checkStyle}"> Boat</label>
+            <div>
+                <label style="font-size:12px; color:#333; display:block; margin-bottom:4px;">Notes</label>
+                <textarea name="notes" style="${inputStyle} height:60px; resize:none;">${client.notes || ''}</textarea>
+            </div>
+        </div>`;
+
+        html += '</div>'; // End second row
+    }
+
+    return html;
+}
+
+function calculateAgeFromDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const today = new Date();
+    let age = today.getFullYear() - date.getFullYear();
+    const m = today.getMonth() - date.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < date.getDate())) age--;
+    return age >= 0 ? age : '';
+}
+
+function closeClientEditPage() {
+    const editPage = document.getElementById('clientEditPageView');
+    const tableView = document.getElementById('clientsTableView');
+    const pageHeader = document.getElementById('clientsPageHeader');
+    const pageView = document.getElementById('clientPageView');
+
+    if (editPage) editPage.style.setProperty('display', 'none', 'important');
+    if (pageView) {
+        pageView.classList.remove('show');
+        pageView.style.setProperty('display', 'none', 'important');
+    }
+    if (tableView) tableView.style.setProperty('display', 'block', 'important');
+    if (pageHeader) pageHeader.style.setProperty('display', 'block', 'important');
+    currentClientId = null;
+}
+
+// ============================================================================
+// CLIENT NAV TAB FUNCTIONS - Navigate to related pages with client filter
+// ============================================================================
+
+function goToClientProposals() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/life-proposals?client_id=${currentClientId}`;
+}
+
+function goToClientPolicies() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/policies?client_id=${currentClientId}`;
+}
+
+function goToClientPayments() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/payment-plans?client_id=${currentClientId}`;
+}
+
+function goToClientVehicles() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/vehicles?client_id=${currentClientId}`;
+}
+
+function goToClientClaims() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/claims?client_id=${currentClientId}`;
+}
+
+function goToClientDocuments() {
+    if (!currentClientId) {
+        alert('No client selected');
+        return;
+    }
+    window.location.href = `/documents?client_id=${currentClientId}`;
+}
+
+// Open Edit Client Modal (legacy - keeping for backward compatibility)
 function openEditClient(clientId) {
     if (!clientId) return;
 
     currentClientId = clientId;
 
     // Fetch client data
-    fetch(`/clients/${clientId}/edit`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.client) {
-                populateClientForm(data.client);
+    fetch(`/clients/${clientId}/edit`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Network error');
+            return response.json();
+        })
+        .then(client => {
+            // Server returns client directly, not wrapped
+            if (client && client.id) {
+                populateClientForm(client);
 
                 const modal = document.getElementById('clientModal');
                 const tableView = document.getElementById('clientsTableView');
                 const pageHeader = document.getElementById('clientsPageHeader');
+                const clientPageView = document.getElementById('clientPageView');
 
                 if (modal) {
                     if (tableView) tableView.style.display = 'none';
                     if (pageHeader) pageHeader.style.display = 'none';
+                    if (clientPageView) clientPageView.style.display = 'none';
                     modal.style.display = 'block';
                 }
 
@@ -2798,16 +3051,22 @@ function openEditClient(clientId) {
                     deleteBtn.style.display = 'inline-block';
                 }
 
-                // Update title
+                // Update title with client name
                 const title = document.getElementById('clientModalTitle');
                 if (title) {
-                    title.textContent = 'Client - Edit';
+                    const clientName = `${client.first_name || ''} ${client.surname || ''}`.trim() || 'Edit';
+                    title.innerHTML = `Client - <span style="color:#f3742a;">${clientName}</span>`;
                 }
+
+                // Toggle fields based on client type
+                toggleClientFields();
+            } else {
+                throw new Error('Invalid client data');
             }
         })
         .catch(error => {
             console.error('Error fetching client:', error);
-            alert('Error loading client data');
+            alert('Error loading client data: ' + error.message);
         });
 }
 
@@ -2817,32 +3076,36 @@ function populateClientForm(client) {
         'client_type', 'first_name', 'surname', 'other_names', 'salutation',
         'dob_dor', 'nin_bcrn', 'id_document_type', 'id_expiry_date', 'passport_no',
         'income_source', 'monthly_income', 'occupation', 'employer', 'spouses_name',
-        'pep_comment', 'mobile_no', 'alternate_no', 'email_address', 'po_box_no',
-        'district', 'location', 'island', 'country', 'notes',
-        'signed_up', 'agency', 'agent', 'source', 'source_name', 'status'
+        'pep_comment', 'mobile_no', 'alternate_no', 'home_no', 'email_address', 'po_box_no',
+        'district', 'location', 'island', 'country', 'notes', 'contact_person', 'pep',
+        'signed_up', 'agency', 'agent', 'source', 'source_name', 'status', 'issuing_country'
     ];
-    
+
     fields.forEach(field => {
         const input = document.getElementById(field);
         if (input && client[field] !== undefined) {
-            input.value = client[field] || '';
+            if (input.type === 'checkbox') {
+                input.checked = client[field] == 1 || client[field] === true || client[field] === '1';
+            } else {
+                input.value = client[field] || '';
+            }
         }
     });
-    
-    // Handle checkboxes
-    const checkboxes = ['married', 'pep', 'wa', 'has_vehicle', 'has_house', 'has_business', 'has_boat'];
+
+    // Handle checkboxes separately
+    const checkboxes = ['married', 'pep', 'wa', 'wa2', 'has_vehicle', 'has_house', 'has_business', 'has_boat'];
     checkboxes.forEach(field => {
         const checkbox = document.getElementById(field) || document.getElementById(field + '_check');
         if (checkbox) {
-            checkbox.checked = client[field] == 1 || client[field] === true;
+            checkbox.checked = client[field] == 1 || client[field] === true || client[field] === '1';
         }
     });
-    
+
     // Calculate age if DOB exists
     if (client.dob_dor) {
         calculateAge();
     }
-    
+
     // Toggle fields based on client type
     toggleClientFields();
 }

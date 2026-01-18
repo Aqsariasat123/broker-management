@@ -41,7 +41,7 @@
         <div class="action-buttons">
           <button class="btn" onclick="removeSelectedNominees()" style="background:#f3742a; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Remove</button>
           <button class="btn btn-add" onclick="openNomineeDialog()">Add</button>
-          <a href="{{ $policy ? route('policies.index', ['policy_id' => $policy->id]) : route('policies.index') }}" class="btn" style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
+          <a href="{{ $policy ? route('policies.index', ['policy_id' => $policy->id]) : route('policies.index') }}" class="btn" style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">Back</a>
         </div>
       </div>
 
@@ -183,7 +183,7 @@
       <h4 style="margin:0;" id="nomineeModalTitle">Add Nominee</h4>
       <div style="display:flex; gap:8px; align-items:center;">
         <button type="button" onclick="saveNominee()" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Save</button>
-        <button type="button" onclick="closeNomineeDialog()" style="background:#000; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Cancel</button>
+        <button type="button" onclick="closeNomineeDialog()" style="background:#ccc; color:#000; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px; font-weight:500;">Cancel</button>
       </div>
     </div>
       <form id="nomineeForm">
@@ -309,7 +309,7 @@
         </div>
       </div>
       <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ddd;">
-        <button type="button" onclick="closeDocumentUploadModal()" style="background:#6c757d; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Cancel</button>
+        <button type="button" onclick="closeDocumentUploadModal()" style="background:#ccc; color:#000; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Cancel</button>
         <button type="submit" style="background:#f3742a; color:#fff; border:none; padding:6px 20px; border-radius:2px; cursor:pointer; font-size:12px;">Upload</button>
       </div>
     </form>

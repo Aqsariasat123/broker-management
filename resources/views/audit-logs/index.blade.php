@@ -54,7 +54,7 @@
         </div>
         <div class="filter-actions">
           <button type="submit" class="btn" style="background:#007bff; color:#fff; border-color:#007bff;">Filter</button>
-          <a href="{{ route('audit-logs.index') }}" class="btn" style="background:#6c757d; color:#fff; border-color:#6c757d;">Clear</a>
+          <a href="{{ route('audit-logs.index') }}" class="btn" style="background:#ccc; color:#000; border-color:#6c757d;">Clear</a>
         </div>
       </form>
     </div>

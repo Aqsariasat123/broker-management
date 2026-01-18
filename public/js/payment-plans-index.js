@@ -28,9 +28,15 @@ async function openPaymentPlanPage(mode) {
 }
 
 // Add Payment Plan Button
-document.getElementById('addPaymentPlanBtn').addEventListener('click', () => openPaymentPlanModal('add'));
+const addPaymentPlanBtn = document.getElementById('addPaymentPlanBtn');
+if (addPaymentPlanBtn) {
+  addPaymentPlanBtn.addEventListener('click', () => openPaymentPlanModal('add'));
+}
 
-document.getElementById('columnBtn2').addEventListener('click', () => openColumnModal());
+const columnBtn2 = document.getElementById('columnBtn2');
+if (columnBtn2) {
+  columnBtn2.addEventListener('click', () => openColumnModal());
+}
 
 async function openEditPaymentPlan(id) {
   try {
@@ -135,13 +141,18 @@ if (editBtn) {
   });
 }
 
+// Initialize column checkboxes based on selectedColumns
+function initializeColumnCheckboxes() {
+  const checkboxes = document.querySelectorAll('.column-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = selectedColumns.includes(checkbox.value);
+  });
+}
+
 // Column modal functions
 function openColumnModal() {
+  initializeColumnCheckboxes();
   document.getElementById('tableResponsive').classList.add('no-scroll');
-  document.querySelectorAll('.column-checkbox').forEach(cb => {
-    // Always check mandatory fields, otherwise check if in selectedColumns
-    cb.checked = mandatoryColumns.includes(cb.value) || selectedColumns.includes(cb.value);
-  });
   document.body.style.overflow = 'hidden';
   document.getElementById('columnModal').classList.add('show');
   // Initialize drag and drop after modal is shown
@@ -173,8 +184,8 @@ function saveColumnSettings() {
   // Mandatory fields that should always be included
   const mandatoryFields = mandatoryColumns;
 
-  // Get order from DOM - this preserves the drag and drop order
-  const items = Array.from(document.querySelectorAll('#columnSelection .column-item'));
+  // Get order from DOM - this preserves the drag and drop order (supports both class names)
+  const items = Array.from(document.querySelectorAll('#columnSelection .column-item, #columnSelection .column-item-vertical'));
   const order = items.map(item => item.dataset.column);
   const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n => n.value);
 
@@ -202,7 +213,13 @@ function saveColumnSettings() {
   });
 
   form.submit();
+
 }
+
+// Initialize checkboxes on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initializeColumnCheckboxes();
+});
 
 function deletePaymentPlan() {
   if (!currentPaymentPlanId) return;
@@ -366,7 +383,7 @@ function initDragAndDrop() {
   // Only initialize once to avoid duplicate event listeners
   if (dragInitialized) {
     // Re-enable draggable on all items
-    const columnItems = columnSelection.querySelectorAll('.column-item');
+    const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
     columnItems.forEach(item => {
       item.setAttribute('draggable', 'true');
     });
@@ -374,7 +391,7 @@ function initDragAndDrop() {
   }
 
   // Make all column items draggable
-  const columnItems = columnSelection.querySelectorAll('.column-item');
+  const columnItems = columnSelection.querySelectorAll('.column-item, .column-item-vertical');
 
   columnItems.forEach(item => {
     // Ensure draggable attribute is set
@@ -386,17 +403,8 @@ function initDragAndDrop() {
       draggedElement = this;
       this.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-      // Create a ghost image
-      const dragImage = this.cloneNode(true);
-      dragImage.style.opacity = '0.5';
-      document.body.appendChild(dragImage);
-      e.dataTransfer.setDragImage(dragImage, 0, 0);
-      setTimeout(() => {
-        if (document.body.contains(dragImage)) {
-          document.body.removeChild(dragImage);
-        }
-      }, 0);
+      e.dataTransfer.setData('text/html', this.outerHTML);
+      e.dataTransfer.setData('text/plain', this.querySelector('.column-checkbox').value);
     });
 
     // Drag end

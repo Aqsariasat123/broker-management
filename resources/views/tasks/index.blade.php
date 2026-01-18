@@ -220,7 +220,7 @@
         <div style="display: flex; gap: 8px;">
           <button type="button" class="btn-delete" id="deleteBtn" style="display: none; background: #f3742a; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;" onclick="deleteTask()">Delete</button>
           <button type="submit" form="taskForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeModal()" style="background: #000; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeModal()" style="background: #ccc; color: #000; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;">Cancel</button>
         </div>
       </div>
       <form id="taskForm" method="POST">

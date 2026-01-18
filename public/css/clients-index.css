@@ -271,7 +271,7 @@
     .form-group label { display:block; margin-bottom:4px; font-weight:600; font-size:13px; }
     .form-control, select, textarea { width:100%; padding:4px 6px; border:1px solid #ccc; border-radius:2px; font-size:13px; }
     .btn-save { background:#007bff; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
-    .btn-cancel { background:#6c757d; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
+    .btn-cancel { background:#ccc; color:#000; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
     .btn-delete { background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:2px; cursor:pointer; }
     .column-selection { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px; margin-bottom:15px; max-height:500px; overflow-y:auto; padding:5px; }
     .column-item { display:flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid #ddd; border-radius:2px; cursor:move; background:#fff; transition:background 0.2s; position:relative; min-height:40px; }

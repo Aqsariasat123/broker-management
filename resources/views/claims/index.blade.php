@@ -21,17 +21,13 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
               @if($policy)
-                {{ $policy->policy_code }} -
-              @endif
-              @if($policy)
-                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Claims</span>
+                {{ $policy->policy_code }} - <span style="color:#f3742a;">Claims</span>
+              @elseif(isset($client) && $client)
+                Claims - <span style="color:#f3742a;">{{ $client->client_name }}</span>
               @else
-                 <span class="client-name" > Claims</span>
+                Claims
               @endif
-            @if(isset($client) && $client)
-              <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> - {{ $client->client_name }}</span>
-            @endif
-            <span id="followUpLabel" style="display:{{ request()->get('pending') == 1 ? 'inline' : 'none' }}; color:#f3742a; font-size:16px; font-weight:500;"> - Pending </span>
+            <span id="followUpLabel" style="display:{{ request()->get('pending') == 1 ? 'inline' : 'none' }}; color:#f3742a;"> - Pending </span>
           </h3>
           @include('partials.page-header-right')
       </div>
@@ -72,7 +68,13 @@
         </div>
       @endif
         <div class="action-buttons">
-          <button class="btn btn-close" onclick="window.history.back()">Close</button>
+          @if(request()->has('client_id') && request()->client_id)
+            <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
+          @elseif(isset($policy) && $policy)
+            <button class="btn btn-back" onclick="window.location.href='{{ route('policies.index', ['policy_id' => $policy->id]) }}'">Back</button>
+          @else
+            <button class="btn btn-close" onclick="window.history.back()">Close</button>
+          @endif
         </div>
 
     </div>
@@ -145,6 +147,8 @@
                   <td data-column="paid_amount">{{ $clm->paid_amount ? number_format($clm->paid_amount, 2) : '-' }}</td>
                 @elseif($col == 'settlment_notes')
                   <td data-column="settlment_notes">{{ $clm->settlment_notes ?? '-' }}</td>
+                @elseif($col == 'comments')
+                  <td data-column="comments">{{ $clm->comments ?? '-' }}</td>
                 @endif
               @endforeach
             </tr>

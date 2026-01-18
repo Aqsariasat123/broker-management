@@ -20,15 +20,12 @@
     <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-top:15px; margin-bottom:15px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
              <h3 style="margin:0; font-size:18px; font-weight:600;">
-          @if($policy)
-            {{ $policy->policy_code }} -
-               <span style="color:#f3742a;">Vehicles</span>
-          @endif
           @if($client)
-             <span style="color:#f3742a;">{{ $client->client_name }} -  </span>
-          @endif
-          @if(!$policy)
-           <span>Vehicles</span>
+            Vehicles - <span style="color:#f3742a;">{{ $client->client_name ?? $client->first_name . ' ' . $client->surname }}</span>
+          @elseif($policy)
+            Vehicles - <span style="color:#f3742a;">{{ $policy->policy_code }}</span>
+          @else
+            Vehicles
           @endif
         </h3>
         @include('partials.page-header-right')
@@ -58,11 +55,21 @@
           @if(isset($policy) && $policy)
           <button class="btn btn-add" id="addVehicleBtn">Add</button>
           @endif
-          <a href="{{ route('policies.index', ['policy_id' => $policyId]) }}"
-            class="btn"
-            style="background:#6c757d; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">
-              Back
-</a>
+          @if(request()->has('client_id') && request()->client_id)
+            <a href="{{ route('clients.index', ['client_id' => request()->client_id]) }}"
+              class="btn btn-back"
+              style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">
+                Back
+            </a>
+          @elseif(isset($policy) && $policy)
+            <a href="{{ route('policies.index', ['policy_id' => $policyId]) }}"
+              class="btn btn-back"
+              style="background:#ccc; color:#000; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; text-decoration:none; font-size:13px;">
+                Back
+            </a>
+          @else
+            <button class="btn btn-close" onclick="window.history.back()" style="background:#ccc; color:#000;">Close</button>
+          @endif
       </div>
     </div>
 
@@ -201,7 +208,6 @@
       <div class="footer-left">
         <a class="btn btn-export" href="{{ route('vehicles.export') }}">Export</a>
         <button class="btn btn-column" id="columnBtn2" type="button">Column</button>
-        <button class="btn btn-export" id="printBtn" type="button" style="margin-left:10px;">Print</button>
       </div>
       <div class="paginator">
         @php

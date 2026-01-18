@@ -21,7 +21,7 @@
   
   /* Button Styles */
   .btn-save { background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
-  .btn-cancel { background:#000; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
+  .btn-cancel { background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
   .btn-upload { background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
   .btn-delete { background:#dc3545; color:#fff; border:none; padding:6px 16px; border-radius:2px; cursor:pointer; font-size:13px; }
   

@@ -191,7 +191,7 @@
         <h4 id="endorsementModalTitle" style="margin:0; font-size:18px; font-weight:bold;">Add Endorsement</h4>
         <div style="display:flex; gap:10px;">
           <button type="submit" form="endorsementForm" class="btn-save" style="background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeendorsementModal()" style="background:#000; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Cancel</button>
+          <button type="button" class="btn-cancel" onclick="closeendorsementModal()" style="background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px;">Cancel</button>
         </div>
       </div>
       <form id="endorsementForm" method="POST" action="{{ route('endorsements.store') }}" enctype="multipart/form-data">

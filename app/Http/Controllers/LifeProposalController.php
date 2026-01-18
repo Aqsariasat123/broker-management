@@ -190,6 +190,18 @@ class LifeProposalController extends Controller
         $query->where('contact_id', $contactId);
     }
 
+    // Get client for title display if client_id is provided
+    $clientId = $request->input('client_id');
+    $client = null;
+    if ($clientId) {
+        $client = \App\Models\Client::find($clientId);
+        // Filter by proposer name matching client name
+        if ($client) {
+            $clientName = $client->client_name ?? ($client->first_name . ' ' . $client->surname);
+            $query->where('proposers_name', 'LIKE', '%' . $clientName . '%');
+        }
+    }
+
     /* ===============================
      | PAGINATION
      |===============================*/
@@ -227,7 +239,7 @@ class LifeProposalController extends Controller
 
     return view(
         'life-proposals.index',
-        compact('proposals', 'lookupData', 'actionType', 'contactId')
+        compact('proposals', 'lookupData', 'actionType', 'contactId', 'client')
     );
 }
 

@@ -5,9 +5,39 @@
 
 @php
   $config = \App\Helpers\TableConfigHelper::getConfig('payment-plans');
-  $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payment-plans');
-  $columnDefinitions = $config['column_definitions'] ?? [];
-  $mandatoryColumns = $config['mandatory_columns'] ?? [];
+
+  // When coming from Client page, use custom columns
+  $fromClient = isset($client) && $client;
+  if ($fromClient) {
+    // Client view column definitions
+    $columnDefinitions = [
+      'debit_note' => 'Debit Note',
+      'payment_type' => 'Payment Type',
+      'date_due' => 'Date Due',
+      'amount_due' => 'Amount Due',
+      'status' => 'Status',
+      'amount_paid' => 'Amount Paid',
+      'date_paid' => 'Date Paid',
+      'payment_mode' => 'Payment Mode',
+      'cheque_no' => 'Cheque No',
+      'policy_no' => 'Policy Number',
+      'comments' => 'Comments',
+    ];
+    // Default columns for client view
+    $defaultClientColumns = ['debit_note','payment_type','date_due','amount_due','status','amount_paid','date_paid','payment_mode','cheque_no','policy_no','comments'];
+    // Read from session if saved, otherwise use defaults
+    $selectedColumns = session('payment_plan_client_columns', $defaultClientColumns);
+    // Filter to only include valid columns from definitions
+    $selectedColumns = array_filter($selectedColumns, fn($col) => isset($columnDefinitions[$col]));
+    if (empty($selectedColumns)) {
+      $selectedColumns = $defaultClientColumns;
+    }
+    $mandatoryColumns = ['status']; // Minimal mandatory for client view
+  } else {
+    $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payment-plans');
+    $columnDefinitions = $config['column_definitions'] ?? [];
+    $mandatoryColumns = $config['mandatory_columns'] ?? [];
+  }
 @endphp
 
 <div class="dashboard">
@@ -16,7 +46,11 @@
   <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:5px; padding:15px 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
-            Payment Plans
+            @if(isset($client) && $client)
+              Payments - <span style="color:#f3742a;">{{ $client->client_name ?? $client->first_name . ' ' . $client->surname }}</span>
+            @else
+              Payment Plans
+            @endif
           </h3>
        
       </div>
@@ -28,31 +62,45 @@
                 <div class="records-found">Records Found - {{ $paymentPlans->total() }}</div>
 
       <div class="page-title-section">
-        <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
-          <div class="filter-group">
-            <form method="GET" action="{{ route('payment-plans.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
-              <select name="status" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
-                <option value="">All Status</option>
-                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-              </select>
-              <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" name="due_soon" value="true" {{ request('due_soon') == 'true' ? 'checked' : '' }}> Due Soon</label>
-              <button type="submit" class="btn btn-column" style="background:#fff; color:#000; border:1px solid #ccc;">Filter</button>
-              @if(request()->hasAny(['search', 'status', 'due_soon']))
-                <a href="{{ route('payment-plans.index') }}" class="btn btn-back" style="background:#ccc; color:#333; border-color:#ccc;">Clear</a>
-              @endif
-            </form>
+        @if(isset($client) && $client)
+          {{-- Simple filter toggle for client view --}}
+          <div style="display:flex; align-items:center; gap:15px;">
+            <label class="toggle-switch" style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="filterToggle">
+              <span class="toggle-slider"></span>
+            </label>
+            <span style="font-size:14px;">Filter</span>
           </div>
-        </div>
+        @else
+          <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div class="filter-group">
+              <form method="GET" action="{{ route('payment-plans.index') }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input type="text" name="search" placeholder="Search..." value="{{ request('search') }}" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
+                <select name="status" style="padding:6px 8px; border:1px solid #ccc; border-radius:2px; font-size:13px;">
+                  <option value="">All Status</option>
+                  <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                  <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                  <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                  <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                  <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                </select>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px;"><input type="checkbox" name="due_soon" value="true" {{ request('due_soon') == 'true' ? 'checked' : '' }}> Due Soon</label>
+                <button type="submit" class="btn btn-column" style="background:#fff; color:#000; border:1px solid #ccc;">Filter</button>
+                @if(request()->hasAny(['search', 'status', 'due_soon']))
+                  <a href="{{ route('payment-plans.index') }}" class="btn btn-back" style="background:#ccc; color:#333; border-color:#ccc;">Clear</a>
+                @endif
+              </form>
+            </div>
+          </div>
+        @endif
       </div>
       <div class="action-buttons">
-        <button class="btn btn-add" id="addPaymentPlanBtn">Add</button>
-        <button class="btn btn-close" onclick="window.history.back()">Close</button>
-
+        @if(request()->has('client_id') && request()->client_id)
+          <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
+        @else
+          <button class="btn btn-add" id="addPaymentPlanBtn">Add</button>
+          <button class="btn btn-close" onclick="window.history.back()">Close</button>
+        @endif
       </div>
     </div>
 
@@ -67,6 +115,12 @@
       <table id="paymentPlansTable">
         <thead>
           <tr>
+            <th style="text-align:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+              </svg>
+            </th>
             <th>Action</th>
             @foreach($selectedColumns as $col)
               @if(isset($columnDefinitions[$col]))
@@ -77,16 +131,63 @@
         </thead>
         <tbody>
           @foreach($paymentPlans as $plan)
-            <tr>
+            @php
+              // Determine payment status for bell indicator
+              $isPaid = $plan->status == 'paid';
+              $isOverdue = !$isPaid && ($plan->status == 'overdue' || ($plan->due_date && $plan->due_date->isPast()));
+              $isDueSoon = !$isPaid && !$isOverdue && $plan->due_date && $plan->due_date->isBetween(now(), now()->addDays(30));
+
+              // Bell indicator: red=overdue, yellow=due soon, green=paid, orange border=normal
+              if ($isOverdue) {
+                $bellColor = '#dc3545'; // red
+                $bellBg = '#dc3545';
+                $rowClass = 'overdue-row';
+              } elseif ($isDueSoon) {
+                $bellColor = '#ffc107'; // yellow
+                $bellBg = '#ffc107';
+                $rowClass = 'due-soon-row';
+              } elseif ($isPaid) {
+                $bellColor = '#28a745'; // green
+                $bellBg = '#28a745';
+                $rowClass = 'paid-row';
+              } else {
+                $bellColor = '#f3742a'; // orange border only
+                $bellBg = 'transparent';
+                $rowClass = '';
+              }
+            @endphp
+            <tr class="{{ $rowClass }}">
+              <td class="bell-cell">
+                <div style="display:flex; align-items:center; justify-content:center;">
+                  <div class="status-indicator" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $bellColor }}; background-color:{{ $bellBg }};"></div>
+                </div>
+              </td>
               <td class="action-cell">
                 <img src="{{ asset('asset/arrow-expand.svg') }}" class="action-expand" onclick="openPaymentPlanModal('edit',{{ $plan->id }})" width="22" height="22" style="cursor:pointer; vertical-align:middle;" alt="Expand">
-
               </td>
               @foreach($selectedColumns as $col)
                 @if($col == 'installment_label')
-                  <td data-column="installment_label">
-                {{ $plan->installment_label ?? 'Installment #' . $plan->id }}               
-                  </td>
+                  <td data-column="installment_label">{{ $plan->installment_label ?? 'Installment #' . $plan->id }}</td>
+                @elseif($col == 'debit_note')
+                  <td data-column="debit_note">{{ $plan->debitNotes->first()->debit_note_no ?? '-' }}</td>
+                @elseif($col == 'payment_type')
+                  <td data-column="payment_type">{{ $plan->installment_label ?? 'Instalment' }}</td>
+                @elseif($col == 'date_due')
+                  <td data-column="date_due">{{ $plan->due_date ? $plan->due_date->format('d-M-y') : '-' }}</td>
+                @elseif($col == 'amount_due')
+                  <td data-column="amount_due">{{ $plan->amount ? number_format($plan->amount, 2) : '-' }}</td>
+                @elseif($col == 'amount_paid')
+                  @php $latestPayment = $plan->debitNotes->first()?->payments->first(); @endphp
+                  <td data-column="amount_paid">{{ $latestPayment ? number_format($latestPayment->amount, 2) : '' }}</td>
+                @elseif($col == 'date_paid')
+                  @php $latestPayment = $latestPayment ?? $plan->debitNotes->first()?->payments->first(); @endphp
+                  <td data-column="date_paid">{{ $latestPayment && $latestPayment->paid_on ? \Carbon\Carbon::parse($latestPayment->paid_on)->format('d-M-y') : '' }}</td>
+                @elseif($col == 'payment_mode')
+                  @php $latestPayment = $latestPayment ?? $plan->debitNotes->first()?->payments->first(); @endphp
+                  <td data-column="payment_mode">{{ $latestPayment?->modeOfPayment?->name ?? '' }}</td>
+                @elseif($col == 'cheque_no')
+                  @php $latestPayment = $latestPayment ?? $plan->debitNotes->first()?->payments->first(); @endphp
+                  <td data-column="cheque_no">{{ $latestPayment?->cheque_no ?? '' }}</td>
                 @elseif($col == 'policy_no')
                   <td data-column="policy_no">{{ $plan->schedule->policy->policy_no ?? '-' }}</td>
                 @elseif($col == 'client_name')
@@ -97,6 +198,8 @@
                   <td data-column="amount">{{ $plan->amount ? number_format($plan->amount, 2) : '-' }}</td>
                 @elseif($col == 'frequency')
                   <td data-column="frequency">{{ $plan->lookuFrequency->name ?? '-' }}</td>
+                @elseif($col == 'comments')
+                  <td data-column="comments">{{ $plan->comments ?? $plan->notes ?? '' }}</td>
                 @elseif($col == 'status')
                   <td data-column="status">
                     <span class="badge-status badge-{{ $plan->status }}" style="font-size:11px; padding:4px 8px; display:inline-block; border-radius:4px; color:#fff; background:{{ $plan->status == 'pending' ? '#ffc107' : ($plan->status == 'active' ? '#17a2b8' : ($plan->status == 'paid' ? '#28a745' : ($plan->status == 'overdue' ? '#dc3545' : '#6c757d'))) }};">
@@ -115,6 +218,7 @@
 
     <div class="footer" style="background:#fff; border-top:1px solid #ddd; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
       <div class="footer-left">
+        <a class="btn btn-export" href="{{ route('payment-plans.export', array_merge(request()->query(), ['page' => $paymentPlans->currentPage()])) }}">Export</a>
         <button class="btn btn-column" id="columnBtn2" type="button">Column</button>
       </div>
       <div class="paginator">
@@ -261,22 +365,24 @@
 
   <!-- Column Selection Modal -->
   <div class="modal" id="columnModal">
-    <div class="modal-content">
+    <div class="modal-content column-modal-vertical">
       <div class="modal-header">
         <h4>Column Select & Sort</h4>
-        <button type="button" class="modal-close" onclick="closeColumnModal()">×</button>
+        <div class="modal-header-buttons">
+          <button class="btn-save-orange" onclick="saveColumnSettings()">Save</button>
+          <button class="btn-cancel-gray" onclick="closeColumnModal()">Cancel</button>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="column-actions">
-          <button type="button" class="btn-select-all" onclick="selectAllColumns()">Select All</button>
-          <button type="button" class="btn-deselect-all" onclick="deselectAllColumns()">Deselect All</button>
-        </div>
-
         <form id="columnForm" action="{{ route('payment-plans.save-column-settings') }}" method="POST">
           @csrf
-          <div class="column-selection" id="columnSelection">
+          @if(request()->has('client_id'))
+            <input type="hidden" name="client_id" value="{{ request()->client_id }}">
+          @endif
+          <div class="column-selection-vertical" id="columnSelection">
             @php
-              $all = $config['column_definitions'];
+              // Use the $columnDefinitions variable that's already set correctly (handles both fromClient and normal cases)
+              $all = $columnDefinitions;
               // Maintain order based on selectedColumns
               $ordered = [];
               foreach($selectedColumns as $col) {
@@ -286,6 +392,7 @@
                 }
               }
               $ordered = array_merge($ordered, $all);
+              $counter = 1;
             @endphp
 
             @foreach($ordered as $key => $label)
@@ -293,18 +400,18 @@
                 $isMandatory = in_array($key, $mandatoryColumns);
                 $isChecked = in_array($key, $selectedColumns) || $isMandatory;
               @endphp
-              <div class="column-item" draggable="true" data-column="{{ $key }}" style="cursor:move;">
-                <span style="cursor:move; margin-right:8px; font-size:16px; color:#666;">☰</span>
-                <input type="checkbox" class="column-checkbox" id="col_{{ $key }}" value="{{ $key }}" @if($isChecked) checked @endif @if($isMandatory) disabled @endif>
-                <label for="col_{{ $key }}" style="cursor:pointer; flex:1; user-select:none;">{{ $label }}</label>
+              <div class="column-item-vertical" draggable="true" data-column="{{ $key }}">
+                <span class="column-number">{{ $counter }}</span>
+                <label class="column-label-wrapper">
+                  <input type="checkbox" class="column-checkbox" id="col_{{ $key }}" value="{{ $key }}" @if($isChecked) checked @endif @if($isMandatory) disabled @endif>
+                  <span class="column-label-text">{{ $label }}</span>
+                </label>
               </div>
+              @php $counter++; @endphp
             @endforeach
           </div>
+          <div class="column-drag-hint">Drag and Select to position and display</div>
         </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeColumnModal()">Cancel</button>
-        <button class="btn-save" onclick="saveColumnSettings()">Save Settings</button>
       </div>
     </div>
   </div>

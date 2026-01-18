@@ -432,6 +432,7 @@ Route::post('/followups/{followup}/status', [FollowupController::class, 'updateS
 
     Route::prefix('payment-plans')->name('payment-plans.')->group(function () {
         Route::get('/', [PaymentPlanController::class, 'index'])->name('index');
+        Route::get('/export', [PaymentPlanController::class, 'export'])->name('export');
         Route::get('/create', [PaymentPlanController::class, 'create'])->name('create');
         Route::post('/', [PaymentPlanController::class, 'store'])->name('store');
         Route::post('/create-instalments', [PaymentPlanController::class, 'createInstalments'])->name('create-instalments');

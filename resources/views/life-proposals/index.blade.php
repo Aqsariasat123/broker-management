@@ -21,7 +21,9 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3 style="margin:0; font-size:18px; font-weight:600;">
             Proposals
-            @if(isset(request()->follow_up) || request()->follow_up === 1 ||  isset($contactid))
+            @if(isset($client) && $client)
+              <span style="color:#f3742a; font-size:18px; font-weight:600;"> - {{ $client->client_name ?? $client->first_name . ' ' . $client->surname }}</span>
+            @elseif(isset(request()->follow_up) || request()->follow_up === 1 ||  isset($contactid))
               <span class="client-name" style="color:#f3742a; font-size:16px; font-weight:500;"> -  To Follow Up</span>
             @endif
           </h3>
@@ -61,7 +63,11 @@
           </div>
             <div class="action-buttons" style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
                 <button class="btn btn-add" id="addProposalBtn">Add</button>
-                <button class="btn btn-close" onclick="window.history.back()">Close</button>
+                @if(request()->has('client_id') && request()->client_id)
+                  <button class="btn btn-back" onclick="window.location.href='{{ route('clients.index', ['client_id' => request()->client_id]) }}'">Back</button>
+                @else
+                  <button class="btn btn-close" onclick="window.history.back()">Close</button>
+                @endif
             </div>
         </div>
       @if ($errors->any())

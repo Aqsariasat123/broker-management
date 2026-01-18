@@ -152,7 +152,7 @@
     .form-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: flex-start; }
     .form-row .form-group { flex: 0 0 calc((100% - 20px) / 3); margin-bottom: 0; }
     .btn-save { background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; }
-    .btn-cancel { background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; }
+    .btn-cancel { background: #ccc; color: #000; border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; }
     .btn-delete { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 2px; cursor: pointer; }
     .alert { padding: 8px 12px; margin-bottom: 12px; border-radius: 2px; font-size: 13px; }
     .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -163,8 +163,8 @@
     .modal-header-buttons { display: flex; gap: 8px; }
     .btn-save-orange { background: #f3742a; color: white; border: none; padding: 6px 16px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; }
     .btn-save-orange:hover { background: #e0651f; }
-    .btn-cancel-gray { background: #6c757d; color: white; border: none; padding: 6px 16px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; }
-    .btn-cancel-gray:hover { background: #5a6268; }
+    .btn-cancel-gray { background: #ccc; color: #000; border: none; padding: 6px 16px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-cancel-gray:hover { background: #bbb; }
     .column-modal-vertical .modal-body { padding: 15px; max-height: 85vh; overflow-y: auto; }
     .column-selection-vertical { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .column-item-vertical { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 3px; cursor: move; transition: background 0.2s; background: #fff; }
@@ -179,8 +179,8 @@
     .column-label-text { font-size: 13px; color: #333; user-select: none; order: 1; }
     .column-drag-hint { text-align: center; padding: 12px 10px; color: #888; font-size: 12px; margin-top: 10px; }
     /* Drag and drop styles for vertical */
-    .column-item-vertical.dragging { opacity: 0.5; background: #e3f2fd; border-color: #2196F3; }
-    .column-item-vertical.drag-over { border-color: #f3742a; box-shadow: 0 0 0 1px #f3742a; }
+    .column-item-vertical.dragging { opacity: 0.5; }
+    .column-item-vertical.drag-over { border-top: 2px solid #f3742a; }
     /* Legacy grid styles (kept for backward compatibility) */
     .column-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 15px; }
     .column-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 2px; cursor: move; transition: all 0.2s; }

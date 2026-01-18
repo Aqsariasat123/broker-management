@@ -13,7 +13,7 @@ class PaymentPlanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PaymentPlan::with(['schedule.policy.client','lookuFrequency']);
+        $query = PaymentPlan::with(['schedule.policy.client','lookuFrequency','debitNotes.payments.modeOfPayment']);
 
          $dateRange = $request->get('date_range', 'month'); // default = 'month'
             $now = Carbon::now();
@@ -95,6 +95,17 @@ class PaymentPlanController extends Controller
             });
         }
 
+        // Filter by client_id
+        $client = null;
+        if ($request->has('client_id') && $request->client_id) {
+            $client = \App\Models\Client::find($request->client_id);
+            if ($client) {
+                $query->whereHas('schedule.policy', function($q) use ($request) {
+                    $q->where('client_id', $request->client_id);
+                });
+            }
+        }
+
         $paymentPlans = $query->orderBy('due_date', 'asc')->paginate(15);
 
         // Get schedules for filter and dropdown
@@ -109,7 +120,7 @@ class PaymentPlanController extends Controller
         $config = \App\Helpers\TableConfigHelper::getConfig('payment-plans');
         $selectedColumns = \App\Helpers\TableConfigHelper::getSelectedColumns('payment-plans');
 
-        return view('payment-plans.index', compact('paymentPlans', 'schedules', 'frequencies', 'selectedColumns'));
+        return view('payment-plans.index', compact('paymentPlans', 'schedules', 'frequencies', 'selectedColumns', 'client'));
     }
 
     public function create(Request $request)
@@ -298,8 +309,121 @@ class PaymentPlanController extends Controller
 
     public function saveColumnSettings(Request $request)
     {
+        // Use different session key for client view
+        if ($request->has('client_id') && $request->client_id) {
+            session(['payment_plan_client_columns' => $request->columns ?? []]);
+            return redirect()->route('payment-plans.index', ['client_id' => $request->client_id])
+                ->with('success', 'Column settings saved successfully.');
+        }
+
         session(['payment_plan_columns' => $request->columns ?? []]);
         return redirect()->route('payment-plans.index')
             ->with('success', 'Column settings saved successfully.');
+    }
+
+    public function export(Request $request)
+    {
+        $query = PaymentPlan::with(['schedule.policy.client', 'lookuFrequency', 'debitNotes.payments.modeOfPayment']);
+
+        // Apply same filters as index
+        $dateRange = $request->get('date_range', 'month');
+        $now = Carbon::now();
+        $startDate = null;
+        $endDate = null;
+
+        switch ($dateRange) {
+            case 'today':
+                $startDate = $now->copy()->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+                break;
+            case 'week':
+                $startDate = $now->copy()->startOfWeek();
+                $endDate = $now->copy()->endOfWeek();
+                break;
+            case 'month':
+                $startDate = $now->copy()->startOfMonth();
+                $endDate = $now->copy()->endOfMonth();
+                break;
+            case 'quarter':
+                $startDate = $now->copy()->firstOfQuarter();
+                $endDate = $now->copy()->lastOfQuarter();
+                break;
+            case 'year':
+                $startDate = $now->copy()->startOfYear();
+                $endDate = $now->copy()->endOfYear();
+                break;
+            default:
+                if (str_starts_with($dateRange, 'year-')) {
+                    $selectedYear = (int) str_replace('year-', '', $dateRange);
+                    $startDate = Carbon::create($selectedYear, 1, 1)->startOfDay();
+                    $endDate = Carbon::create($selectedYear, 12, 31)->endOfDay();
+                }
+                break;
+        }
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('due_date', [$startDate, $endDate]);
+        }
+
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('client_id') && $request->client_id) {
+            $query->whereHas('schedule.policy', function($q) use ($request) {
+                $q->where('client_id', $request->client_id);
+            });
+        }
+
+        $paymentPlans = $query->orderBy('due_date', 'asc')->get();
+
+        $fileName = 'payment_plans_export_' . date('Y-m-d') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        $callback = function() use ($paymentPlans) {
+            $file = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($file, [
+                'Debit Note',
+                'Payment Type',
+                'Due Date',
+                'Amount Due',
+                'Status',
+                'Amount Paid',
+                'Date Paid',
+                'Payment Mode',
+                'Cheque No',
+                'Policy Number',
+                'Client Name',
+                'Comments'
+            ]);
+
+            foreach ($paymentPlans as $plan) {
+                $latestPayment = $plan->debitNotes->first()?->payments->first();
+
+                fputcsv($file, [
+                    $plan->debitNotes->first()->debit_note_no ?? '',
+                    $plan->installment_label ?? 'Instalment',
+                    $plan->due_date ? $plan->due_date->format('d-M-Y') : '',
+                    $plan->amount ? number_format($plan->amount, 2) : '',
+                    ucfirst($plan->status),
+                    $latestPayment ? number_format($latestPayment->amount, 2) : '',
+                    $latestPayment && $latestPayment->paid_on ? Carbon::parse($latestPayment->paid_on)->format('d-M-Y') : '',
+                    $latestPayment?->modeOfPayment?->name ?? '',
+                    $latestPayment?->cheque_no ?? '',
+                    $plan->schedule->policy->policy_no ?? '',
+                    $plan->schedule->policy->client->client_name ?? '',
+                    $plan->comments ?? $plan->notes ?? ''
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
