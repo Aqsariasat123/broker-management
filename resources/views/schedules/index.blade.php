@@ -62,7 +62,10 @@
         <thead>
           <tr>
             <th style="text-align:center; width:40px;">
-              <div style="width:12px; height:12px; border-radius:50%; background:#f3742a; margin:0 auto;"></div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
+                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
+              </svg>
             </th>
             <th style="width:50px;">Action</th>
             <th>Year</th>
@@ -136,9 +139,11 @@
               }
             @endphp
 
-            <tr>
-              <td style="text-align:center;">
-                <div style="width:12px; height:12px; border-radius:50%; background:{{ $isInForce ? '#f3742a' : '#ccc' }}; margin:0 auto;"></div>
+            <tr class="{{ $isExpired ? 'expired-row' : ($isInForce ? '' : 'dfr-row') }}">
+              <td class="bell-cell {{ $isExpired ? 'expired' : ($isInForce ? '' : 'dfr') }}">
+                <div style="display:flex; align-items:center; justify-content:center;">
+                  <div class="status-indicator {{ $isExpired ? 'expired' : 'normal' }}" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : '#f3742a' }}; background-color:{{ $isExpired ? '#dc3545' : ($isInForce ? '#f3742a' : 'transparent') }};"></div>
+                </div>
               </td>
               <td class="action-cell">
                 @if($p)
