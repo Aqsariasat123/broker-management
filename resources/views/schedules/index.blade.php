@@ -49,7 +49,11 @@
       </div>
       <div class="action-buttons">
         <!-- <button class="btn btn-add" onclick="openScheduleModal('add')">Add</button> -->
-        <button class="btn btn-back" onclick="window.history.back()">Back</button>
+        @if($policy && $policy->client_id)
+          <button class="btn btn-back" onclick="window.location.href='{{ route('policies.index', ['client_id' => $policy->client_id, 'policy_id' => $policy->id]) }}'">Back</button>
+        @else
+          <button class="btn btn-back" onclick="window.history.back()">Back</button>
+        @endif
       </div>
     </div>
 
