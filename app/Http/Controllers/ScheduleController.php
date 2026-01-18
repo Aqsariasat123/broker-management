@@ -16,7 +16,7 @@ class ScheduleController extends Controller
         $policy= null;
         
         // Eager load common relations used for filtering/display
-        $query = Schedule::with(['policy.client', 'policy.insurer', 'policy.policyClass', 'policy.agency']);
+        $query = Schedule::with(['policy.client', 'policy.insurer', 'policy.policyClass', 'policy.agency', 'policy.policyPlan', 'policy.payPlan', 'policy.frequency', 'policy.vehicles']);
 
         // Pagination size (Set Record Lines)
         $perPage = intval($request->get('set_record_lines', 15));

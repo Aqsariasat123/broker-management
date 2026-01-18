@@ -57,69 +57,126 @@
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table>
+    <div class="table-responsive" id="tableResponsive" style="overflow-x:auto;">
+      <table style="min-width:1800px;">
         <thead>
           <tr>
-
-            <th style="text-align:center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
-                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 2 16 2 16H22C22 16 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#fff" stroke="#fff" stroke-width="1.5"/>
-                <path d="M9 21C9 22.1 9.9 23 11 23H13C14.1 23 15 22.1 15 21H9Z" fill="#fff"/>
-              </svg>
+            <th style="text-align:center; width:40px;">
+              <div style="width:12px; height:12px; border-radius:50%; background:#f3742a; margin:0 auto;"></div>
             </th>
-            <th>Action</th>
-            <th>Schedule No</th>
-            <th>Policy</th>
-            <th>Client</th>
-            <th>Issued On</th>
-            <th>Effective From</th>
-            <th>Effective To</th>
+            <th style="width:50px;">Action</th>
+            <th>Year</th>
             <th>Status</th>
+            <th>Policy Plan</th>
+            <th>Sum Insured</th>
+            <th>Inclusions</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Base Premium</th>
+            <th>Full Premium</th>
+            <th>FOP</th>
+            <th>NOP</th>
+            <th>Pay Plan</th>
+            <th>Regn No</th>
+            <th>Term</th>
+            <th>Insured Item</th>
+            <th>Excess</th>
+            <th>Note</th>
+            <th>Schedule ID</th>
           </tr>
         </thead>
         <tbody>
           @forelse($schedules as $schedule)
             @php
+              $p = $schedule->policy;
               $isExpired = $schedule->effective_to && $schedule->effective_to->isPast();
-              $isDFR = $schedule->effective_from && $schedule->effective_from->isFuture();
+              $isInForce = !$isExpired && $schedule->effective_from && $schedule->effective_from->isPast();
 
-              if ($isExpired) {
-                $isDFR = false;
+              // Get year from effective_from
+              $year = $schedule->effective_from ? $schedule->effective_from->format('Y') : '-';
+
+              // Status display
+              $statusText = $isExpired ? 'Expired' : ($isInForce ? 'In Force' : ucfirst($schedule->status ?? 'Draft'));
+
+              // Inclusions from policy (WSC, LOU, PA)
+              $inclusions = [];
+              if ($p && $p->wsc) $inclusions[] = 'WSC ' . number_format($p->wsc/1000) . 'k';
+              if ($p && $p->lou) $inclusions[] = 'LOU ' . number_format($p->lou/1000) . 'k';
+              if ($p && $p->pa) $inclusions[] = 'PA' . number_format($p->pa/1000) . 'k';
+              $inclusionsText = count($inclusions) > 0 ? implode(', ', $inclusions) : '-';
+
+              // Get vehicle registration if exists
+              $regnNo = '-';
+              if ($p && $p->vehicles && $p->vehicles->count() > 0) {
+                $regnNo = $p->vehicles->first()->registration_no ?? '-';
+              }
+
+              // Pay plan name
+              $payPlanName = $p && $p->payPlan ? $p->payPlan->name : '-';
+
+              // Policy plan name
+              $policyPlanName = $p && $p->policyPlan ? $p->policyPlan->name : '-';
+
+              // Frequency name (FOP)
+              $fopName = $p && $p->frequency ? substr($p->frequency->name, 0, 1) : '-';
+
+              // NOP (Number of Payments) - calculate from term and frequency
+              $nop = '-';
+              if ($p && $p->term && $p->frequency) {
+                $freqName = strtolower($p->frequency->name ?? '');
+                if (str_contains($freqName, 'annual') || str_contains($freqName, 'yearly')) {
+                  $nop = $p->term;
+                } elseif (str_contains($freqName, 'monthly')) {
+                  $nop = $p->term * 12;
+                } elseif (str_contains($freqName, 'quarter')) {
+                  $nop = $p->term * 4;
+                } else {
+                  $nop = $p->term;
+                }
               }
             @endphp
 
             <tr>
-              <td class="bell-cell {{ $isExpired ? 'expired' : ($isDFR ? 'dfr' : '') }}">
-                <div style="display:flex; align-items:center; justify-content:center;">
-                  <div class="status-indicator {{ $isExpired ? 'expired' : 'normal' }}" style="width:18px; height:18px; border-radius:50%; border:2px solid {{ $isExpired ? '#dc3545' : '#f3742a' }}; background-color:{{ $isExpired ? '#dc3545' : 'transparent' }};"></div>
-                </div>
+              <td style="text-align:center;">
+                <div style="width:12px; height:12px; border-radius:50%; background:{{ $isInForce ? '#f3742a' : '#ccc' }}; margin:0 auto;"></div>
               </td>
               <td class="action-cell">
-                  <a href="{{ route('policies.index') }}">
-                      <img src="{{ asset('asset/arrow-expand.svg') }}" 
-                          class="action-expand" 
-                          width="22" height="22" 
-                          style="cursor:pointer; vertical-align:middle;" 
-                          alt="View Policy">
-                  </a>               
+                @if($p)
+                  <a href="{{ route('policies.index', ['client_id' => $p->client_id, 'policy_id' => $p->id]) }}">
+                    <img src="{{ asset('asset/arrow-expand.svg') }}"
+                        class="action-expand"
+                        width="22" height="22"
+                        style="cursor:pointer; vertical-align:middle;"
+                        alt="View Policy">
+                  </a>
+                @endif
               </td>
-              <td>{{ $schedule->schedule_no }}</td>
-              <td>{{ $schedule->policy->policy_no ?? '-' }}</td>
-              <td>{{ $schedule->policy->client->client_name ?? '-' }}</td>
-              <td>{{ $schedule->issued_on ? $schedule->issued_on->format('d-M-y') : '-' }}</td>
-              <td>{{ $schedule->effective_from ? $schedule->effective_from->format('d-M-y') : '-' }}</td>
-              <td>{{ $schedule->effective_to ? $schedule->effective_to->format('d-M-y') : '-' }}</td>
+              <td>{{ $year }}</td>
               <td>
-                <span class="badge-status badge-{{ $schedule->status }}">
-                  {{ ucfirst($schedule->status) }}
+                <span style="color:{{ $isInForce ? '#28a745' : ($isExpired ? '#dc3545' : '#666') }}; font-weight:500;">
+                  {{ $statusText }}
                 </span>
               </td>
-              
+              <td>{{ $policyPlanName }}</td>
+              <td style="text-align:right;">{{ $p ? number_format($p->sum_insured ?? 0, 2) : '-' }}</td>
+              <td>{{ $inclusionsText }}</td>
+              <td>{{ $schedule->effective_from ? $schedule->effective_from->format('d-M-y') : '-' }}</td>
+              <td>{{ $schedule->effective_to ? $schedule->effective_to->format('d-M-y') : '-' }}</td>
+              <td style="text-align:right;">{{ $p ? number_format($p->base_premium ?? 0, 2) : '-' }}</td>
+              <td style="text-align:right;">{{ $p ? number_format($p->premium ?? 0, 2) : '-' }}</td>
+              <td style="text-align:center;">{{ $fopName }}</td>
+              <td style="text-align:center;">{{ $nop }}</td>
+              <td>{{ $payPlanName }}</td>
+              <td>{{ $regnNo }}</td>
+              <td style="text-align:center;">{{ $p->term ?? '-' }}</td>
+              <td>{{ $p->insured_item ?? '-' }}</td>
+              <td>{{ $p->excess ?? '-' }}</td>
+              <td>{{ $schedule->notes ?? '-' }}</td>
+              <td>{{ $schedule->schedule_no }}</td>
             </tr>
           @empty
             <tr>
-              <td colspan="8" style="text-align:center; padding:20px; color:#999;">No schedules found</td>
+              <td colspan="20" style="text-align:center; padding:20px; color:#999;">No schedules found</td>
             </tr>
           @endforelse
         </tbody>
