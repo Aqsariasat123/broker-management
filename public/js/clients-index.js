@@ -1460,7 +1460,7 @@ function populateClientDetailsModal(client) {
                 <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Other Names</span><div class="detail-value">${client.other_names || '-'}</div></div>
                 <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">Surname</span><div class="detail-value">${client.surname || '-'}</div></div>
               </div>
-              ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}')"></div>`
+              ${photoUrl ? `<div style="flex-shrink:0; margin-top:13px;"><img src="${photoUrl}" alt="Photo" class="detail-photo" onclick="previewClientPhotoModal('${photoUrl}', ${client.id})" style="cursor:pointer;"></div>`
       : `<div style="flex-shrink:0; margin-top:13px; width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>`}
             </div>
             <div class="detail-row">
@@ -1772,7 +1772,7 @@ function populateClientEditForm(client, formContainer) {
                 </div>
               </div>
               ${photoUrl ? `
-                <div style="flex-shrink:0; margin-top:13px; position:relative;">
+                <div style="flex-shrink:0; margin-top:13px;" id="clientPhotoContainer">
                   <img src="${photoUrl}" alt="Photo" class="detail-photo" id="clientPhotoImg" style="display:block; cursor:pointer;" onclick="document.querySelector('input[type=\\'file\\'][name=\\'image\\']').click()">
                   <input type="file" name="image" accept="image/*" style="display:none;" onchange="handleImagePreview(event)">
                   <input type="hidden" name="existing_image" id="existing_image" value="${client.image || ''}">
@@ -2535,8 +2535,16 @@ function renderDocumentsList(documents) {
       const fileUrl = doc.file_path.startsWith('http') ? doc.file_path : `/storage/${doc.file_path}`;
       const isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
       const docName = doc.name || 'Document';
+      const docId = doc.id || ''; // Use database id for delete
+      const isClientPhoto = docName === 'Client Photo' || doc.group === 'Photo';
+
+      // Use photo modal for Client Photo, regular preview for others - both with delete option
+      const onClickHandler = isClientPhoto && currentClientId
+        ? `previewClientPhotoModal('${fileUrl}', ${currentClientId})`
+        : `previewUploadedDocument('${fileUrl}', '${fileExt}', '${docName}', '${docId}')`;
+
       docsHTML += `
-          <div class="document-item" style="cursor:pointer;" onclick="previewUploadedDocument('${fileUrl}', '${fileExt}', '${docName}')">
+          <div class="document-item" style="cursor:pointer;" onclick="${onClickHandler}">
             ${isImage ? `<img src="${fileUrl}" alt="${docName}" style="width:60px; height:60px; object-fit:cover; border-radius:4px;">` : `<div class="document-icon">${fileExt}</div>`}
             <div style="font-size:11px; text-align:center;">${docName}</div>
           </div>
@@ -2874,7 +2882,7 @@ function buildEditFormHTML(client, isIndividual) {
                     </div>
                 </div>
                 <div style="width:70px; height:85px; border:1px solid #ddd; display:flex; align-items:center; justify-content:center; background:#f9f9f9;">
-                    ${client.image ? `<img src="/storage/${client.image}" style="max-width:100%; max-height:100%; object-fit:cover;">` : '<span style="color:#ccc; font-size:10px;">Photo</span>'}
+                    ${client.image ? `<img src="/storage/${client.image}" style="max-width:100%; max-height:100%; object-fit:cover; cursor:pointer;" onclick="previewClientPhotoModal('/storage/${client.image}', ${client.id})">` : '<span style="color:#ccc; font-size:10px;">Photo</span>'}
                 </div>
             </div>
         </div>`;
@@ -3558,39 +3566,28 @@ function initDragAndDrop() {
 // DOCUMENT PREVIEW MODALS
 // ============================================================================
 
-function previewUploadedDocument(fileUrl, fileExt, documentName) {
+function previewUploadedDocument(fileUrl, fileExt, documentName, docId) {
   let previewModal = document.getElementById('documentPreviewModal');
-  if (!previewModal) {
-    previewModal = document.createElement('div');
-    previewModal.id = 'documentPreviewModal';
-    previewModal.className = 'modal';
-    previewModal.innerHTML = `
-        <div class="modal-content" style="max-width:90%; max-height:90vh; overflow:auto;">
-          <div class="modal-header">
-            <h4>${documentName}</h4>
-            <button type="button" class="modal-close" onclick="closeDocumentPreviewModal()">×</button>
-          </div>
-          <div class="modal-body" style="text-align:center; padding:20px;">
-            <div id="uploadedDocumentPreview"></div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeDocumentPreviewModal()">Close</button>
-          </div>
-        </div>
-      `;
-    document.body.appendChild(previewModal);
+
+  // Always recreate to update docId
+  if (previewModal) {
+    previewModal.remove();
   }
 
-  const previewContent = document.getElementById('uploadedDocumentPreview');
+  previewModal = document.createElement('div');
+  previewModal.id = 'documentPreviewModal';
+  previewModal.className = 'modal';
+
   const isImage = ['JPG', 'JPEG', 'PNG'].includes(fileExt);
   const isPDF = fileExt === 'PDF';
 
+  let contentHtml = '';
   if (isImage) {
-    previewContent.innerHTML = `<img src="${fileUrl}" alt="${documentName}" style="max-width:100%; max-height:70vh; border:1px solid #ddd; border-radius:4px;">`;
+    contentHtml = `<img src="${fileUrl}" alt="${documentName}" style="max-width:100%; max-height:60vh; border:1px solid #ddd; border-radius:4px;">`;
   } else if (isPDF) {
-    previewContent.innerHTML = `<embed src="${fileUrl}" type="application/pdf" width="100%" height="600px" style="border:1px solid #ddd; border-radius:4px;">`;
+    contentHtml = `<embed src="${fileUrl}" type="application/pdf" width="100%" height="500px" style="border:1px solid #ddd; border-radius:4px;">`;
   } else {
-    previewContent.innerHTML = `
+    contentHtml = `
         <div style="padding:40px;">
           <div class="document-icon" style="width:120px; height:120px; font-size:32px; margin:0 auto;">${fileExt}</div>
           <div style="margin-top:20px; font-size:16px; color:#666;">${documentName}</div>
@@ -3600,6 +3597,23 @@ function previewUploadedDocument(fileUrl, fileExt, documentName) {
         </div>
       `;
   }
+
+  previewModal.innerHTML = `
+      <div class="modal-content" style="max-width:600px; max-height:90vh; overflow:auto;">
+        <div class="modal-header">
+          <h4>${documentName}</h4>
+          <button type="button" class="modal-close" onclick="closeDocumentPreviewModal()">×</button>
+        </div>
+        <div class="modal-body" style="text-align:center; padding:20px;">
+          ${contentHtml}
+        </div>
+        <div class="modal-footer" style="display:flex; gap:10px; justify-content:center;">
+          <button type="button" class="btn-cancel" onclick="closeDocumentPreviewModal()" style="background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer;">Close</button>
+          ${docId ? `<button type="button" onclick="deleteDocument('${docId}')" style="background:#dc3545; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer;">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  document.body.appendChild(previewModal);
 
   previewModal.classList.add('show');
   document.body.style.overflow = 'hidden';
@@ -3613,31 +3627,33 @@ function closeDocumentPreviewModal() {
   }
 }
 
-function previewClientPhotoModal(photoUrl) {
+function previewClientPhotoModal(photoUrl, clientId) {
   let photoModal = document.getElementById('clientPhotoPreviewModal');
-  if (!photoModal) {
-    photoModal = document.createElement('div');
-    photoModal.id = 'clientPhotoPreviewModal';
-    photoModal.className = 'modal';
-    photoModal.innerHTML = `
-        <div class="modal-content" style="max-width:90%; max-height:90vh; overflow:auto; text-align:center;">
-          <div class="modal-header">
-            <h4>Client Photo</h4>
-            <button type="button" class="modal-close" onclick="closeClientPhotoPreviewModal()">×</button>
-          </div>
-          <div class="modal-body" style="padding:20px; text-align:center;">
-            <img src="${photoUrl}" alt="Client Photo" style="max-width:100%; max-height:70vh; border:1px solid #ddd; border-radius:4px; object-fit:contain;">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeClientPhotoPreviewModal()">Close</button>
-          </div>
-        </div>
-      `;
-    document.body.appendChild(photoModal);
-  } else {
-    const img = photoModal.querySelector('img');
-    if (img) img.src = photoUrl;
+
+  // Always recreate to update clientId in delete button
+  if (photoModal) {
+    photoModal.remove();
   }
+
+  photoModal = document.createElement('div');
+  photoModal.id = 'clientPhotoPreviewModal';
+  photoModal.className = 'modal';
+  photoModal.innerHTML = `
+      <div class="modal-content" style="max-width:500px; max-height:90vh; overflow:auto; text-align:center;">
+        <div class="modal-header">
+          <h4>Client Photo</h4>
+          <button type="button" class="modal-close" onclick="closeClientPhotoPreviewModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px; text-align:center;">
+          <img src="${photoUrl}" alt="Client Photo" style="max-width:100%; max-height:60vh; border:1px solid #ddd; border-radius:4px; object-fit:contain;">
+        </div>
+        <div class="modal-footer" style="display:flex; gap:10px; justify-content:center;">
+          <button type="button" class="btn-cancel" onclick="closeClientPhotoPreviewModal()" style="background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer;">Close</button>
+          ${clientId ? `<button type="button" onclick="deleteClientPhoto(${clientId})" style="background:#dc3545; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer;">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  document.body.appendChild(photoModal);
 
   photoModal.classList.add('show');
   document.body.style.overflow = 'hidden';
@@ -3648,6 +3664,127 @@ function closeClientPhotoPreviewModal() {
   if (photoModal) {
     photoModal.classList.remove('show');
     document.body.style.overflow = '';
+  }
+}
+
+// Delete client photo
+async function deleteClientPhoto(clientId) {
+  if (!confirm('Are you sure you want to delete this photo?')) {
+    return;
+  }
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+      alert('CSRF token not found. Please refresh the page.');
+      return;
+    }
+
+    const response = await fetch(`/clients/${clientId}/delete-photo`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error:', response.status, errorText);
+      alert('Server error: ' + response.status);
+      return;
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Close the photo preview modal
+      closeClientPhotoPreviewModal();
+
+      // Refresh client data without page reload
+      if (currentClientId) {
+        const clientResponse = await fetch(`/clients/${currentClientId}`);
+        const client = await clientResponse.json();
+
+        // Update documents list
+        const documentsList = document.getElementById('clientDocumentsList');
+        if (documentsList) {
+          documentsList.innerHTML = renderDocumentsList(client.documents || []);
+        }
+
+        // Update photo in Individual Details section
+        const photoContainer = document.querySelector('.detail-photo');
+        if (photoContainer) {
+          const parent = photoContainer.parentElement;
+          parent.innerHTML = '<div style="width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>';
+        }
+      }
+
+      alert('Photo deleted successfully');
+    } else {
+      alert(data.message || 'Failed to delete photo');
+    }
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    alert('Error deleting photo: ' + error.message);
+  }
+}
+
+// Delete any document
+async function deleteDocument(docId) {
+  if (!confirm('Are you sure you want to delete this document?')) {
+    return;
+  }
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+      alert('CSRF token not found. Please refresh the page.');
+      return;
+    }
+
+    const response = await fetch(`/documents/${docId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error:', response.status, errorText);
+      alert('Server error: ' + response.status);
+      return;
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Close the document preview modal
+      closeDocumentPreviewModal();
+
+      // Refresh client data without page reload
+      if (currentClientId) {
+        const clientResponse = await fetch(`/clients/${currentClientId}`);
+        const client = await clientResponse.json();
+
+        // Update documents list
+        const documentsList = document.getElementById('clientDocumentsList');
+        if (documentsList) {
+          documentsList.innerHTML = renderDocumentsList(client.documents || []);
+        }
+      }
+
+      alert('Document deleted successfully');
+    } else {
+      alert(data.message || 'Failed to delete document');
+    }
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    alert('Error deleting document: ' + error.message);
   }
 }
 

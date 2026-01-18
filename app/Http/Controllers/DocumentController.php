@@ -176,16 +176,32 @@ class DocumentController extends Controller
 
     public function destroy(Request $request, Document $document)
     {
-        $document->delete();
+        try {
+            // Delete file from storage if exists
+            if ($document->file_path && \Storage::disk('public')->exists($document->file_path)) {
+                \Storage::disk('public')->delete($document->file_path);
+            }
 
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Document deleted successfully.'
-            ]);
+            $document->delete();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Document deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('documents.index')->with('success', 'Document deleted successfully.');
+        } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error deleting document: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('documents.index')->with('error', 'Error deleting document.');
         }
-
-        return redirect()->route('documents.index')->with('success', 'Document deleted successfully.');
     }
 
     public function saveColumnSettings(Request $request)

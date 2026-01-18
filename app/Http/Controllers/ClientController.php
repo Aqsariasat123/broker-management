@@ -763,6 +763,33 @@ class ClientController extends Controller
         ]);
     }
 
+    public function deletePhoto(Client $client)
+    {
+        try {
+            if ($client->image && Storage::disk('public')->exists($client->image)) {
+                Storage::disk('public')->delete($client->image);
+            }
+
+            // Also delete the photo document record
+            Document::where('tied_to', $client->clid)
+                ->where('group', 'Photo')
+                ->delete();
+
+            $client->update(['image' => null]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo deleted successfully.',
+                'client' => $client
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting photo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function uploadDocument(Request $request, Client $client)
     {
         $request->validate([

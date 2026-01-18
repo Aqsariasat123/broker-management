@@ -168,6 +168,7 @@ Route::prefix('tasks')->group(function () {
     Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
     Route::post('/clients/save-column-settings', [ClientController::class, 'saveColumnSettings'])->name('clients.save-column-settings');
     Route::post('/clients/{client}/upload-photo', [ClientController::class, 'uploadPhoto'])->name('clients.upload-photo');
+    Route::delete('/clients/{client}/delete-photo', [ClientController::class, 'deletePhoto'])->name('clients.delete-photo');
     Route::post('/clients/{client}/upload-document', [ClientController::class, 'uploadDocument'])->name('clients.upload-document');
     Route::post('/clients/{client}/update-wa', [ClientController::class, 'updateWA'])->name('clients.update-wa');
 
