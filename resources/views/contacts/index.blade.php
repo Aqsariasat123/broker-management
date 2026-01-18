@@ -746,5 +746,8 @@
   const contactsStoreRoute = '{{ route("contacts.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>
+@include('partials.table-scripts', [
+  'mandatoryColumns' => $mandatoryColumns ?? [],
+])
 <script src="{{ asset('js/contacts-index.js') }}"></script>
 @endsection

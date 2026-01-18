@@ -413,9 +413,11 @@
 <script>
   // Initialize data from Blade
   let selectedColumns = @json($selectedColumns ?? []);
-  const mandatoryColumns = @json($mandatoryColumns ?? []);
   const tasksStoreRoute = '{{ route("tasks.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>
+@include('partials.table-scripts', [
+  'mandatoryColumns' => $mandatoryColumns ?? [],
+])
 <script src="{{ asset('js/tasks-index.js') }}?v={{ time() }}"></script>
 @endsection
