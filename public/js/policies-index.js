@@ -8,6 +8,10 @@ const lookupData = window.appConfig.lookupData;
 const selectedColumns = window.appConfig.selectedColumns;
 const vehiclesStoreRoute = app.routes?.store || '/vehicles';
 
+// Filter modal elements
+const filterToggle = document.getElementById('filterToggle');
+const filterModal = document.getElementById('filterModal');
+
 // Open policy details (full page view) - MUST be defined before event listeners
 async function openPolicyDetails(id) {
   try {

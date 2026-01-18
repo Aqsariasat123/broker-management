@@ -12,15 +12,14 @@ class ClaimController extends Controller
     {
         $query = Claim::query();
         
-        // Filter by client_id if provided - use whereIn with subquery to get policy numbers
+        // Filter by client_id if provided - use whereIn with subquery to get policy IDs
         if ($request->has('client_id') && $request->client_id) {
-            $policyNumbers = Policy::where('client_id', $request->client_id)
-                ->pluck('policy_no')
-                ->filter()
+            $policyIds = Policy::where('client_id', $request->client_id)
+                ->pluck('id')
                 ->toArray();
-            
-            if (!empty($policyNumbers)) {
-                $query->whereIn('policy_no', $policyNumbers);
+
+            if (!empty($policyIds)) {
+                $query->whereIn('policy_id', $policyIds);
             } else {
                 // If no policies found for this client, return empty result
                 $query->whereRaw('1 = 0');
