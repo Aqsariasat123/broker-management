@@ -1660,6 +1660,22 @@ function populatePolicyForm(policy, formContent, formScheduleContent, formDocume
 }
 
 function closePolicyPageView() {
+  // Check if we came directly to view a policy (policy_id in URL)
+  const urlParams = new URLSearchParams(window.location.search);
+  const policyIdFromUrl = urlParams.get('policy_id');
+  const clientId = urlParams.get('client_id');
+
+  if (policyIdFromUrl) {
+    // User came from another page (like schedules) - go back or redirect to policies list
+    if (clientId) {
+      // Redirect to policies list for this client without policy_id
+      window.location.href = '/policies?client_id=' + clientId;
+    } else {
+      window.history.back();
+    }
+    return;
+  }
+
   const policyPageView = document.getElementById('policyPageView');
   policyPageView.classList.remove('show');
   policyPageView.style.display = 'none';

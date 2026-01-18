@@ -166,13 +166,14 @@
                         {{-- Status with color badge --}}
                         @case('status')
                             @php
-                                $statusColor = match(optional($contact->statusRelation)->name) {
+                                $statusName = optional($contact->statusRelation)->name ?? '-';
+                                $statusColor = match($statusName) {
                                     'Archived' => '#343a40',
                                     'Proposal Made' => '#28a745',
                                     'In Discussion' => '#ffc107',
                                     default => '#6c757d'
                                 };
-                                $value = "<span class='badge-status' style='background:{$statusColor}'>{$contact->statusRelation->name}</span>";
+                                $value = "<span class='badge-status' style='background:{$statusColor}'>{$statusName}</span>";
                             @endphp
                             @break
 

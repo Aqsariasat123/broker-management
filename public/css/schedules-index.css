@@ -46,37 +46,50 @@
   .btn-save { background:#f3742a; color:#fff; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
   .btn-cancel { background:#ccc; color:#000; border:none; padding:8px 20px; border-radius:2px; cursor:pointer; font-size:13px; }
 /* Toggle Switch Styling */
-    #filterToggle {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
+    .filter-switch {
+      position: relative;
+      display: inline-block;
       width: 50px;
       height: 24px;
-      background-color: #ccc;
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      outline: none;
+      margin: 0;
     }
-    
-    #filterToggle:checked {
-      background-color: #28a745;
-    }
-    
-    #filterToggle::before {
-      content: '';
+
+    .filter-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
       position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
+    }
+
+    .filter-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+
+    .filter-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
       background-color: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.3s;
+      transition: 0.3s;
+      border-radius: 50%;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    
-    #filterToggle:checked::before {
-      left: 28px;
+
+    .filter-switch input:checked + .filter-slider {
+      background-color: #28a745;
+    }
+
+    .filter-switch input:checked + .filter-slider:before {
+      transform: translateX(26px);
     }

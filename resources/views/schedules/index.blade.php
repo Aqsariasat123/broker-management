@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.table-styles')
 <link rel="stylesheet" href="{{ asset('css/schedules-index.css') }}">
 
 
@@ -13,42 +14,30 @@
 @endif
 
 <div class="dashboard">
-  <div style="background:#fff; border:1px solid #ddd; border-radius:4px; margin-bottom:15px; padding:15px 20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="page-title-section">
-              <h3 style="margin:0; font-size:18px; font-weight:600;">
-                
-                
-              @if($policy)
-                {{ $policy->policy_code }} - 
-              @endif
-              
-              @if($policy)
-                 <span class="client-name" style="color:#f3742a; font-size:20px; font-weight:500;"> Schedules</span>
-              @else
-                 <span class="client-name" > Schedules</span>
-              @endif
-              </h3>
-           </div>
-      </div>
-  </div>
-  <div class="container-table" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px 20px;">
+    <div class="container-table" style="background:#fff; border:1px solid #ddd; border-radius:4px; padding:15px 20px;">
 
-    <div class="top-bar">
-      <div class="left-group">
+    <!-- Header Row -->
+    <div style="margin-bottom:15px;">
+      @if($policy)
+        <h3 style="margin:0; font-size:18px; font-weight:600;">{{ $policy->policy_code }} - <span style="color:#f3742a;">Schedules</span></h3>
+      @else
+        <h3 style="margin:0; font-size:18px; font-weight:600;">Schedules</h3>
+      @endif
+    </div>
+
+    <!-- Controls Row -->
+    <div class="top-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <div class="left-group" style="flex:1;">
         <div class="records-found">Records Found - {{ $schedules->total() }}</div>
-          <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
-              <span style="font-size:13px;">Filter</span>
-              @php
-                $hasFollowUp = request()->has('follow_up') && (request()->follow_up == 'true' || request()->follow_up == '1');
-                $hasSubmitted = request()->has('submitted') && (request()->submitted == 'true' || request()->submitted == '1');
-              @endphp
-              <input type="checkbox" id="filterToggle" {{ $hasFollowUp || $hasSubmitted ? 'checked' : '' }}>
-            </label>
-    
       </div>
-      <div class="action-buttons">
-        <!-- <button class="btn btn-add" onclick="openScheduleModal('add')">Add</button> -->
+      <div class="center-group" style="flex:1; display:flex; justify-content:center; align-items:center; gap:8px;">
+        <label class="filter-switch">
+          <input type="checkbox" id="filterToggle" {{ request()->hasAny(['status_filter', 'search_term', 'client_id', 'insurer', 'agency']) ? 'checked' : '' }}>
+          <span class="filter-slider"></span>
+        </label>
+        <label for="filterToggle" style="font-size:14px; color:#2d2d2d; margin:0; cursor:pointer; user-select:none;">Filter</label>
+      </div>
+      <div class="action-buttons" style="flex:1; display:flex; justify-content:flex-end;">
         @if($policy && $policy->client_id)
           <button class="btn btn-back" onclick="window.location.href='{{ route('policies.index', ['client_id' => $policy->client_id, 'policy_id' => $policy->id]) }}'">Back</button>
         @else
@@ -188,8 +177,15 @@
       </table>
     </div>
 
-    <div class="footer">
-      {{ $schedules->links() }}
+    <div class="footer" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-top:1px solid #ddd; background:#f9f9f9;">
+      <div class="footer-left" style="display:flex; gap:10px;">
+        <button type="button" class="btn" onclick="exportSchedules()" style="background:#fff; border:1px solid #ccc; padding:6px 15px; font-size:13px; cursor:pointer;">Export</button>
+        <button type="button" class="btn" onclick="openColumnModal()" style="background:#fff; border:1px solid #ccc; padding:6px 15px; font-size:13px; cursor:pointer;">Column</button>
+      </div>
+      <div class="footer-center">
+        {{ $schedules->links() }}
+      </div>
+      <div class="footer-right" style="width:120px;"></div>
     </div>
   </div>
 </div>
@@ -404,13 +400,158 @@
 
 
 
-  <script>
+<!-- Column Modal -->
+<div class="modal" id="columnModal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #ddd; background:#fff;">
+      <h4 style="margin:0; font-size:18px; font-weight:bold;">Select Columns</h4>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn-save" onclick="applyColumns()" style="background:#f3742a; color:#fff; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Apply</button>
+        <button type="button" class="btn-cancel" onclick="closeColumnModal()" style="background:#ccc; color:#000; border:none; padding:8px 16px; border-radius:2px; cursor:pointer; font-size:13px;">Close</button>
+      </div>
+    </div>
+    <div class="modal-body" style="padding:20px; max-height:400px; overflow-y:auto;">
+      <div id="columnList" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+</div>
 
-
+<script>
     // Initialize data from Blade
     const schedulesStoreRoute = '{{ route("schedules.store") }}';
     const schedulesUpdateRouteTemplate = '{{ route("schedules.update", ":id") }}';
-  </script>
+
+    // Column definitions
+    const allColumns = [
+      { key: 'bell', label: 'Bell', default: true },
+      { key: 'action', label: 'Action', default: true },
+      { key: 'year', label: 'Year', default: true },
+      { key: 'status', label: 'Status', default: true },
+      { key: 'policy_plan', label: 'Policy Plan', default: true },
+      { key: 'sum_insured', label: 'Sum Insured', default: true },
+      { key: 'inclusions', label: 'Inclusions', default: true },
+      { key: 'start_date', label: 'Start Date', default: true },
+      { key: 'end_date', label: 'End Date', default: true },
+      { key: 'base_premium', label: 'Base Premium', default: true },
+      { key: 'full_premium', label: 'Full Premium', default: true },
+      { key: 'fop', label: 'FOP', default: true },
+      { key: 'nop', label: 'NOP', default: true },
+      { key: 'pay_plan', label: 'Pay Plan', default: true },
+      { key: 'regn_no', label: 'Regn No', default: true },
+      { key: 'term', label: 'Term', default: true },
+      { key: 'insured_item', label: 'Insured Item', default: true },
+      { key: 'excess', label: 'Excess', default: true },
+      { key: 'note', label: 'Note', default: true },
+      { key: 'schedule_id', label: 'Schedule ID', default: true }
+    ];
+
+    let selectedColumns = JSON.parse(localStorage.getItem('scheduleColumns')) || allColumns.map(c => c.key);
+
+    // Column Modal Functions
+    function openColumnModal() {
+      const columnList = document.getElementById('columnList');
+      columnList.innerHTML = '';
+
+      allColumns.forEach(col => {
+        const isChecked = selectedColumns.includes(col.key);
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px; background:#f8f8f8; border-radius:4px;';
+        div.innerHTML = `
+          <input type="checkbox" id="col_${col.key}" value="${col.key}" ${isChecked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
+          <label for="col_${col.key}" style="cursor:pointer; font-size:14px;">${col.label}</label>
+        `;
+        columnList.appendChild(div);
+      });
+
+      document.getElementById('columnModal').classList.add('show');
+    }
+
+    function closeColumnModal() {
+      document.getElementById('columnModal').classList.remove('show');
+    }
+
+    function applyColumns() {
+      selectedColumns = [];
+      allColumns.forEach(col => {
+        const checkbox = document.getElementById('col_' + col.key);
+        if (checkbox && checkbox.checked) {
+          selectedColumns.push(col.key);
+        }
+      });
+
+      localStorage.setItem('scheduleColumns', JSON.stringify(selectedColumns));
+
+      // Apply visibility to table columns
+      const table = document.querySelector('.table-responsive table');
+      if (table) {
+        const headers = table.querySelectorAll('thead th');
+        const rows = table.querySelectorAll('tbody tr');
+
+        headers.forEach((th, index) => {
+          const colKey = allColumns[index]?.key;
+          if (colKey) {
+            th.style.display = selectedColumns.includes(colKey) ? '' : 'none';
+          }
+        });
+
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          cells.forEach((td, index) => {
+            const colKey = allColumns[index]?.key;
+            if (colKey) {
+              td.style.display = selectedColumns.includes(colKey) ? '' : 'none';
+            }
+          });
+        });
+      }
+
+      closeColumnModal();
+    }
+
+    // Export Function
+    function exportSchedules() {
+      const table = document.querySelector('.table-responsive table');
+      if (!table) return;
+
+      let csv = [];
+      const headers = [];
+      table.querySelectorAll('thead th').forEach((th, index) => {
+        if (th.style.display !== 'none') {
+          headers.push('"' + (th.textContent.trim() || 'Bell') + '"');
+        }
+      });
+      csv.push(headers.join(','));
+
+      table.querySelectorAll('tbody tr').forEach(row => {
+        const rowData = [];
+        row.querySelectorAll('td').forEach((td, index) => {
+          if (td.style.display !== 'none') {
+            rowData.push('"' + td.textContent.trim().replace(/"/g, '""') + '"');
+          }
+        });
+        if (rowData.length > 0) {
+          csv.push(rowData.join(','));
+        }
+      });
+
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'schedules_export_' + new Date().toISOString().split('T')[0] + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Apply saved column visibility on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (selectedColumns.length > 0 && selectedColumns.length < allColumns.length) {
+        applyColumns();
+      }
+    });
+</script>
 <script src="{{ asset('js/schedules-index.js') }}"></script>
 @endsection
 
