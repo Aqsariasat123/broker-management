@@ -132,48 +132,22 @@
   // Column modal functions
   function openColumnModal(){
     // Mandatory fields that should always be checked
-    const mandatoryFields = typeof mandatoryColumns !== 'undefined' ? mandatoryColumns : [];
-
-    // Get selectedColumns - check multiple sources for compatibility
-    let selected = [];
-    if (typeof selectedColumns !== 'undefined') {
-      selected = selectedColumns;
-    } else if (typeof window.selectedColumns !== 'undefined') {
-      selected = window.selectedColumns;
-    } else if (typeof window.appConfig !== 'undefined' && window.appConfig.selectedColumns) {
-      selected = window.appConfig.selectedColumns;
-    } else if (typeof window.vehiclesApp !== 'undefined' && window.vehiclesApp.selectedColumns) {
-      selected = window.vehiclesApp.selectedColumns;
-    }
-
-    const tableResponsive = document.getElementById('tableResponsive');
-    if (tableResponsive) {
-      tableResponsive.classList.add('no-scroll');
-    }
-
+    const mandatoryFields = mandatoryColumns;
+    
+    document.getElementById('tableResponsive').classList.add('no-scroll');
     document.querySelectorAll('.column-checkbox').forEach(cb => {
       // Always check mandatory fields, otherwise check if in selectedColumns
-      cb.checked = mandatoryFields.includes(cb.value) || selected.includes(cb.value);
+      cb.checked = mandatoryFields.includes(cb.value) || selectedColumns.includes(cb.value);
     });
-
     document.body.style.overflow = 'hidden';
-    const columnModal = document.getElementById('columnModal');
-    if (columnModal) {
-      columnModal.classList.add('show');
-      // Initialize drag and drop after modal is shown
-      setTimeout(initDragAndDrop, 100);
-    }
+    document.getElementById('columnModal').classList.add('show');
+    // Initialize drag and drop after modal is shown
+    setTimeout(initDragAndDrop, 100);
   }
   
   function closeColumnModal(){
-    const tableResponsive = document.getElementById('tableResponsive');
-    if (tableResponsive) {
-      tableResponsive.classList.remove('no-scroll');
-    }
-    const columnModal = document.getElementById('columnModal');
-    if (columnModal) {
-      columnModal.classList.remove('show');
-    }
+    document.getElementById('tableResponsive').classList.remove('no-scroll');
+    document.getElementById('columnModal').classList.remove('show');
     document.body.style.overflow = '';
   }
   
@@ -229,40 +203,22 @@
   }
 
   // close modals on ESC and clicking backdrop
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
+  document.addEventListener('keydown', e => { 
+    if (e.key === 'Escape') { 
       const modals = document.querySelectorAll('.modal.show');
       modals.forEach(m => {
         m.classList.remove('show');
         document.body.style.overflow = '';
       });
-    }
+    } 
   });
-
+  
   document.querySelectorAll('.modal').forEach(m => {
-    m.addEventListener('click', e => {
-      if (e.target === m) {
-        m.classList.remove('show');
+    m.addEventListener('click', e => { 
+      if (e.target === m) { 
+        m.classList.remove('show'); 
         document.body.style.overflow = '';
         document.getElementById('tableResponsive')?.classList.remove('no-scroll');
-      }
+      } 
     });
-  });
-
-  // Column button click handlers - automatically attach to both columnBtn and columnBtn2
-  document.addEventListener('DOMContentLoaded', function() {
-    const columnBtn = document.getElementById('columnBtn');
-    const columnBtn2 = document.getElementById('columnBtn2');
-
-    if (columnBtn) {
-      columnBtn.addEventListener('click', function() {
-        openColumnModal();
-      });
-    }
-
-    if (columnBtn2) {
-      columnBtn2.addEventListener('click', function() {
-        openColumnModal();
-      });
-    }
   });

@@ -213,13 +213,11 @@
 
 <script>
   let selectedColumns = @json($selectedColumns ?? []);
+  const mandatoryColumns = @json($mandatoryColumns ?? []);
   const csrfToken = '{{ csrf_token() }}';
   const fromCalendar = '{{ request()->get("from_calendar", "") }}';
   const startDate = '{{ request()->get("start_date", "") }}';
   const endDate = '{{ request()->get("end_date", "") }}';
 </script>
-@include('partials.table-scripts', [
-  'mandatoryColumns' => $mandatoryColumns ?? [],
-])
 <script src="{{ asset('js/followups-index.js') }}?v={{ time() }}"></script>
 @endsection

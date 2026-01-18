@@ -856,8 +856,5 @@ function closeClientPageView() {
   const csrfToken = '{{ csrf_token() }}';
   const clientsTotal = {{ $clients->total() }};
 </script>
-@include('partials.table-scripts', [
-  'mandatoryColumns' => ['client_name', 'client_type', 'mobile_no', 'source', 'status', 'signed_up', 'clid', 'first_name', 'surname'],
-])
 <script src="{{ asset('js/clients-index.js') }}?v={{ time() }}"></script>
 @endsection

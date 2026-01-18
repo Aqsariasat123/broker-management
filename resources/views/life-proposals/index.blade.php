@@ -660,8 +660,5 @@
   const lifeProposalsStoreRoute = '{{ route("life-proposals.store") }}';
   const csrfToken = '{{ csrf_token() }}';
 </script>
-@include('partials.table-scripts', [
-  'mandatoryColumns' => $mandatoryColumns ?? [],
-])
 <script src="{{ asset('js/life-proposals-index.js') }}?v={{ time() }}"></script>
 @endsection
