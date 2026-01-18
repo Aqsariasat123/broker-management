@@ -3111,7 +3111,7 @@ function populateClientForm(client) {
 
     // Calculate age if DOB exists
     if (client.dob_dor) {
-        calculateAge();
+        calculateAgeFromDobInput();
     }
 
     // Toggle fields based on client type
@@ -3134,21 +3134,21 @@ function toggleClientFields() {
     });
 }
 
-// Calculate age from DOB
-function calculateAge() {
+// Calculate age from DOB input field
+function calculateAgeFromDobInput() {
     const dobInput = document.getElementById('dob_dor');
     const ageInput = document.getElementById('dob_age');
-    
+
     if (dobInput && dobInput.value && ageInput) {
         const dob = new Date(dobInput.value);
         const today = new Date();
         let age = today.getFullYear() - dob.getFullYear();
         const monthDiff = today.getMonth() - dob.getMonth();
-        
+
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
             age--;
         }
-        
+
         ageInput.value = age >= 0 ? age : '';
     }
 }
@@ -3669,6 +3669,11 @@ function closeClientPhotoPreviewModal() {
 
 // Delete client photo
 async function deleteClientPhoto(clientId) {
+  if (!clientId) {
+    alert('Error: Client ID not found. Please refresh the page and try again.');
+    return;
+  }
+
   if (!confirm('Are you sure you want to delete this photo?')) {
     return;
   }
@@ -3680,6 +3685,8 @@ async function deleteClientPhoto(clientId) {
       return;
     }
 
+    console.log('Deleting photo for client ID:', clientId);
+
     const response = await fetch(`/clients/${clientId}/delete-photo`, {
       method: 'DELETE',
       headers: {
@@ -3689,14 +3696,24 @@ async function deleteClientPhoto(clientId) {
       }
     });
 
+    const responseText = await response.text();
+    console.log('Response status:', response.status);
+    console.log('Response text:', responseText);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server error:', response.status, errorText);
+      console.error('Server error:', response.status, responseText);
       alert('Server error: ' + response.status);
       return;
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Invalid JSON response:', responseText);
+      alert('Server returned invalid response. Check console for details.');
+      return;
+    }
 
     if (data.success) {
       // Close the photo preview modal
@@ -3704,20 +3721,27 @@ async function deleteClientPhoto(clientId) {
 
       // Refresh client data without page reload
       if (currentClientId) {
-        const clientResponse = await fetch(`/clients/${currentClientId}`);
-        const client = await clientResponse.json();
+        try {
+          const clientResponse = await fetch(`/clients/${currentClientId}`, {
+            headers: { 'Accept': 'application/json' }
+          });
+          const clientText = await clientResponse.text();
+          const client = JSON.parse(clientText);
 
-        // Update documents list
-        const documentsList = document.getElementById('clientDocumentsList');
-        if (documentsList) {
-          documentsList.innerHTML = renderDocumentsList(client.documents || []);
-        }
+          // Update documents list
+          const documentsList = document.getElementById('clientDocumentsList');
+          if (documentsList) {
+            documentsList.innerHTML = renderDocumentsList(client.documents || []);
+          }
 
-        // Update photo in Individual Details section
-        const photoContainer = document.querySelector('.detail-photo');
-        if (photoContainer) {
-          const parent = photoContainer.parentElement;
-          parent.innerHTML = '<div style="width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>';
+          // Update photo in Individual Details section
+          const photoContainer = document.querySelector('.detail-photo');
+          if (photoContainer) {
+            const parent = photoContainer.parentElement;
+            parent.innerHTML = '<div style="width:80px; height:100px; border:1px solid #ddd; border-radius:2px; background:#f5f5f5;"></div>';
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing client data:', refreshError);
         }
       }
 
@@ -3726,13 +3750,18 @@ async function deleteClientPhoto(clientId) {
       alert(data.message || 'Failed to delete photo');
     }
   } catch (error) {
-    console.error('Error deleting photo:', error);
-    alert('Error deleting photo: ' + error.message);
+    console.error('Delete photo error:', error);
+    alert('Delete failed: ' + error.message);
   }
 }
 
 // Delete any document
 async function deleteDocument(docId) {
+  if (!docId) {
+    alert('Error: Document ID not found. Please refresh the page and try again.');
+    return;
+  }
+
   if (!confirm('Are you sure you want to delete this document?')) {
     return;
   }
@@ -3744,6 +3773,8 @@ async function deleteDocument(docId) {
       return;
     }
 
+    console.log('Deleting document ID:', docId);
+
     const response = await fetch(`/documents/${docId}`, {
       method: 'DELETE',
       headers: {
@@ -3753,14 +3784,24 @@ async function deleteDocument(docId) {
       }
     });
 
+    const responseText = await response.text();
+    console.log('Response status:', response.status);
+    console.log('Response text:', responseText);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server error:', response.status, errorText);
+      console.error('Server error:', response.status, responseText);
       alert('Server error: ' + response.status);
       return;
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Invalid JSON response:', responseText);
+      alert('Server returned invalid response. Check console for details.');
+      return;
+    }
 
     if (data.success) {
       // Close the document preview modal
