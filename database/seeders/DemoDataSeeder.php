@@ -62,6 +62,12 @@ class DemoDataSeeder extends Seeder
             ['first' => 'Emily', 'surname' => 'Davis'],
             ['first' => 'Robert', 'surname' => 'Wilson'],
         ];
+        // Get a source lookup value
+        $sourceId = LookupValue::where('name', 'like', '%Referral%')
+            ->orWhere('name', 'like', '%Walk%')
+            ->orWhere('name', 'like', '%Direct%')
+            ->first()?->id ?? 1;
+
         foreach ($birthdayClients as $index => $client) {
             $maxClientId++;
             Client::create([
@@ -69,7 +75,7 @@ class DemoDataSeeder extends Seeder
                 'surname' => $client['surname'],
                 'client_name' => $client['first'] . ' ' . $client['surname'],
                 'client_type' => 'Individual',
-                'source' => null,
+                'source' => $sourceId,
                 'status' => 'Active',
                 'clid' => 'DEMO' . str_pad($maxClientId, 5, '0', STR_PAD_LEFT),
                 'signed_up' => Carbon::now()->subMonths(rand(1, 12)),
@@ -94,7 +100,7 @@ class DemoDataSeeder extends Seeder
                 'surname' => $client['surname'],
                 'client_name' => $client['first'] . ' ' . $client['surname'],
                 'client_type' => 'Individual',
-                'source' => null,
+                'source' => $sourceId,
                 'status' => 'Active',
                 'clid' => 'DEMO' . str_pad($maxClientId, 5, '0', STR_PAD_LEFT),
                 'signed_up' => Carbon::now()->subMonths(rand(1, 12)),
