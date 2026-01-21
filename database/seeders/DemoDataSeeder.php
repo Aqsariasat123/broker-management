@@ -242,33 +242,65 @@ class DemoDataSeeder extends Seeder
         if (!\App\Models\Commission::where('commission_code', 'like', 'DEMO%')->exists()) {
             $this->command->info('Adding Commission records (Outstanding)...');
 
-            $maxCommissionId = \App\Models\Commission::max('id') ?? 0;
+            // First, create a demo commission note (requires schedule_id)
+            // Get or create a schedule
+            $schedule = \App\Models\Schedule::first();
+            if (!$schedule) {
+                // Create a minimal schedule tied to a policy
+                $policy = Policy::first();
+                if ($policy) {
+                    $schedule = \App\Models\Schedule::create([
+                        'policy_id' => $policy->id,
+                        'schedule_code' => 'DEMO-SCH001',
+                    ]);
+                }
+            }
 
-            // Add 5 outstanding commissions (date_received is NULL)
-            for ($i = 0; $i < 5; $i++) {
-                $maxCommissionId++;
-                \App\Models\Commission::create([
-                    'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
-                    'basic_premium' => rand(1000, 5000),
-                    'rate' => rand(5, 15),
-                    'amount_due' => rand(500, 2500),
-                    'date_due' => Carbon::now()->subDays(rand(1, 60)),
-                    // date_received is NULL = outstanding
+            // Create a demo commission note
+            $commissionNote = null;
+            if ($schedule) {
+                $commissionNote = \App\Models\CommissionNote::create([
+                    'schedule_id' => $schedule->id,
+                    'com_note_id' => 'DEMO-CN001',
+                    'issued_on' => Carbon::now(),
+                    'total_premium' => 10000,
+                    'expected_commission' => 1000,
                 ]);
             }
 
-            // Add 3 received commissions (date_received is set)
-            for ($i = 0; $i < 3; $i++) {
-                $maxCommissionId++;
-                \App\Models\Commission::create([
-                    'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
-                    'basic_premium' => rand(1000, 5000),
-                    'rate' => rand(5, 15),
-                    'amount_due' => rand(500, 2500),
-                    'amount_received' => rand(500, 2500),
-                    'date_due' => Carbon::now()->subDays(rand(30, 90)),
-                    'date_received' => Carbon::now()->subDays(rand(1, 30)),
-                ]);
+            if ($commissionNote) {
+                $maxCommissionId = \App\Models\Commission::max('id') ?? 0;
+
+                // Add 5 outstanding commissions (date_received is NULL)
+                for ($i = 0; $i < 5; $i++) {
+                    $maxCommissionId++;
+                    \App\Models\Commission::create([
+                        'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
+                        'commission_note_id' => $commissionNote->id,
+                        'basic_premium' => rand(1000, 5000),
+                        'rate' => rand(5, 15),
+                        'amount_due' => rand(500, 2500),
+                        'date_due' => Carbon::now()->subDays(rand(1, 60)),
+                        // date_received is NULL = outstanding
+                    ]);
+                }
+
+                // Add 3 received commissions (date_received is set)
+                for ($i = 0; $i < 3; $i++) {
+                    $maxCommissionId++;
+                    \App\Models\Commission::create([
+                        'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
+                        'commission_note_id' => $commissionNote->id,
+                        'basic_premium' => rand(1000, 5000),
+                        'rate' => rand(5, 15),
+                        'amount_due' => rand(500, 2500),
+                        'amount_received' => rand(500, 2500),
+                        'date_due' => Carbon::now()->subDays(rand(30, 90)),
+                        'date_received' => Carbon::now()->subDays(rand(1, 30)),
+                    ]);
+                }
+            } else {
+                $this->command->info('Could not create commission note (no schedule/policy found), skipping commissions...');
             }
         } else {
             $this->command->info('Commission demo data already exists, skipping...');
