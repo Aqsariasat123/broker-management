@@ -242,10 +242,6 @@ class DemoDataSeeder extends Seeder
         if (!\App\Models\Commission::where('commission_code', 'like', 'DEMO%')->exists()) {
             $this->command->info('Adding Commission records (Outstanding)...');
 
-            // Get an insurer lookup value
-            $insurerId = LookupValue::whereHas('lookupCategory', fn($q) => $q->where('name', 'Insurers'))
-                ->first()?->id;
-
             $maxCommissionId = \App\Models\Commission::max('id') ?? 0;
 
             // Add 5 outstanding commissions (date_received is NULL)
@@ -253,7 +249,6 @@ class DemoDataSeeder extends Seeder
                 $maxCommissionId++;
                 \App\Models\Commission::create([
                     'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
-                    'insurer_id' => $insurerId,
                     'basic_premium' => rand(1000, 5000),
                     'rate' => rand(5, 15),
                     'amount_due' => rand(500, 2500),
@@ -267,7 +262,6 @@ class DemoDataSeeder extends Seeder
                 $maxCommissionId++;
                 \App\Models\Commission::create([
                     'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
-                    'insurer_id' => $insurerId,
                     'basic_premium' => rand(1000, 5000),
                     'rate' => rand(5, 15),
                     'amount_due' => rand(500, 2500),
