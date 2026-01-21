@@ -77,11 +77,13 @@ class LifeProposalController extends Controller
                 break;
        }
 
-     if ($startDate && $endDate) {
+    // Only apply date filter if NOT coming from dashboard with status filter
+    // Dashboard links use ?status=pending or ?status=processing
+    if ($startDate && $endDate && !$request->filled('status')) {
             $query->where(function($q) use ($startDate, $endDate) {
-                // Example 1: Filter by client DOB within range
+                // Filter by start_date within range
                 $q->whereBetween('start_date', [$startDate->toDateString(), $endDate->toDateString()]);
-            
+
             });
         }
     /* ===============================

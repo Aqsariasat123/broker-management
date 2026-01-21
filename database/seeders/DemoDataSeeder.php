@@ -237,6 +237,49 @@ class DemoDataSeeder extends Seeder
             $this->command->info('Life proposals demo data already exists, skipping...');
         }
 
+        // === COMMISSIONS (OUTSTANDING) ===
+        // Skip if demo commissions already exist
+        if (!\App\Models\Commission::where('commission_code', 'like', 'DEMO%')->exists()) {
+            $this->command->info('Adding Commission records (Outstanding)...');
+
+            // Get an insurer lookup value
+            $insurerId = LookupValue::whereHas('lookupCategory', fn($q) => $q->where('name', 'Insurers'))
+                ->first()?->id;
+
+            $maxCommissionId = \App\Models\Commission::max('id') ?? 0;
+
+            // Add 5 outstanding commissions (date_received is NULL)
+            for ($i = 0; $i < 5; $i++) {
+                $maxCommissionId++;
+                \App\Models\Commission::create([
+                    'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
+                    'insurer_id' => $insurerId,
+                    'basic_premium' => rand(1000, 5000),
+                    'rate' => rand(5, 15),
+                    'amount_due' => rand(500, 2500),
+                    'date_due' => Carbon::now()->subDays(rand(1, 60)),
+                    // date_received is NULL = outstanding
+                ]);
+            }
+
+            // Add 3 received commissions (date_received is set)
+            for ($i = 0; $i < 3; $i++) {
+                $maxCommissionId++;
+                \App\Models\Commission::create([
+                    'commission_code' => 'DEMO' . str_pad($maxCommissionId, 5, '0', STR_PAD_LEFT),
+                    'insurer_id' => $insurerId,
+                    'basic_premium' => rand(1000, 5000),
+                    'rate' => rand(5, 15),
+                    'amount_due' => rand(500, 2500),
+                    'amount_received' => rand(500, 2500),
+                    'date_due' => Carbon::now()->subDays(rand(30, 90)),
+                    'date_received' => Carbon::now()->subDays(rand(1, 30)),
+                ]);
+            }
+        } else {
+            $this->command->info('Commission demo data already exists, skipping...');
+        }
+
         $this->command->info('Demo data added successfully!');
     }
 }

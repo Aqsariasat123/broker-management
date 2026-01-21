@@ -134,13 +134,13 @@
       </div>
     </a>
 
-    <!-- Birthdays Today -->
+    <!-- Birthdays This Month -->
     <a href="{{ route('clients.birthday-list') }}" class="card-link">
       <div class="card">
         <span class="icon icon-red"><i class="fa-solid fa-calendar-days"></i></span>
         <div class="card-content">
           <span class="value">{{ $stats['birthdays_today'] ?? 0 }}</span>
-          <span>Birthdays Today</span>
+          <span>Birthdays This Month</span>
         </div>
       </div>
     </a>

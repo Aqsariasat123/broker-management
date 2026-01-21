@@ -73,8 +73,10 @@ class PolicyController extends Controller
     }
 
     // Apply date_range filter if no manual date filters provided
+    // Skip date filter when filtering by type (from dashboard) or filter (expiring)
     if ((!$request->has('start_date_from') && !$request->has('start_date_to')) &&
-        (!$request->has('end_date_from') && !$request->has('end_date_to'))) {
+        (!$request->has('end_date_from') && !$request->has('end_date_to')) &&
+        !$request->has('type') && !$request->has('filter')) {
 
         if ($startDate && $endDate) {
             $query->whereBetween('end_date', [$startDate->toDateString(), $endDate->toDateString()]);

@@ -218,11 +218,10 @@ class AuthController extends Controller
                     ->count();
             } catch (\Exception $e) { $stats['life_policies'] = 0; }
 
-            // Birthdays today (matching month and day)
+            // Birthdays this month (to match the birthday list page)
             try {
                 $stats['birthdays_today'] = Client::whereNotNull('dob_dor')
                     ->whereMonth('dob_dor', now()->month)
-                    ->whereDay('dob_dor', now()->day)
                     ->count();
             } catch (\Exception $e) { $stats['birthdays_today'] = 0; }
 
