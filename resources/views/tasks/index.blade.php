@@ -208,128 +208,124 @@
      </div>
   </div>
 
-  <!-- Add/Edit Task Modal (hidden, used for form structure) -->
-  <div class="modal" id="taskModal">
-    <div class="modal-content" style="max-width: 520px;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #ddd;">
-        <h4 id="modalTitle" style="margin: 0; font-size: 16px; font-weight: 600;">View/Edit Task</h4>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-delete" id="deleteBtn" style="display: none; background: #f3742a; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;" onclick="deleteTask()">Delete</button>
-          <button type="submit" form="taskForm" class="btn-save" style="background: #f3742a; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;">Save</button>
-          <button type="button" class="btn-cancel" onclick="closeModal()" style="background: #000; color: #fff; border: none; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 13px;">Cancel</button>
+  <!-- Side Panel Overlay -->
+  <div class="panel-overlay" id="taskPanelOverlay" onclick="closeTaskPanel()"></div>
+
+  <!-- Add/Edit Task Side Panel -->
+  <div class="side-panel" id="taskSidePanel">
+    <div class="side-panel-header">
+      <h4 id="taskPanelTitle">View/Edit Task</h4>
+      <div class="side-panel-actions">
+        <button type="button" class="btn-delete" id="taskDeleteBtn" style="display: none;" onclick="deleteTask()">Delete</button>
+        <button type="submit" form="taskForm" class="btn-save">Save</button>
+        <button type="button" class="btn-cancel" onclick="closeTaskPanel()">Cancel</button>
+      </div>
+    </div>
+    <form id="taskForm" method="POST" class="side-panel-body">
+      @csrf
+      <div id="formMethod"></div>
+      <input type="hidden" id="description" name="description" value="">
+      <input type="hidden" id="date_in" name="date_in">
+
+      <div class="panel-form-row">
+        <label for="category">Category</label>
+        <select class="form-control" id="category" name="category" required>
+          <option value="">Select Category</option>
+          @foreach($categories as $cat)
+            <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="panel-form-row">
+        <label for="item">Item</label>
+        <input type="text" class="form-control" id="item" name="item">
+      </div>
+
+      <div class="panel-form-row">
+        <label for="name">Name</label>
+        <select class="form-control" id="name" name="name" required>
+          <option value="">Select Name</option>
+          @foreach($contacts as $contact)
+            <option value="{{ $contact->name }}">{{ $contact->name }}</option>
+          @endforeach
+          @foreach($clients as $client)
+            <option value="{{ $client->name }}">{{ $client->name }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="panel-form-row">
+        <label for="contact_no">Contact No.</label>
+        <input type="text" class="form-control" id="contact_no" name="contact_no">
+      </div>
+
+      <div class="panel-form-row">
+        <label for="due_date">Due Date</label>
+        <input type="date" class="form-control" id="due_date" name="due_date" required>
+      </div>
+
+      <div class="panel-form-row">
+        <label for="due_time">Due Time</label>
+        <input type="time" class="form-control" id="due_time" name="due_time">
+      </div>
+
+      <div class="panel-form-row">
+        <label for="assignee">Assignee</label>
+        <select class="form-control" id="assignee" name="assignee" required>
+          <option value="">Select Assignee</option>
+          @foreach($users as $user)
+            <option value="{{ $user->name }}">{{ $user->name }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="panel-form-row">
+        <label for="task_status">Task Status</label>
+        <select class="form-control" id="task_status" name="task_status" required>
+          <option value="Not Done">Not Done</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+
+      <div class="panel-form-row">
+        <label for="date_done">Date Done</label>
+        <input type="date" class="form-control" id="date_done" name="date_done">
+      </div>
+
+      <div class="panel-form-row" style="align-items: flex-start;">
+        <label for="task_notes" style="padding-top: 6px;">Task Notes</label>
+        <textarea class="form-control" id="task_notes" name="task_notes" rows="3" style="resize: vertical;"></textarea>
+      </div>
+
+      <div style="border: 1px solid #ddd; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <div class="panel-form-row">
+          <label>Repeat / Frequency</label>
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+            <input type="checkbox" id="repeat" name="repeat" value="1" style="width: 18px; height: 18px; cursor: pointer;">
+            <select class="form-control" id="frequency" name="frequency" style="flex: 1;">
+              <option value="">Select Frequency</option>
+              @if($frequencyCategories && $frequencyCategories->values)
+                @foreach($frequencyCategories->values as $freq)
+                  <option value="{{ $freq->name }}">{{ $freq->name }}</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+        </div>
+
+        <div class="panel-form-row">
+          <label for="rpt_date">Repeat Date</label>
+          <input type="date" class="form-control" id="rpt_date" name="rpt_date">
+        </div>
+
+        <div class="panel-form-row" style="margin-bottom: 0;">
+          <label for="rpt_stop_date">Repeat Stop Date</label>
+          <input type="date" class="form-control" id="rpt_stop_date" name="rpt_stop_date">
         </div>
       </div>
-      <form id="taskForm" method="POST">
-        @csrf
-        <div id="formMethod" style="display: none;"></div>
-        <input type="hidden" id="description" name="description" value="">
-        <input type="hidden" id="date_in" name="date_in">
-
-        <div class="modal-body" style="padding: 20px;">
-          <!-- Vertical layout like Excel -->
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="category" style="width: 120px; font-weight: 500; font-size: 13px;">Category</label>
-            <select class="form-control" id="category" name="category" required style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-              <option value="">Select Category</option>
-              @foreach($categories as $cat)
-                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="item" style="width: 120px; font-weight: 500; font-size: 13px;">Item</label>
-            <input type="text" class="form-control" id="item" name="item" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="name" style="width: 120px; font-weight: 500; font-size: 13px;">Name</label>
-            <select class="form-control" id="name" name="name" required style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-              <option value="">Select Name</option>
-              @foreach($contacts as $contact)
-                <option value="{{ $contact->name }}">{{ $contact->name }}</option>
-              @endforeach
-              @foreach($clients as $client)
-                <option value="{{ $client->name }}">{{ $client->name }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="contact_no" style="width: 120px; font-weight: 500; font-size: 13px;">Contact No.</label>
-            <input type="text" class="form-control" id="contact_no" name="contact_no" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="due_date" style="width: 120px; font-weight: 500; font-size: 13px;">Due Date</label>
-            <input type="date" class="form-control" id="due_date" name="due_date" required style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="due_time" style="width: 120px; font-weight: 500; font-size: 13px;">Due Time</label>
-            <input type="time" class="form-control" id="due_time" name="due_time" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="assignee" style="width: 120px; font-weight: 500; font-size: 13px;">Assignee</label>
-            <select class="form-control" id="assignee" name="assignee" required style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-              <option value="">Select Assignee</option>
-              @foreach($users as $user)
-                <option value="{{ $user->name }}">{{ $user->name }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="task_status" style="width: 120px; font-weight: 500; font-size: 13px;">Task Status</label>
-            <select class="form-control" id="task_status" name="task_status" required style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-              <option value="Not Done">Not Done</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <label for="date_done" style="width: 120px; font-weight: 500; font-size: 13px;">Date Done</label>
-            <input type="date" class="form-control" id="date_done" name="date_done" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-          </div>
-
-          <div class="form-row-vertical" style="display: flex; align-items: flex-start; margin-bottom: 10px;">
-            <label for="task_notes" style="width: 120px; font-weight: 500; font-size: 13px; padding-top: 6px;">Task Notes</label>
-            <textarea class="form-control" id="task_notes" name="task_notes" rows="3" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; resize: vertical; font-size: 13px;"></textarea>
-          </div>
-
-          <div style="border: 1px solid #ddd; padding: 12px; margin-top: 15px;">
-            <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-              <label style="width: 120px; font-weight: 500; font-size: 13px;">Repeat / Frequency</label>
-              <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                <input type="checkbox" id="repeat" name="repeat" value="1" style="width: 18px; height: 18px; cursor: pointer;">
-                <select class="form-control" id="frequency" name="frequency" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-                  <option value="">Select Frequency</option>
-                  @if($frequencyCategories && $frequencyCategories->values)
-                    @foreach($frequencyCategories->values as $freq)
-                      <option value="{{ $freq->name }}">{{ $freq->name }}</option>
-                    @endforeach
-                  @endif
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 10px;">
-              <label for="rpt_date" style="width: 120px; font-weight: 500; font-size: 13px;">Repeat Date</label>
-              <input type="date" class="form-control" id="rpt_date" name="rpt_date" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-            </div>
-
-            <div class="form-row-vertical" style="display: flex; align-items: center; margin-bottom: 0;">
-              <label for="rpt_stop_date" style="width: 120px; font-weight: 500; font-size: 13px;">Repeat Stop Date</label>
-              <input type="date" class="form-control" id="rpt_stop_date" name="rpt_stop_date" style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 2px; font-size: 13px;">
-            </div>
-          </div>
-        </div>
-        
-       
-      </form>
-    </div>
+    </form>
   </div>
 
   <!-- Column Selection Modal -->

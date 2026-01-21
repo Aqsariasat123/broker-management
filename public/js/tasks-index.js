@@ -19,41 +19,39 @@
       });
     }
 
-    // Add Task Button - moved to DOMContentLoaded to ensure button exists
-    // Column Button - moved to DOMContentLoaded to ensure button exists
-
-
+    // Open side panel for editing task
     async function openEditTask(id) {
       try {
-        const res = await fetch(`/tasks/${id}/edit`, { 
-          headers: { 
+        const res = await fetch(`/tasks/${id}/edit`, {
+          headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
-          } 
+          }
         });
         if (!res.ok) throw new Error('Network error');
         const task = await res.json();
         currentTaskId = id;
-        openModalWithTask('edit', task);
+        openTaskPanelWithData('edit', task);
       } catch (e) {
         console.error(e);
         alert('Error loading task data');
       }
     }
-    
-    // Open modal with task data for editing
-    function openModalWithTask(mode, task) {
-      const modal = document.getElementById('taskModal');
-      if (!modal) {
-        console.error('Modal not found');
+
+    // Open side panel with task data for editing
+    function openTaskPanelWithData(mode, task) {
+      const panel = document.getElementById('taskSidePanel');
+      const overlay = document.getElementById('taskPanelOverlay');
+      if (!panel) {
+        console.error('Side panel not found');
         return;
       }
-      
-      const title = document.getElementById('modalTitle');
+
+      const title = document.getElementById('taskPanelTitle');
       const form = document.getElementById('taskForm');
-      const deleteBtn = document.getElementById('deleteBtn');
+      const deleteBtn = document.getElementById('taskDeleteBtn');
       const formMethod = document.getElementById('formMethod');
-      
+
       if (mode === 'edit' && task) {
         if (title) title.textContent = 'View/Edit Task';
         if (form) {
@@ -61,8 +59,8 @@
           form.method = 'POST';
         }
         if (formMethod) formMethod.innerHTML = '<input type="hidden" name="_method" value="POST">';
-        if (deleteBtn) deleteBtn.style.display = 'block';
-        
+        if (deleteBtn) deleteBtn.style.display = 'inline-block';
+
         // Populate form fields
         const fields = ['category','item','description','name','contact_no','due_date','due_time','date_in','assignee','task_status','date_done','task_notes','frequency','rpt_date','rpt_stop_date'];
         fields.forEach(id => {
@@ -118,13 +116,13 @@
             el.value = task[id] ?? '';
           }
         });
-        
+
         // Handle repeat checkbox
         const repeatCheckbox = form.querySelector('#repeat');
         if (repeatCheckbox) {
           repeatCheckbox.checked = !!task.repeat;
         }
-        
+
         // Sync item to description if needed
         const itemField = form.querySelector('#item');
         const descField = form.querySelector('#description');
@@ -134,21 +132,22 @@
           descField.value = itemField.value;
         }
       }
-      
-      // prevent body scrollbar when modal open
+
+      // Show panel
+      panel.classList.add('show');
+      overlay.classList.add('show');
       document.body.style.overflow = 'hidden';
-      modal.classList.add('show');
-      
-      // Setup event listeners for modal form
+
+      // Setup event listeners for form
       setTimeout(() => {
-        setupFormEventListeners(modal);
+        setupFormEventListeners(panel);
       }, 100);
     }
 
     // Setup event listeners for form dropdowns
     function setupFormEventListeners(container) {
       if (!container) return;
-      
+
       // Handle name dropdown change to auto-fill contact_no
       const nameSelect = container.querySelector('#name');
       const contactNoInput = container.querySelector('#contact_no');
@@ -160,7 +159,7 @@
           }
         });
       }
-      
+
       // Sync item to description when item changes (since description is required)
       const itemInput = container.querySelector('#item');
       const descInput = container.querySelector('#description');
@@ -173,27 +172,25 @@
       }
     }
 
-
-    // Edit button from details page - moved to DOMContentLoaded
-
     // Legacy editTask function for backward compatibility
     async function editTask(taskId) {
       openEditTask(taskId);
     }
 
-    // Open Task Modal
-    function openModal(mode) {
-      const modal = document.getElementById('taskModal');
-      if (!modal) {
-        console.error('Modal not found');
+    // Open Task Side Panel for adding
+    function openTaskPanel(mode) {
+      const panel = document.getElementById('taskSidePanel');
+      const overlay = document.getElementById('taskPanelOverlay');
+      if (!panel) {
+        console.error('Side panel not found');
         return;
       }
-      
-      const title = document.getElementById('modalTitle');
+
+      const title = document.getElementById('taskPanelTitle');
       const form = document.getElementById('taskForm');
-      const deleteBtn = document.getElementById('deleteBtn');
+      const deleteBtn = document.getElementById('taskDeleteBtn');
       const formMethod = document.getElementById('formMethod');
-      
+
       if (mode === 'add') {
         if (title) title.textContent = 'Add Task';
         if (form) {
@@ -211,40 +208,52 @@
           form.method = 'POST';
         }
         if (formMethod) formMethod.innerHTML = '<input type="hidden" name="_method" value="POST">';
-        if (deleteBtn) deleteBtn.style.display = 'block';
+        if (deleteBtn) deleteBtn.style.display = 'inline-block';
       }
-      
-      // prevent body scrollbar when modal open
+
+      // Show panel
+      panel.classList.add('show');
+      overlay.classList.add('show');
       document.body.style.overflow = 'hidden';
-      modal.classList.add('show');
-      
-      // Setup event listeners for modal form
+
+      // Setup event listeners for form
       setTimeout(() => {
-        setupFormEventListeners(modal);
+        setupFormEventListeners(panel);
       }, 100);
     }
 
-    // Close Task Modal
-    function closeModal() {
-      document.getElementById('taskModal').classList.remove('show');
-      currentTaskId = null;
-      // restore body scrollbar
+    // Close Task Side Panel
+    function closeTaskPanel() {
+      const panel = document.getElementById('taskSidePanel');
+      const overlay = document.getElementById('taskPanelOverlay');
+
+      if (panel) panel.classList.remove('show');
+      if (overlay) overlay.classList.remove('show');
       document.body.style.overflow = '';
+
+      currentTaskId = null;
+    }
+
+    // Legacy functions for backward compatibility
+    function openModal(mode) {
+      openTaskPanel(mode);
+    }
+
+    function closeModal() {
+      closeTaskPanel();
     }
 
     // Open Column Modal
     function openColumnModal() {
       initializeColumnCheckboxes();
-      // prevent body scrollbar when modal open
       document.body.style.overflow = 'hidden';
       document.getElementById('columnModal').classList.add('show');
-         setTimeout(initDragAndDrop, 100);
+      setTimeout(initDragAndDrop, 100);
     }
 
     // Close Column Modal
     function closeColumnModal() {
       document.getElementById('columnModal').classList.remove('show');
-      // restore body scrollbar
       document.body.style.overflow = '';
     }
 
@@ -275,32 +284,32 @@
       const items = Array.from(document.querySelectorAll('#columnSelection .column-item, #columnSelection .column-item-vertical'));
     const order = items.map(item => item.dataset.column);
     const checked = Array.from(document.querySelectorAll('.column-checkbox:checked')).map(n=>n.value);
-    
+
     // Ensure mandatory fields are always included
     mandatoryFields.forEach(field => {
       if (!checked.includes(field)) {
         checked.push(field);
       }
     });
-    
+
     // Maintain order of checked items based on DOM order (drag and drop order)
     const orderedChecked = order.filter(col => checked.includes(col));
-    
+
     const form = document.getElementById('columnForm');
-    const existing = form.querySelectorAll('input[name="columns[]"]'); 
+    const existing = form.querySelectorAll('input[name="columns[]"]');
     existing.forEach(e=>e.remove());
-    
+
     // Add columns in the order they appear in the DOM (after drag and drop)
     orderedChecked.forEach(c => {
-      const i = document.createElement('input'); 
-      i.type='hidden'; 
-      i.name='columns[]'; 
-      i.value=c; 
+      const i = document.createElement('input');
+      i.type='hidden';
+      i.name='columns[]';
+      i.value=c;
       form.appendChild(i);
     });
-    
+
     form.submit();
-    
+
     }
 
     // Drag and drop functionality
@@ -318,7 +327,7 @@
         }
         item.dataset.dragInitialized = 'true';
         item.setAttribute('draggable', 'true');
-        
+
         // Prevent checkbox from interfering with drag
         const checkbox = item.querySelector('.column-checkbox');
         if (checkbox) {
@@ -329,7 +338,7 @@
             e.stopPropagation();
           });
         }
-        
+
         // Prevent label from interfering with drag
         const label = item.querySelector('label');
         if (label) {
@@ -340,7 +349,7 @@
             }
           });
         }
-        
+
         item.addEventListener('dragstart', function(e) {
           draggedElement = this;
           this.classList.add('dragging');
@@ -348,7 +357,7 @@
           e.dataTransfer.setData('text/html', this.outerHTML);
           e.dataTransfer.setData('text/plain', this.querySelector('.column-checkbox').value);
         });
-        
+
         item.addEventListener('dragend', function(e) {
           this.classList.remove('dragging');
           // Remove drag-over from all items
@@ -359,26 +368,26 @@
           }
           draggedElement = null;
         });
-        
+
         item.addEventListener('dragover', function(e) {
           e.preventDefault();
           e.stopPropagation();
           e.dataTransfer.dropEffect = 'move';
-          
+
           if (draggedElement && this !== draggedElement) {
             // Remove drag-over class from previous element
             if (dragOverElement && dragOverElement !== this) {
               dragOverElement.classList.remove('drag-over');
             }
-            
+
             // Add drag-over class to current element
             this.classList.add('drag-over');
             dragOverElement = this;
-            
+
             const rect = this.getBoundingClientRect();
             const midpoint = rect.top + (rect.height / 2);
             const next = e.clientY > midpoint;
-            
+
             if (next) {
               if (this.nextSibling && this.nextSibling !== draggedElement) {
                 this.parentNode.insertBefore(draggedElement, this.nextSibling);
@@ -392,14 +401,14 @@
             }
           }
         });
-        
+
         item.addEventListener('dragenter', function(e) {
           e.preventDefault();
           if (draggedElement && this !== draggedElement) {
             this.classList.add('drag-over');
           }
         });
-        
+
         item.addEventListener('dragleave', function(e) {
           // Only remove if we're actually leaving the element
           if (!this.contains(e.relatedTarget)) {
@@ -409,7 +418,7 @@
             }
           }
         });
-        
+
         item.addEventListener('drop', function(e) {
           e.preventDefault();
           e.stopPropagation();
@@ -437,15 +446,15 @@
     document.addEventListener('DOMContentLoaded', function() {
       // initialize column checkboxes and other startup code
       initializeColumnCheckboxes();
-      
+
       // Add Task Button
       const addTaskBtn = document.getElementById('addTaskBtn');
       if (addTaskBtn) {
         addTaskBtn.addEventListener('click', function() {
-          openModal('add');
+          openTaskPanel('add');
         });
       }
-      
+
       // Column Button
       const columnBtn = document.getElementById('columnBtn');
       if (columnBtn) {
@@ -453,10 +462,10 @@
           openColumnModal();
         });
       }
-      
-      // Setup event listeners for modal form on page load
-      setupFormEventListeners(document.getElementById('taskModal'));
-      
+
+      // Setup event listeners for form on page load
+      setupFormEventListeners(document.getElementById('taskSidePanel'));
+
       // Handle form submission to ensure description is set
       const taskForm = document.getElementById('taskForm');
       if (taskForm) {
@@ -533,7 +542,16 @@
           window.location.href = u.toString();
         });
       }
+
+      // Close panel on escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeTaskPanel();
+          closeColumnModal();
+        }
+      });
     });
+
   function handleBack() {
       // Get params from current URL
       const params = new URLSearchParams(window.location.search);
@@ -551,10 +569,11 @@
           window.location.href = "/dashboard";
       }
   }
+
   function printTable() {
     const table = document.getElementById('tasksTable');
     if (!table) return;
-    
+
     // Get table headers - preserve order
     const headers = [];
     const headerCells = table.querySelectorAll('thead th');
@@ -573,18 +592,18 @@
         headers.push(headerText);
       }
     });
-    
+
     // Get table rows data
     const rows = [];
     const tableRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
     tableRows.forEach(row => {
       if (row.style.display === 'none') return; // Skip hidden rows
-      
+
       const cells = [];
       const rowCells = row.querySelectorAll('td');
       rowCells.forEach((cell) => {
         let cellContent = '';
-        
+
         // Handle notification column (bell-cell)
         if (cell.classList.contains('bell-cell')) {
           const statusIndicator = cell.querySelector('.status-indicator');
@@ -599,7 +618,7 @@
           } else {
             cellContent = '';
           }
-        } 
+        }
         // Handle action column
         else if (cell.classList.contains('action-cell')) {
           const expandIcon = cell.querySelector('.action-expand');
@@ -610,12 +629,12 @@
           if (clockIcon) icons.push('🕐');
           if (ellipsis) icons.push('⋯');
           cellContent = icons.join(' ');
-        } 
+        }
         // Handle checkbox cells
         else if (cell.classList.contains('checkbox-cell')) {
           const checkbox = cell.querySelector('input[type="checkbox"]');
           cellContent = checkbox && checkbox.checked ? '✓' : '';
-        } 
+        }
         // Handle regular cells
         else {
           // Get text content, handling links
@@ -626,12 +645,12 @@
             cellContent = cell.textContent.trim();
           }
         }
-        
+
         cells.push(cellContent || '-');
       });
       rows.push(cells);
     });
-    
+
     // Escape HTML to prevent XSS and syntax issues
     function escapeHtml(text) {
       if (!text) return '';
@@ -639,10 +658,10 @@
       div.textContent = text;
       return div.innerHTML;
     }
-    
+
     // Build headers HTML
     const headersHTML = headers.map(h => '<th>' + escapeHtml(h) + '</th>').join('');
-    
+
     // Build rows HTML
     const rowsHTML = rows.map(row => {
       const cellsHTML = row.map(cell => {
@@ -651,14 +670,14 @@
       }).join('');
       return '<tr>' + cellsHTML + '</tr>';
     }).join('');
-    
+
     // Create print window with minimal delay
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    
+
     const printHTML = '<!DOCTYPE html>' +
       '<html>' +
       '<head>' +
-      '<title>Clients - Print</title>' +
+      '<title>Tasks - Print</title>' +
       '<style>' +
       '@page { margin: 1cm; size: A4 landscape; }' +
       'html, body { margin: 0; padding: 0; background: #fff !important; }' +
@@ -688,11 +707,10 @@
       '</scr' + 'ipt>' +
       '</body>' +
       '</html>';
-    
+
     if (printWindow) {
       printWindow.document.open();
       printWindow.document.write(printHTML);
       printWindow.document.close();
     }
   }
-  
