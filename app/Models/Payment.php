@@ -20,6 +20,8 @@ class Payment extends Model
         'receipt_path',
         'is_encrypted',
         'notes',
+        'variance',
+        'variance_reason',
     ];
 
     protected $casts = [

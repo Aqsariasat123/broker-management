@@ -279,80 +279,105 @@
     </div>
   </div>
 
-  <!-- Add/Edit Payment Modal (hidden, used for form structure) -->
-  <div class="modal" id="paymentModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 id="paymentModalTitle">Add Payment</h4>
-        <button type="button" class="modal-close" onclick="closePaymentModal()">×</button>
+  <!-- Add/Edit Payment Side Panel -->
+  <div class="side-panel" id="paymentSidePanel">
+    <div class="side-panel-header">
+      <h4 id="paymentPanelTitle">Add/Edit Payment</h4>
+      <div class="side-panel-actions">
+        <button type="button" class="btn-delete" id="paymentDeleteBtn2" style="display:none;" onclick="deletePayment()">Delete</button>
+        <button type="submit" form="paymentPanelForm" class="btn-save">Save</button>
+        <button type="button" class="btn-cancel" onclick="closePaymentPanel()">Cancel</button>
       </div>
+    </div>
+    <form id="paymentPanelForm" method="POST" action="{{ route('payments.store') }}" enctype="multipart/form-data">
+      @csrf
+      <div id="paymentPanelFormMethod" style="display:none;"></div>
+      <div class="side-panel-body">
+        <!-- Readonly Info Fields -->
+        <div class="panel-form-row">
+          <label>Debit Note No</label>
+          <input type="text" id="panel_debit_note_no" class="form-control" readonly>
+          <input type="hidden" name="debit_note_id" id="panel_debit_note_id">
+        </div>
+        <div class="panel-form-row">
+          <label>Policy Number</label>
+          <input type="text" id="panel_policy_no" class="form-control" readonly>
+        </div>
+        <div class="panel-form-row">
+          <label>Date Due</label>
+          <input type="text" id="panel_date_due" class="form-control" readonly>
+        </div>
+        <div class="panel-form-row">
+          <label>Amount Due</label>
+          <input type="text" id="panel_amount_due" class="form-control" readonly>
+        </div>
+
+        <!-- Editable Fields -->
+        <div class="panel-form-row">
+          <label>Amount Paid</label>
+          <input type="number" step="0.01" min="0" name="amount" id="panel_amount" class="form-control">
+        </div>
+        <div class="panel-form-row">
+          <label>Date Paid</label>
+          <input type="date" name="paid_on" id="panel_paid_on" class="form-control">
+        </div>
+        <div class="panel-form-row">
+          <label>Payment Type</label>
+          <input type="text" id="panel_payment_type" class="form-control" readonly>
+        </div>
+        <div class="panel-form-row">
+          <label>Mode Of Payment</label>
+          <select name="mode_of_payment_id" id="panel_mode_of_payment_id" class="form-control">
+            <option value="">Select</option>
+            @foreach($modesOfPayment as $mode)
+              <option value="{{ $mode->id }}">{{ $mode->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="panel-form-row">
+          <label>Cheque No</label>
+          <input type="text" name="cheque_no" id="panel_cheque_no" class="form-control">
+        </div>
+        <div class="panel-form-row">
+          <label>Variance</label>
+          <input type="number" step="0.01" name="variance" id="panel_variance" class="form-control" readonly>
+        </div>
+        <div class="panel-form-row">
+          <label>Variance Reason</label>
+          <input type="text" name="variance_reason" id="panel_variance_reason" class="form-control">
+        </div>
+        <div class="panel-form-row" style="align-items:flex-start;">
+          <label style="padding-top:8px;">Payment Notes</label>
+          <textarea name="notes" id="panel_notes" class="form-control" rows="4"></textarea>
+        </div>
+
+        <!-- Hidden payment reference field -->
+        <input type="hidden" name="payment_reference" id="panel_payment_reference">
+      </div>
+    </form>
+  </div>
+  <div class="side-panel-overlay" id="paymentPanelOverlay" onclick="closePaymentPanel()"></div>
+
+  <!-- Legacy Modal (hidden, kept for form structure reference) -->
+  <div class="modal" id="paymentModal" style="display:none !important;">
+    <div class="modal-content">
       <form id="paymentForm" method="POST" action="{{ route('payments.store') }}" enctype="multipart/form-data">
         @csrf
         <div id="paymentFormMethod" style="display:none;"></div>
         <div class="modal-body">
-          <div class="form-row">
-            <div class="form-group" style="flex:1 1 100%;">
-              <label for="debit_note_id">Debit Note *</label>
-              <select class="form-control" name="debit_note_id" id="debit_note_id" required>
-                <option value="">Select Debit Note</option>
-                @foreach($allDebitNotes as $dn)
-                  <option value="{{ $dn->id }}">
-                    {{ $dn->debit_note_no }} -
-                    {{ $dn->paymentPlan->schedule->policy->policy_no ?? 'N/A' }} -
-                    {{ $dn->paymentPlan->schedule->policy->client->client_name ?? 'N/A' }} -
-                    Amount: {{ number_format($dn->amount, 2) }} -
-                    Status: {{ ucfirst($dn->status) }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="payment_reference">Payment Reference *</label>
-              <input type="text" class="form-control" name="payment_reference" id="payment_reference" required placeholder="e.g., PAY-2025-001">
-            </div>
-            <div class="form-group">
-              <label for="paid_on">Paid On *</label>
-              <input type="date" class="form-control" name="paid_on" id="paid_on" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="amount">Amount *</label>
-              <input type="number" step="0.01" min="0" class="form-control" name="amount" id="amount" required>
-            </div>
-            <div class="form-group">
-              <label for="mode_of_payment_id">Mode Of Payment</label>
-              <select class="form-control" name="mode_of_payment_id" id="mode_of_payment_id">
-                <option value="">Select Mode Of Payment</option>
-                @foreach($modesOfPayment as $mode)
-                  <option value="{{ $mode->id }}">{{ $mode->name }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="cheque_no">Cheque No</label>
-              <input type="text" class="form-control" name="cheque_no" id="cheque_no" placeholder="If applicable">
-            </div>
-            <div class="form-group">
-              <label for="receipt">Receipt Document</label>
-              <input type="file" class="form-control" name="receipt" id="receipt" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="flex:1 1 100%;">
-              <label for="notes">Notes</label>
-              <textarea class="form-control" name="notes" id="notes" rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" onclick="closePaymentModal()">Cancel</button>
-          <button type="button" class="btn-delete" id="paymentDeleteBtn" style="display: none;" onclick="deletePayment()">Delete</button>
-          <button type="submit" class="btn-save">Save</button>
+          <select class="form-control" name="debit_note_id" id="debit_note_id">
+            <option value="">Select Debit Note</option>
+            @foreach($allDebitNotes as $dn)
+              <option value="{{ $dn->id }}"
+                data-debit-note-no="{{ $dn->debit_note_no }}"
+                data-policy-no="{{ $dn->paymentPlan->schedule->policy->policy_no ?? 'N/A' }}"
+                data-date-due="{{ $dn->paymentPlan->due_date ?? '' }}"
+                data-amount-due="{{ $dn->amount }}"
+                data-payment-type="{{ stripos($dn->paymentPlan->installment_label ?? '', 'full') !== false ? 'Full payment' : 'Instalment' }}">
+                {{ $dn->debit_note_no }} - {{ $dn->paymentPlan->schedule->policy->policy_no ?? 'N/A' }}
+              </option>
+            @endforeach
+          </select>
         </div>
       </form>
     </div>
