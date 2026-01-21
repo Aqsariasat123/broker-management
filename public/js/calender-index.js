@@ -271,7 +271,7 @@ document.querySelectorAll('.category-dropdown').forEach(dropdown => {
                 url = `/payments?from_calendar=1&filter=overdue&start_date=${startDate}&end_date=${endDate}`;
                 break;
             case 'birthdays':
-                url = `/clients?from_calendar=1&filter=birthday_today&start_date=${startDate}&end_date=${endDate}`;
+                url = `/clients/birthdays?from_calendar=1&month=${currentMonth + 1}`;
                 break;
         }
 

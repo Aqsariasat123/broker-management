@@ -149,9 +149,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Clients Routes
     Route::get('/clients/export', [ClientController::class, 'export'])->name('clients.export');
+    Route::get('/clients/birthdays', [ClientController::class, 'birthdayList'])->name('clients.birthday-list');
+    Route::get('/clients/birthdays/export', [ClientController::class, 'birthdayExport'])->name('clients.birthday-export');
     Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
     Route::resource('clients', ClientController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
     Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
+    Route::post('/clients/{client}/birthday-update', [ClientController::class, 'birthdayUpdate'])->name('clients.birthday-update');
     Route::post('/clients/save-column-settings', [ClientController::class, 'saveColumnSettings'])->name('clients.save-column-settings');
     Route::post('/clients/{client}/upload-photo', [ClientController::class, 'uploadPhoto'])->name('clients.upload-photo');
     Route::post('/clients/{client}/upload-document', [ClientController::class, 'uploadDocument'])->name('clients.upload-document');

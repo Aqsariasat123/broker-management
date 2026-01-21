@@ -57,13 +57,18 @@ class Client extends Model
         'has_house',
         'has_business',
         'has_boat',
-        'notes'
+        'notes',
+        'home_no',
+        'bday_medium',
+        'bday_wish_status',
+        'bday_date_done'
     ];
 
     protected $casts = [
         'dob_dor' => 'date',
         'signed_up' => 'date',
         'id_expiry_date' => 'date',
+        'bday_date_done' => 'date',
         'married' => 'boolean',
         'pep' => 'boolean',
         'has_vehicle' => 'boolean',

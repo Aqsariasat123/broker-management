@@ -812,6 +812,106 @@ class ClientController extends Controller
         ]);
     }
 
-   
-  
+
+    /**
+     * Show birthday list for a specific month
+     */
+    public function birthdayList(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $showDone = $request->get('show_done', false);
+
+        $query = Client::whereNotNull('dob_dor')
+            ->whereMonth('dob_dor', $month);
+
+        // Filter out done wishes unless show_done is set
+        if (!$showDone) {
+            $query->where(function($q) {
+                $q->whereNull('bday_wish_status')
+                  ->orWhereNotIn('bday_wish_status', ['Done', 'Sent']);
+            });
+        }
+
+        $clients = $query->orderByRaw('DAY(dob_dor) ASC')->paginate(15);
+
+        return view('clients.birthday-list', compact('clients'));
+    }
+
+    /**
+     * Update birthday tracking fields for a client
+     */
+    public function birthdayUpdate(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'home_no' => 'nullable|string|max:20',
+            'bday_medium' => 'nullable|string|max:50',
+            'bday_wish_status' => 'nullable|string|max:50',
+            'bday_date_done' => 'nullable|date',
+        ]);
+
+        $client->update($validated);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Birthday wish updated successfully.',
+                'client' => $client
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Birthday wish updated successfully.');
+    }
+
+    /**
+     * Export birthday list
+     */
+    public function birthdayExport(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        $clients = Client::whereNotNull('dob_dor')
+            ->whereMonth('dob_dor', $month)
+            ->orderByRaw('DAY(dob_dor) ASC')
+            ->get();
+
+        $fileName = 'birthday_list_' . $monthNames[$month] . '_' . date('Y-m-d') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        $callback = function() use ($clients) {
+            $handle = fopen('php://output', 'w');
+
+            // Write headers
+            fputcsv($handle, [
+                'Name', 'Date Of Birth', 'Age', 'Client Status', 'Mobile No', 'WhatsApp',
+                'Contact No', 'Home No', 'Email Address', 'Medium', 'Wish Status', 'Date Done'
+            ]);
+
+            // Write data rows
+            foreach ($clients as $client) {
+                $age = $client->dob_dor ? now()->diffInYears($client->dob_dor) : '-';
+                fputcsv($handle, [
+                    $client->client_name,
+                    $client->dob_dor ? $client->dob_dor->format('d-M-y') : '-',
+                    $age,
+                    $client->status == 'Inactive' ? 'Dormant' : $client->status,
+                    $client->mobile_no ?? '-',
+                    $client->wa ? 'Y' : 'N',
+                    $client->alternate_no ?? '-',
+                    $client->home_no ?? '-',
+                    $client->email_address ?? '-',
+                    $client->bday_medium ?? '-',
+                    $client->bday_wish_status ?? 'Not Done',
+                    $client->bday_date_done ? $client->bday_date_done->format('d-M-y') : '-',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
