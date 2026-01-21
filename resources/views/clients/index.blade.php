@@ -6,8 +6,8 @@
 @php
   $selectedColumns = session('client_columns', [
     'client_name','client_type','nin_bcrn','dob_dor','mobile_no','wa','district','occupation','source','status','signed_up',
-    'employer','clid','contact_person','income_source','married','spouses_name','children','children_details','alternate_no','email_address','location',
-    'island','country','po_box_no','pep','pep_comment','image','salutation','first_name','other_names','surname','passport_no','pic','industry'
+    'employer','clid','contact_person','income_source','married','spouses_name','alternate_no','email_address','location',
+    'island','country','po_box_no','pep','pep_comment','image','salutation','first_name','other_names','surname','passport_no'
   ]);
 @endphp
 
@@ -98,7 +98,7 @@
                 'client_type' => ['label' => 'Client Type', 'filter' => true],
                 'nin_bcrn' => ['label' => 'NIN/BCRN', 'filter' => true],
                 'dob_dor' => ['label' => 'DOB/DOR', 'filter' => false],
-                'mobile_no' => ['label' => 'MobileNo', 'filter' => false],
+                'mobile_no' => ['label' => 'Mobile No', 'filter' => false],
                 'wa' => ['label' => 'WA', 'filter' => false],
                 'district' => ['label' => 'District', 'filter' => false],
                 'occupation' => ['label' => 'Occupation', 'filter' => false],
@@ -111,8 +111,6 @@
                 'income_source' => ['label' => 'Income Source', 'filter' => false],
                 'married' => ['label' => 'Married', 'filter' => false],
                 'spouses_name' => ['label' => 'Spouses Name', 'filter' => false],
-                'children' => ['label' => 'Children', 'filter' => false],
-                'children_details' => ['label' => 'Children Details', 'filter' => false],
                 'alternate_no' => ['label' => 'Alternate No', 'filter' => false],
                 'email_address' => ['label' => 'Email Address', 'filter' => false],
                 'location' => ['label' => 'Location', 'filter' => false],
@@ -127,8 +125,6 @@
                 'other_names' => ['label' => 'Other Names', 'filter' => false],
                 'surname' => ['label' => 'Surname', 'filter' => false],
                 'passport_no' => ['label' => 'Passport No', 'filter' => false],
-                'pic' => ['label' => 'PIC', 'filter' => false],
-                'industry' => ['label' => 'Industry', 'filter' => false],
               ];
             @endphp
             @foreach($selectedColumns as $col)
