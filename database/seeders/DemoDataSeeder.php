@@ -25,9 +25,10 @@ class DemoDataSeeder extends Seeder
         // === INCOME DATA ===
         $this->command->info('Adding Income records...');
         $incomeAmounts = [5000, 7500, 12000, 8500, 15000, 9000, 11000, 6500, 14000, 10000, 8000, 13500];
+        $baseIncomeId = Income::max('id') ?? 0;
         foreach ($incomeAmounts as $month => $amount) {
             Income::create([
-                'income_code' => 'INC' . str_pad($month + 1, 4, '0', STR_PAD_LEFT),
+                'income_code' => 'DEMO' . str_pad($baseIncomeId + $month + 1, 4, '0', STR_PAD_LEFT),
                 'date_received' => Carbon::create($currentYear, $month + 1, rand(1, 28)),
                 'amount_received' => $amount + rand(0, 2000),
                 'description' => 'Commission Income - Month ' . ($month + 1),
@@ -38,9 +39,10 @@ class DemoDataSeeder extends Seeder
         $this->command->info('Adding Expense records...');
         $expenseAmounts = [3000, 4500, 5000, 3500, 6000, 4000, 5500, 3800, 7000, 4500, 3500, 6500];
         $payees = ['Office Rent', 'Utilities', 'Staff Salaries', 'Marketing', 'Insurance Premium', 'Office Supplies'];
+        $baseExpenseId = Expense::max('id') ?? 0;
         foreach ($expenseAmounts as $month => $amount) {
             Expense::create([
-                'expense_code' => 'EXP' . str_pad($month + 1, 4, '0', STR_PAD_LEFT),
+                'expense_code' => 'DEMO' . str_pad($baseExpenseId + $month + 1, 4, '0', STR_PAD_LEFT),
                 'payee' => $payees[array_rand($payees)],
                 'date_paid' => Carbon::create($currentYear, $month + 1, rand(1, 28)),
                 'amount_paid' => $amount + rand(0, 1000),
