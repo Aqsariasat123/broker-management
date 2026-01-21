@@ -56,6 +56,7 @@ class DemoDataSeeder extends Seeder
         foreach ($names as $index => $name) {
             Client::create([
                 'client_name' => $name,
+                'client_type' => 'Individual',
                 'dob_dor' => Carbon::create(1985 + $index, $currentMonth, rand(1, 28)), // Birthday this month
                 'mobile_no' => '071' . rand(1000000, 9999999),
                 'email_address' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
@@ -68,6 +69,7 @@ class DemoDataSeeder extends Seeder
         foreach ($expiredNames as $index => $name) {
             Client::create([
                 'client_name' => $name,
+                'client_type' => 'Individual',
                 'dob_dor' => Carbon::create(1980 + $index, 5, 15),
                 'id_expiry_date' => Carbon::now()->subDays(rand(30, 365)), // Expired ID
                 'mobile_no' => '072' . rand(1000000, 9999999),
