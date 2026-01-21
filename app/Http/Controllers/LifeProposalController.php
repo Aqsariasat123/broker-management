@@ -100,9 +100,11 @@ class LifeProposalController extends Controller
      |===============================*/
     if ($request->filled('status')) {
         if ($request->status === 'pending') {
-            $query->whereHas('status', fn ($q) => $q->where('name', 'Pending'));
+            // Match dashboard query: use LIKE pattern for flexibility
+            $query->whereHas('status', fn ($q) => $q->where('name', 'like', '%Pending%'));
         } elseif ($request->status === 'processing') {
-            $query->whereHas('status', fn ($q) => $q->where('name', 'Processing'));
+            // Match dashboard query: use LIKE pattern for flexibility
+            $query->whereHas('status', fn ($q) => $q->where('name', 'like', '%Processing%'));
         }
     }
 

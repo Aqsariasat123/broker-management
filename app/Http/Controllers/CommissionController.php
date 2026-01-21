@@ -72,14 +72,19 @@ class CommissionController extends Controller
 
                 if ($paymentStatusess) {
                     $query->where('payment_status_id', $paymentStatusess->id);
-                    
+
                } else {
                     // 🔒 Force empty result if status does not exist
                     $query->whereRaw('1 = 0');
                 }
             }
 
-    
+            // Filter for Outstanding commissions (match dashboard query: date_received is null)
+            if ($request->has('filter') && $request->filter == 'outstanding') {
+                $query->whereNull('date_received');
+            }
+
+
         $commissions = $query
             ->orderByDesc('created_at')
             ->paginate(10);

@@ -171,9 +171,13 @@ class AuthController extends Controller
                     ->count();
             } catch (\Exception $e) { $stats['ids_expired'] = 0; }
 
-            // General policies count (all policies for now)
+            // General policies count (non-life policies)
             try {
-                $stats['general_policies'] = Policy::count();
+                $stats['general_policies'] = Policy::where(function($q) {
+                    $q->whereDoesntHave('policyClass', function($subQ) {
+                        $subQ->where('name', 'like', '%Life%');
+                    })->orWhereNull('policy_class_id');
+                })->count();
             } catch (\Exception $e) { $stats['general_policies'] = 0; }
 
             // Gen-Com Outstanding - unpaid commission amounts

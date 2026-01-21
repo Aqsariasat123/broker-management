@@ -64,9 +64,10 @@ class ContactController extends Controller
             $query->where('status', 'Archived');
         }
         
-        // Filter for Open leads
+        // Filter for Open leads (match dashboard query: not Archived and not Converted)
         if ($request->has('status') && $request->status == 'open') {
-            $query->where('status', '!=', 'Archived');
+            $query->where('status', '!=', 'Archived')
+                  ->where('status', '!=', 'Converted');
             $statusfilter = $request->status ;
         }
         

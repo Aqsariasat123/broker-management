@@ -103,12 +103,16 @@ class PolicyController extends Controller
     // Filter by policy type
     if ($request->has('type') && $request->type) {
         if ($request->type == 'life') {
+            // Life policies: policyClass contains 'Life'
             $query->whereHas('policyClass', function($q) {
-                $q->where('name', 'like', '%life%');
+                $q->where('name', 'like', '%Life%');
             });
         } elseif ($request->type == 'general') {
-            $query->whereDoesntHave('policyClass', function($q) {
-                $q->where('name', 'like', '%general%');
+            // General policies: policyClass does NOT contain 'Life' (all non-life policies)
+            $query->where(function($q) {
+                $q->whereDoesntHave('policyClass', function($subQ) {
+                    $subQ->where('name', 'like', '%Life%');
+                })->orWhereNull('policy_class_id');
             });
         }
     }

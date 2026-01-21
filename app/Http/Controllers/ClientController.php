@@ -91,7 +91,9 @@ class ClientController extends Controller
             });
         }
          if ($request->has('filter') && $request->filter == 'ids_expired') {
-               $query->where('status','Expired');
+               // Match dashboard query: clients with expired ID documents
+               $query->whereNotNull('id_expiry_date')
+                     ->where('id_expiry_date', '<', now()->format('Y-m-d'));
         }
         
         // Filter for Birthdays Today
