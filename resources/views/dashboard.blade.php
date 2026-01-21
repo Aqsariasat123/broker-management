@@ -123,25 +123,25 @@
       </div>
     </a>
 
-    <!-- Proposals Pending -->
+    <!-- Life Proposals Pending -->
     <a href="{{ route('life-proposals.index', ['status' => 'pending', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card">
         <span class="icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
           <i class="fa-solid fa-file-circle-question" style="font-size: 24px;"></i>
         </span>
         <span class="value">{{ $stats['proposals_pending'] ?? 0 }}</span>
-        <span>Proposals Pending</span>
+        <span>Life Proposals Pending</span>
       </div>
     </a>
 
-    <!-- Proposals Processing -->
+    <!-- Life Proposals Processing -->
     <a href="{{ route('life-proposals.index', ['status' => 'processing', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
       <div class="card">
         <span class="icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
           <i class="fa-solid fa-spinner" style="font-size: 24px;"></i>
         </span>
         <span class="value">{{ $stats['proposals_processing'] ?? 0 }}</span>
-        <span>Proposals Processing</span>
+        <span>Life Proposals Processing</span>
       </div>
     </a>
 
