@@ -146,7 +146,7 @@
                       {{ $proposal->prid }}
                       </td>
                     @elseif($col == 'insurer')
-                      <td data-column="insurer">{{ $proposal->insurer->name }}</td>
+                      <td data-column="insurer">{{ $proposal->insurer?->name ?? '-' }}</td>
                     @elseif($col == 'policy_plan')
                       <td data-column="policy_plan">{{ $proposal->policy_plan }}</td>
                     @elseif($col == 'sum_assured')
@@ -160,9 +160,9 @@
                     @elseif($col == 'premium')
                       <td data-column="premium">{{ number_format($proposal->premium,2) }}</td>
                     @elseif($col == 'frequency')
-                      <td data-column="frequency">{{ $proposal->frequency->name }}</td>
+                      <td data-column="frequency">{{ $proposal->frequency?->name ?? '-' }}</td>
                     @elseif($col == 'stage')
-                      <td data-column="stage">{{ $proposal->stage->name  }}</td>
+                      <td data-column="stage">{{ $proposal->stage?->name ?? '-' }}</td>
                     @elseif($col == 'date')
                       <td data-column="date">{{ $proposal->date ? $proposal->date->format('d-M-y') : '##########' }}</td>
                     @elseif($col == 'age')
@@ -181,7 +181,7 @@
                       @endphp
                       <td data-column="status"><span class="badge-status" style="background:{{ $statusColor }}">{{ $statusName }}</span></td>
                     @elseif($col == 'source_of_payment')
-                      <td data-column="source_of_payment">{{ $proposal->sourceOfPayment->name }}</td>
+                      <td data-column="source_of_payment">{{ $proposal->sourceOfPayment?->name ?? '-' }}</td>
                     @elseif($col == 'mcr')
                       <td data-column="mcr">{{ $proposal->mcr ?? '-' }}</td>
                     @elseif($col == 'doctor')
