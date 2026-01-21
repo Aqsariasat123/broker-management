@@ -162,11 +162,16 @@ class DemoDataSeeder extends Seeder
         $pendingStatusId = LookupValue::where('name', 'like', '%Pending%')->first()?->id;
         $processingStatusId = LookupValue::where('name', 'like', '%Processing%')->first()?->id;
 
+        // Get or create a contact for the life proposals
+        $contact = \App\Models\Contact::first();
+        $contactId = $contact?->id ?? 1;
+
         if ($pendingStatusId) {
             $this->command->info('Adding Life Proposals (Pending)...');
             for ($i = 0; $i < 3; $i++) {
                 LifeProposal::create([
                     'proposers_name' => 'Proposer Pending ' . ($i + 1),
+                    'contact_id' => $contactId,
                     'status_id' => $pendingStatusId,
                     'sum_assured' => rand(50000, 200000),
                     'premium' => rand(500, 2000),
@@ -180,6 +185,7 @@ class DemoDataSeeder extends Seeder
             for ($i = 0; $i < 2; $i++) {
                 LifeProposal::create([
                     'proposers_name' => 'Proposer Processing ' . ($i + 1),
+                    'contact_id' => $contactId,
                     'status_id' => $processingStatusId,
                     'sum_assured' => rand(50000, 200000),
                     'premium' => rand(500, 2000),
