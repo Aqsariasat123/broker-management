@@ -15,7 +15,9 @@ use App\Models\Income;
 use App\Models\Expense;
 use App\Models\Contact;
 use App\Models\LifeProposal;
+use App\Models\Followup;
 use App\Models\AuditLog;
+use App\Models\Commission;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -141,72 +143,71 @@ class AuthController extends Controller
 
            
             $stats = [
+                // Tasks due today or overdue (not completed)
                 'tasks_today' => Task::query()
-                ->where('task_status', '!=', 'Completed')
-                ->where('due_date', '<', now()->format('Y-m-d')) // only overdue
-                ->whereBetween('due_date',[$startDate, $endDate]) // respect selected date range
-                ->count(),
+                    ->where('task_status', '!=', 'Completed')
+                    ->where('due_date', '<=', now()->format('Y-m-d'))
+                    ->count(),
+
+                // Policies expiring in selected date range
                 'policies_expiring' => Policy::query()
                     ->whereBetween('end_date', [$startDate, $endDate])
-                    ->count(),
-                'instalments_overdue' => DebitNote::with(['paymentPlan.schedule.policy.client'])
-                    ->where('status', 'Unpaid')
-                    ->whereHas('paymentPlan', fn($q) => $q->whereBetween('due_date', [$startDate, $endDate]))
+                    ->where('policy_status', '!=', 'Cancelled')
                     ->count(),
 
-                // IDs expired in selected date range
+                // Instalments overdue (unpaid and past due date)
+                'instalments_overdue' => PaymentPlan::query()
+                    ->where('status', '!=', 'Paid')
+                    ->where('due_date', '<', now()->format('Y-m-d'))
+                    ->count(),
+
+                // IDs expired (clients with expired ID documents)
                 'ids_expired' => Client::query()
-                    ->where('status', 'Expired')
-                    ->whereBetween('id_expiry_date', [$startDate, $endDate]) // or status_changed_at if you track status change
+                    ->whereNotNull('id_expiry_date')
+                    ->where('id_expiry_date', '<', now()->format('Y-m-d'))
                     ->count(),
 
-                // General policies created in date range
-                
-                  'general_policies' => Policy::whereDoesntHave('policyClass', function($q) {
-                        $q->where('name', 'like', '%general%');
-                    })
-                    ->whereBetween('end_date', [$startDate, $endDate])
-                    ->count(),
+                // General policies (non-life policies) count
+                'general_policies' => Policy::whereHas('policyClass', function($q) {
+                        $q->where('name', 'not like', '%Life%');
+                    })->count(),
 
-                // Gen-Com Outstanding in selected date range
-                'gen_com_outstanding' => PaymentPlan::query()
-                    ->where('status', '!=', 'paid')
-                    ->whereBetween('due_date', [$startDate, $endDate])
-                    ->sum('amount'),
+                // Gen-Com Outstanding - unpaid commission amounts
+                'gen_com_outstanding' => Commission::query()
+                    ->whereHas('paymentStatus', fn($q) => $q->where('name', '!=', 'Paid'))
+                    ->sum('amount_due') ?? 0,
 
-                // Open leads in date range
+                // Open leads (contacts not archived or converted)
                 'open_leads' => Contact::query()
-                    ->where('status', '!=', 'Archived')
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->whereNotIn('status', ['Archived', 'Converted', 'Lost'])
                     ->count(),
 
-                // Follow-ups in date range (not completed tasks)
-                'follow_ups_today' => Contact::query()
-                    ->whereHas('followups', fn($q) => $q->where('status', 'Pending'))
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                // Follow-ups due today or overdue
+                'follow_ups_today' => Followup::query()
+                    ->where('status', '!=', 'Completed')
+                    ->where('follow_up_date', '<=', now()->format('Y-m-d'))
                     ->count(),
 
-                // Proposals pending in date range
+                // Life Proposals with Pending status
                 'proposals_pending' => LifeProposal::query()
-                    ->whereHas('status', fn($q) => $q->where('name', 'Pending'))
-                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->whereHas('status', fn($q) => $q->where('name', 'like', '%Pending%'))
                     ->count(),
 
-                // Proposals processing in date range
+                // Life Proposals with Processing status
                 'proposals_processing' => LifeProposal::query()
-                    ->whereHas('status', fn($q) => $q->where('name', 'Processing'))
-                    ->whereBetween('start_date', [$startDate, $endDate])
+                    ->whereHas('status', fn($q) => $q->where('name', 'like', '%Processing%'))
                     ->count(),
 
-                // Life policies (custom method)
-                'life_policies' => $this->countLifePolicies(),
+                // Life policies count
+                'life_policies' => Policy::whereHas('policyClass', function($q) {
+                        $q->where('name', 'like', '%Life%');
+                    })->count(),
 
-                // Birthdays in selected date range (month/day range)
+                // Birthdays today (matching month and day)
                 'birthdays_today' => Client::query()
-                    ->whereMonth('dob_dor', '>=', $startDate->month)
-                    ->whereMonth('dob_dor', '<=', $endDate->month)
-                    ->whereDay('dob_dor', '>=', $startDate->day)
-                    ->whereDay('dob_dor', '<=', $endDate->day)
+                    ->whereNotNull('dob_dor')
+                    ->whereMonth('dob_dor', now()->month)
+                    ->whereDay('dob_dor', now()->day)
                     ->count(),
             ];
 

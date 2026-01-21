@@ -7,29 +7,7 @@
 
 <div class="dashboard">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>Admin Dashboard</h2>
-    <div style="display: flex; gap: 10px;">
-      <form method="GET" action="{{ route('dashboard') }}" style="display: flex; gap: 10px; align-items: center;">
-        <select name="date_range" class="form-control" style="width: auto; padding: 5px 10px;" onchange="this.form.submit()">
-          <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Today</option>
-          <option value="week" {{ request('date_range') == 'week' ? 'selected' : '' }}>This Week</option>
-          <option value="month" {{ request('date_range') == 'month' || !request('date_range') ? 'selected' : '' }}>This Month</option>
-          <option value="quarter" {{ request('date_range') == 'quarter' ? 'selected' : '' }}>This Quarter</option>
-          <option value="year" {{ request('date_range') == 'year' ? 'selected' : '' }}>This Year</option>
-              @php
-                $currentYear = now()->year;
-                $previousYears = range($currentYear - 5, $currentYear - 1); // last 5 years
-            @endphp
-
-            @foreach ($previousYears as $year)
-                <option value="year-{{ $year }}" {{ request('date_range') == 'year-'.$year ? 'selected' : '' }}>
-                    {{ $year }}
-                </option>
-            @endforeach
-        </select>
-        <button type="button" class="btn" onclick="exportDashboard()" style="padding: 5px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Export Report</button>
-      </form>
-    </div>
+    <h2>Dashboard</h2>
   </div>
 
   <!-- Statistics Cards -->
@@ -38,132 +16,132 @@
     <!-- Tasks Today -->
     <a href="{{ route('tasks.index') }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #10b981, #059669); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-clipboard-check" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['tasks_today'] ?? 0 }}</span>
-        <span>Tasks</span>
+        <span class="icon icon-green"><i class="fa-regular fa-clock"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['tasks_today'] ?? 0 }}</span>
+          <span>Tasks Today</span>
+        </div>
       </div>
     </a>
 
     <!-- Policies Expiring -->
-    <a href="{{ route('policies.index', ['filter' => 'expiring', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('policies.index', ['filter' => 'expiring']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-hourglass-end" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['policies_expiring'] ?? 0 }}</span>
-        <span>Policies Expiring</span>
+        <span class="icon icon-red"><i class="fa-solid fa-exclamation"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['policies_expiring'] ?? 0 }}</span>
+          <span>Policies Expiring</span>
+        </div>
       </div>
     </a>
 
     <!-- Instalments Overdue -->
-    <a href="{{ route('debit-notes.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('payment-plans.index', ['filter' => 'overdue']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-credit-card" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['instalments_overdue'] ?? 0 }}</span>
-        <span>Instalments Overdue</span>
+        <span class="icon icon-salmon"><i class="fa-solid fa-dollar-sign"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['instalments_overdue'] ?? 0 }}</span>
+          <span>Instalments Overdue</span>
+        </div>
       </div>
     </a>
 
     <!-- IDs Expired -->
-    <a href="{{ route('clients.index', ['filter' => 'ids_expired', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('clients.index', ['filter' => 'ids_expired']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-id-card" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['ids_expired'] ?? 0 }}</span>
-        <span>IDs Expired</span>
+        <span class="icon icon-black"><i class="fa-solid fa-user"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['ids_expired'] ?? 0 }}</span>
+          <span>IDs Expired</span>
+        </div>
       </div>
     </a>
 
     <!-- General Policies -->
-    <a href="{{ route('policies.index', ['filter' => 'overdue', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('policies.index', ['type' => 'general']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-file-shield" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['general_policies'] ?? 0 }}</span>
-        <span>General Policies</span>
+        <span class="icon icon-black"><i class="fa-solid fa-expand"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['general_policies'] ?? 0 }}</span>
+          <span>General Policies</span>
+        </div>
       </div>
     </a>
 
     <!-- Gen-Com Outstanding -->
-    <a href="{{ route('payment-plans.index', ['filter' => 'outstanding', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('commissions.index', ['filter' => 'outstanding']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #eab308, #ca8a04); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-coins" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ number_format($stats['gen_com_outstanding'] ?? 0,2) }}</span>
-        <span>Gen-Com Outstanding</span>
+        <span class="icon icon-black"><i class="fa-solid fa-expand"></i></span>
+        <div class="card-content">
+          <span class="value">{{ number_format($stats['gen_com_outstanding'] ?? 0, 2) }}</span>
+          <span>Gen-Com Outstanding</span>
+        </div>
       </div>
     </a>
 
     <!-- Open Leads -->
-    <a href="{{ route('contacts.index', ['status' => 'open', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('contacts.index', ['status' => 'open']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-user-plus" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['open_leads'] ?? 0 }}</span>
-        <span>Open Leads</span>
+        <span class="icon icon-black"><i class="fa-solid fa-user"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['open_leads'] ?? 0 }}</span>
+          <span>Open Leads</span>
+        </div>
       </div>
     </a>
 
     <!-- Follow Ups Today -->
-    <a href="{{ route('contacts.index', ['follow_up' => '1', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('contacts.index', ['follow_up' => '1']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-phone" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['follow_ups_today'] ?? 0 }}</span>
-        <span>Follow Ups</span>
+        <span class="icon icon-red"><i class="fa-solid fa-calendar-days"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['follow_ups_today'] ?? 0 }}</span>
+          <span>Follow Ups Today</span>
+        </div>
       </div>
     </a>
 
-    <!-- Life Proposals Pending -->
-    <a href="{{ route('life-proposals.index', ['status' => 'pending', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <!-- Proposals Pending -->
+    <a href="{{ route('life-proposals.index', ['status' => 'pending']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-file-circle-question" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['proposals_pending'] ?? 0 }}</span>
-        <span>Life Proposals Pending</span>
+        <span class="icon icon-black"><i class="fa-solid fa-expand"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['proposals_pending'] ?? 0 }}</span>
+          <span>Proposals Pending</span>
+        </div>
       </div>
     </a>
 
-    <!-- Life Proposals Processing -->
-    <a href="{{ route('life-proposals.index', ['status' => 'processing', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <!-- Proposals Processing -->
+    <a href="{{ route('life-proposals.index', ['status' => 'processing']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-spinner" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['proposals_processing'] ?? 0 }}</span>
-        <span>Life Proposals Processing</span>
+        <span class="icon icon-black"><i class="fa-solid fa-expand"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['proposals_processing'] ?? 0 }}</span>
+          <span>Proposals Processing</span>
+        </div>
       </div>
     </a>
 
     <!-- Life Policies -->
-    <a href="{{ route('policies.index', ['type' => 'life', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('policies.index', ['type' => 'life']) }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-heart-pulse" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['life_policies'] ?? 0 }}</span>
-        <span>Life Policies</span>
+        <span class="icon icon-black"><i class="fa-solid fa-expand"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['life_policies'] ?? 0 }}</span>
+          <span>Life Policies</span>
+        </div>
       </div>
     </a>
 
     <!-- Birthdays Today -->
-    <a href="{{ route('clients.index', ['filter' => 'birthday_today', 'date_range' => request('date_range') ?? 'month']) }}" class="card-link">
+    <a href="{{ route('clients.birthday-list') }}" class="card-link">
       <div class="card">
-        <span class="icon" style="background: linear-gradient(135deg, #a855f7, #9333ea); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-          <i class="fa-solid fa-cake-candles" style="font-size: 24px;"></i>
-        </span>
-        <span class="value">{{ $stats['birthdays_today'] ?? 0 }}</span>
-        <span>Birthdays</span>
+        <span class="icon icon-red"><i class="fa-solid fa-calendar-days"></i></span>
+        <div class="card-content">
+          <span class="value">{{ $stats['birthdays_today'] ?? 0 }}</span>
+          <span>Birthdays Today</span>
+        </div>
       </div>
     </a>
 
