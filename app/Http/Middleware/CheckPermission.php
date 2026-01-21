@@ -16,9 +16,6 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        // TEMPORARILY DISABLED FOR DEVELOPMENT
-        return $next($request);
-
         if (!auth()->check()) {
             return redirect()->route('login');
         }

@@ -15,9 +15,6 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // TEMPORARILY DISABLED FOR DEVELOPMENT
-        return $next($request);
-
         if (!auth()->check()) {
             return redirect()->route('login');
         }

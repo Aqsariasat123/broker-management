@@ -33,32 +33,22 @@ use App\Http\Controllers\FollowupController;
 
 
 Route::get('/', function () {
-    // Auto-login first user for development
-    if (!auth()->check()) {
-        $user = \App\Models\User::first();
-        if ($user) {
-            auth()->login($user);
-        }
-    }
-    return redirect('/dashboard');
+    return redirect('/login');
 });
 
-// Login routes (temporarily disabled for development)
+// Login routes
 Route::get('/login', function () {
-    // Auto-login first user for development
-    if (!auth()->check()) {
-        $user = \App\Models\User::first();
-        if ($user) {
-            auth()->login($user);
-        }
+    // If user is logged in, redirect to dashboard
+    if (auth()->check()) {
+        return redirect('/dashboard');
     }
-    return redirect('/dashboard');
+    return app(AuthController::class)->showLoginForm();
 })->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// All routes - auth temporarily disabled for development
-Route::group([], function () {
+// All protected routes
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/export', [AuthController::class, 'exportDashboard'])->name('dashboard.export');
 
