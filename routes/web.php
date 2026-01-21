@@ -33,11 +33,25 @@ use App\Http\Controllers\FollowupController;
 
 
 Route::get('/', function () {
+    // Auto-login first user for development
+    if (!auth()->check()) {
+        $user = \App\Models\User::first();
+        if ($user) {
+            auth()->login($user);
+        }
+    }
     return redirect('/dashboard');
 });
 
 // Login routes (temporarily disabled for development)
 Route::get('/login', function () {
+    // Auto-login first user for development
+    if (!auth()->check()) {
+        $user = \App\Models\User::first();
+        if ($user) {
+            auth()->login($user);
+        }
+    }
     return redirect('/dashboard');
 })->name('login');
 Route::post('/login', [AuthController::class, 'login']);
