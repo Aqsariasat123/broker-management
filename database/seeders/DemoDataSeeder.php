@@ -55,38 +55,53 @@ class DemoDataSeeder extends Seeder
 
         // === CLIENTS WITH BIRTHDAYS THIS MONTH ===
         $this->command->info('Adding Clients with birthdays this month...');
-        $names = ['John Smith', 'Sarah Johnson', 'Michael Brown', 'Emily Davis', 'Robert Wilson'];
-        foreach ($names as $index => $name) {
+        $birthdayClients = [
+            ['first' => 'John', 'surname' => 'Smith'],
+            ['first' => 'Sarah', 'surname' => 'Johnson'],
+            ['first' => 'Michael', 'surname' => 'Brown'],
+            ['first' => 'Emily', 'surname' => 'Davis'],
+            ['first' => 'Robert', 'surname' => 'Wilson'],
+        ];
+        foreach ($birthdayClients as $index => $client) {
             $maxClientId++;
             Client::create([
-                'client_name' => $name,
+                'first_name' => $client['first'],
+                'surname' => $client['surname'],
+                'client_name' => $client['first'] . ' ' . $client['surname'],
                 'client_type' => 'Individual',
-                'source' => 'Demo',
+                'source' => null,
                 'status' => 'Active',
                 'clid' => 'DEMO' . str_pad($maxClientId, 5, '0', STR_PAD_LEFT),
                 'signed_up' => Carbon::now()->subMonths(rand(1, 12)),
                 'dob_dor' => Carbon::create(1985 + $index, $currentMonth, rand(1, 28)), // Birthday this month
                 'mobile_no' => '071' . rand(1000000, 9999999),
-                'email_address' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+                'email_address' => strtolower($client['first'] . '.' . $client['surname']) . '@example.com',
             ]);
         }
 
         // === CLIENTS WITH EXPIRED IDS ===
         $this->command->info('Adding Clients with expired IDs...');
-        $expiredNames = ['James Miller', 'Patricia Taylor', 'David Anderson', 'Jennifer Thomas'];
-        foreach ($expiredNames as $index => $name) {
+        $expiredClients = [
+            ['first' => 'James', 'surname' => 'Miller'],
+            ['first' => 'Patricia', 'surname' => 'Taylor'],
+            ['first' => 'David', 'surname' => 'Anderson'],
+            ['first' => 'Jennifer', 'surname' => 'Thomas'],
+        ];
+        foreach ($expiredClients as $index => $client) {
             $maxClientId++;
             Client::create([
-                'client_name' => $name,
+                'first_name' => $client['first'],
+                'surname' => $client['surname'],
+                'client_name' => $client['first'] . ' ' . $client['surname'],
                 'client_type' => 'Individual',
-                'source' => 'Demo',
+                'source' => null,
                 'status' => 'Active',
                 'clid' => 'DEMO' . str_pad($maxClientId, 5, '0', STR_PAD_LEFT),
                 'signed_up' => Carbon::now()->subMonths(rand(1, 12)),
                 'dob_dor' => Carbon::create(1980 + $index, 5, 15),
                 'id_expiry_date' => Carbon::now()->subDays(rand(30, 365)), // Expired ID
                 'mobile_no' => '072' . rand(1000000, 9999999),
-                'email_address' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+                'email_address' => strtolower($client['first'] . '.' . $client['surname']) . '@example.com',
             ]);
         }
 
