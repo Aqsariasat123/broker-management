@@ -1,4 +1,9 @@
-// Data initialized in Blade template
+// Data initialized in Blade template:
+// - currentPaymentId (declared in blade)
+// - selectedColumns
+// - paymentsStoreRoute
+// - paymentsUpdateRouteTemplate
+// - csrfToken
 
 // Helper function for date formatting
 function formatDate(dateStr) {
@@ -14,9 +19,8 @@ function formatNumber(num) {
   return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Current payment/debit note being edited
-let currentPaymentId = null;
-let currentDebitNoteData = null;
+// Current debit note data being edited (currentPaymentId is declared in blade template)
+var currentDebitNoteData = null;
 
 // Open payment side panel for editing
 window.openPaymentDetails = async function(debitNoteId) {
